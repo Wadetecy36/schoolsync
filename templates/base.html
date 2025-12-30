@@ -3,12 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- CRITICAL FIX: Add CSRF Token Meta Tag -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    
     <title>{% block title %}SchoolSync Pro{% endblock %}</title>
-    
-    <!-- FAVICON LINK -->
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
 
     <!-- Material Icons -->
@@ -18,276 +14,298 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Custom CSS -->
+    <!-- Theme Initialization Script (Prevents Flash) -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+
     <style>
-        * { font-family: 'Inter', sans-serif; }
-        
-        /* Material Icons Setup */
-        .material-icons-round {
-            font-family: 'Material Icons Round';
-            font-weight: normal;
-            font-style: normal;
-            font-size: 24px;
-            line-height: 1;
-            letter-spacing: normal;
-            text-transform: none;
-            display: inline-block;
-            white-space: nowrap;
-            word-wrap: normal;
-            direction: ltr;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            vertical-align: middle;
+        /* --- DYNAMIC THEME VARIABLES --- */
+        :root {
+            /* Default (Dark) */
+            --bg-color: #0a192f;
+            --glass-bg: rgba(17, 34, 64, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #e6f1ff;
+            --text-muted: #94a3b8;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-hover: rgba(255, 255, 255, 0.07);
+            --nav-bg: rgba(10, 25, 47, 0.85);
+            --input-bg: rgba(0, 0, 0, 0.2);
+            --gold-accent: #FFD700;
+            --glow-primary: rgba(29, 78, 216, 0.15);
+            --glow-secondary: rgba(184, 134, 11, 0.1);
         }
-        
-        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .gradient-primary { background: linear-gradient(135deg, #3b82f6 0%, #0ea5e9 100%); }
-        .gradient-success { background: linear-gradient(135deg, #10b981 0%, #34d399 100%); }
-        .gradient-warning { background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%); }
-        .gradient-danger { background: linear-gradient(135deg, #ef4444 0%, #f87171 100%); }
-        
-        .card-hover:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+        [data-theme="light"] {
+            /* Light Theme Overrides */
+            --bg-color: #f0f4f8;
+            --glass-bg: rgba(255, 255, 255, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --card-bg: rgba(255, 255, 255, 0.6);
+            --card-hover: rgba(255, 255, 255, 0.8);
+            --nav-bg: rgba(240, 244, 248, 0.85);
+            --input-bg: rgba(255, 255, 255, 0.5);
+            --gold-accent: #d97706; /* Darker gold for light bg contrast */
+            --glow-primary: rgba(59, 130, 246, 0.1);
+            --glow-secondary: rgba(234, 179, 8, 0.1);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* --- AMBIENT GLOW --- */
+        .ambient-glow {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
+            background: radial-gradient(circle at 15% 50%, var(--glow-primary), transparent 25%),
+                        radial-gradient(circle at 85% 30%, var(--glow-secondary), transparent 25%);
+            pointer-events: none;
+            transition: background 0.5s ease;
+        }
+
+        /* --- GLASSMORPHISM --- */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1rem;
             transition: all 0.3s ease;
         }
+
+        .glass-card:hover {
+            background: var(--card-hover);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
+            border-color: var(--gold-accent);
+        }
+
+        /* --- TEXT & ACCENTS --- */
+        .text-theme-main { color: var(--text-main); }
+        .text-theme-muted { color: var(--text-muted); }
         
+        .text-gold {
+            color: var(--gold-accent);
+            font-weight: 700;
+        }
+
+        /* --- BUTTONS --- */
+        .btn-gold {
+            background: linear-gradient(135deg, #B8860B 0%, #FFD700 100%);
+            color: #000;
+            font-weight: 600;
+            border: none;
+            box-shadow: 0 4px 15px rgba(184, 134, 11, 0.3);
+            transition: all 0.3s ease;
+        }
+        .btn-gold:hover {
+            transform: scale(1.02);
+            filter: brightness(1.1);
+        }
+
+        /* --- FORM ELEMENTS --- */
+        input, select, textarea {
+            background: var(--input-bg) !important;
+            border: 1px solid var(--glass-border) !important;
+            color: var(--text-main) !important;
+            transition: all 0.3s ease;
+        }
+        input::placeholder { color: var(--text-muted); }
+        
+        input:focus, select:focus {
+            border-color: var(--gold-accent) !important;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
+        }
+
+        /* --- ICONS --- */
+        .material-icons-round { vertical-align: middle; }
         .animate-fade-in { animation: fadeIn 0.5s ease-in-out; }
-        .animate-slide-up { animation: slideUp 0.3s ease-out; }
-        
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        
-        .glass { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); }
-        .spinner { animation: spin 1s linear infinite; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
-    
     {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="antialiased">
+    <div class="ambient-glow"></div>
+
     <!-- Navigation -->
-    <nav class="gradient-bg shadow-lg sticky top-0 z-50">
+    <nav class="glass sticky top-0 z-50 border-b-0" style="background: var(--nav-bg);">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
+            <div class="flex justify-between items-center h-20">
                 <!-- Logo -->
                 <div class="flex items-center space-x-3">
-                    <div class="glass p-2 rounded-xl">
-                        <i class="material-icons-round text-white text-xl">school</i>
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center shadow-lg shadow-yellow-500/20">
+                        <i class="material-icons-round text-black text-2xl">school</i>
                     </div>
                     <div>
-                        <span class="text-white text-lg font-bold">SchoolSync Pro</span>
+                        <span class="text-xl font-bold tracking-tight text-theme-main">SchoolSync <span class="text-gold">Pro</span></span>
                     </div>
                 </div>
                 
                 <!-- Desktop Navigation -->
-                <div class="hidden md:flex items-center space-x-1">
-                    <a href="/" class="nav-link px-4 py-2 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition flex items-center">
-                        <i class="material-icons-round text-xl mr-2">dashboard</i>
-                        <span>Dashboard</span>
+                <div class="hidden md:flex items-center space-x-2">
+                    <a href="/" class="px-4 py-2 rounded-lg text-theme-muted hover:text-theme-main hover:bg-white/10 transition flex items-center">
+                        <i class="material-icons-round mr-2 text-gold">dashboard</i> Dashboard
                     </a>
-                    <a href="/students" class="nav-link px-4 py-2 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition flex items-center">
-                        <i class="material-icons-round text-xl mr-2">people</i>
-                        <span>Students</span>
+                    <a href="/students" class="px-4 py-2 rounded-lg text-theme-muted hover:text-theme-main hover:bg-white/10 transition flex items-center">
+                        <i class="material-icons-round mr-2 text-gold">people</i> Students
                     </a>
-                    <a href="/import" class="nav-link px-4 py-2 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition flex items-center">
-                        <i class="material-icons-round text-xl mr-2">cloud_upload</i>
-                        <span>Import</span>
+                    <a href="/import" class="px-4 py-2 rounded-lg text-theme-muted hover:text-theme-main hover:bg-white/10 transition flex items-center">
+                        <i class="material-icons-round mr-2 text-gold">cloud_upload</i> Import
                     </a>
                 </div>
                 
-                <!-- User Profile (Desktop) -->
-                {% if current_user.is_authenticated %}
-                <div class="hidden md:flex items-center space-x-4">
-                    <span class="text-white text-sm font-medium">{{ current_user.full_name }}</span>
-                    
-                    <!-- Settings Button -->
-                    <a href="/settings" class="text-white hover:text-blue-200 transition" title="Settings">
+                <!-- Right Side Actions -->
+                <div class="hidden md:flex items-center space-x-4 pl-4 border-l border-white/10">
+                    <!-- Theme Toggle -->
+                    <button onclick="toggleTheme()" class="p-2 rounded-full hover:bg-white/10 text-theme-muted hover:text-gold transition focus:outline-none" title="Toggle Theme">
+                        <i class="material-icons-round" id="theme-icon">light_mode</i>
+                    </button>
+
+                    {% if current_user.is_authenticated %}
+                    <span class="text-sm font-medium text-theme-main">{{ current_user.full_name }}</span>
+                    <a href="/settings" class="p-2 rounded-full hover:bg-white/10 text-theme-muted hover:text-gold transition">
                         <i class="material-icons-round">settings</i>
                     </a>
-
-                    <!-- Logout Button -->
-                    <a href="/logout" class="text-white hover:text-red-200 transition" title="Logout">
+                    <a href="/logout" class="p-2 rounded-full hover:bg-red-500/20 text-theme-muted hover:text-red-400 transition">
                         <i class="material-icons-round">logout</i>
                     </a>
+                    {% endif %}
                 </div>
-                {% endif %}
 
-                <!-- Mobile Menu Button (Hamburger) -->
-                <div class="md:hidden flex items-center">
-                    <button id="mobile-menu-button" class="text-white p-2 hover:bg-white hover:bg-opacity-10 rounded-lg transition focus:outline-none">
-                        <i class="material-icons-round text-2xl">menu</i>
-                    </button>
-                </div>
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-button" class="md:hidden text-theme-main p-2">
+                    <i class="material-icons-round text-3xl">menu</i>
+                </button>
             </div>
         </div>
 
-        <!-- Mobile Menu Dropdown -->
-        <div id="mobile-menu" class="md:hidden border-t border-white border-opacity-20 hidden bg-gradient-to-b from-indigo-600 to-purple-700">
-            <div class="px-4 py-3 space-y-1">
-                <a href="/" class="block px-3 py-2 rounded-md text-white hover:bg-white hover:bg-opacity-10 transition">
-                    <div class="flex items-center">
-                        <i class="material-icons-round md-20 mr-3">dashboard</i>
-                        <span>Dashboard</span>
-                    </div>
-                </a>
-                <a href="/students" class="block px-3 py-2 rounded-md text-white hover:bg-white hover:bg-opacity-10 transition">
-                    <div class="flex items-center">
-                        <i class="material-icons-round md-20 mr-3">people</i>
-                        <span>Students</span>
-                    </div>
-                </a>
-                <a href="/import" class="block px-3 py-2 rounded-md text-white hover:bg-white hover:bg-opacity-10 transition">
-                    <div class="flex items-center">
-                        <i class="material-icons-round md-20 mr-3">cloud_upload</i>
-                        <span>Import</span>
-                    </div>
-                </a>
-                
-                <!-- Settings Link for Mobile -->
-                <a href="/settings" class="block px-3 py-2 rounded-md text-white hover:bg-white hover:bg-opacity-10 transition">
-                    <div class="flex items-center">
-                        <i class="material-icons-round md-20 mr-3">settings</i>
-                        <span>Settings</span>
-                    </div>
-                </a>
-
-                {% if current_user.is_authenticated %}
-                <div class="border-t border-white border-opacity-20 pt-2 mt-2">
-                    <div class="px-3 py-2 text-sm text-indigo-100 font-medium">
-                        Signed in as {{ current_user.full_name }}
-                    </div>
-                    <a href="/logout" class="block px-3 py-2 rounded-md text-red-200 hover:bg-red-800 hover:bg-opacity-30 transition">
-                        <div class="flex items-center">
-                            <i class="material-icons-round md-20 mr-3">logout</i>
-                            <span>Logout</span>
-                        </div>
-                    </a>
-                </div>
-                {% endif %}
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="md:hidden glass border-t border-white/10 hidden absolute w-full">
+            <div class="px-4 py-4 space-y-2">
+                <a href="/" class="block px-4 py-3 rounded-lg hover:bg-white/10 text-theme-main">Dashboard</a>
+                <a href="/students" class="block px-4 py-3 rounded-lg hover:bg-white/10 text-theme-main">Students</a>
+                <a href="/import" class="block px-4 py-3 rounded-lg hover:bg-white/10 text-theme-main">Import</a>
+                <a href="/settings" class="block px-4 py-3 rounded-lg hover:bg-white/10 text-theme-main">Settings</a>
+                <!-- Mobile Theme Toggle -->
+                <button onclick="toggleTheme()" class="w-full text-left px-4 py-3 rounded-lg hover:bg-white/10 text-theme-main flex items-center">
+                    <i class="material-icons-round mr-2 text-gold">brightness_6</i> Toggle Theme
+                </button>
+                <a href="/logout" class="block px-4 py-3 rounded-lg hover:bg-red-500/20 text-red-400">Logout</a>
             </div>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div class="animate-fade-in">
-            {% block content %}{% endblock %}
-        </div>
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+        {% block content %}{% endblock %}
     </main>
 
     <!-- Toast Container -->
     <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-3"></div>
 
     <!-- Loading Overlay -->
-    <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center">
-        <div class="bg-white rounded-2xl p-8 shadow-2xl">
-            <div class="flex flex-col items-center">
-                <div class="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full spinner mb-4"></div>
-                <p class="text-lg font-semibold">Loading...</p>
-            </div>
+    <div id="loading-overlay" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center backdrop-blur-sm">
+        <div class="glass p-8 rounded-2xl flex flex-col items-center">
+            <div class="w-12 h-12 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p class="text-gold font-semibold">Processing...</p>
         </div>
     </div>
 
-    <!-- Global Scripts -->
     <script>
-        // Mobile menu toggle logic
-        const mobileMenuBtn = document.getElementById('mobile-menu-button');
-        const mobileMenu = document.getElementById('mobile-menu');
-        
-        if (mobileMenuBtn && mobileMenu) {
-            mobileMenuBtn.addEventListener('click', () => {
-                mobileMenu.classList.toggle('hidden');
-            });
+        // --- THEME LOGIC ---
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon();
         }
 
-        // Toast notification system
+        function updateThemeIcon() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const icon = document.getElementById('theme-icon');
+            if(icon) {
+                icon.textContent = currentTheme === 'light' ? 'dark_mode' : 'light_mode';
+            }
+        }
+
+        // Initialize icon on load
+        document.addEventListener('DOMContentLoaded', updateThemeIcon);
+
+        // --- MOBILE MENU ---
+        const mobileMenuBtn = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+        }
+
+        // --- TOAST & API ---
         window.showToast = function(message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            const colors = { success: 'bg-green-500', error: 'bg-red-500', warning: 'bg-yellow-500', info: 'bg-blue-500' };
-            const icons = { success: 'check_circle', error: 'error', warning: 'warning', info: 'info' };
+            // Simplified Toast Colors
+            const bgClass = type === 'error' ? 'bg-red-600' : 'bg-green-600';
+            const icon = type === 'error' ? 'error' : 'check_circle';
             
-            toast.className = `${colors[type]} text-white p-4 rounded-lg shadow-lg flex items-center justify-between animate-slide-up`;
+            toast.className = `${bgClass} text-white p-4 rounded-xl shadow-lg flex items-center justify-between animate-fade-in backdrop-blur-md bg-opacity-90`;
             toast.innerHTML = `
                 <div class="flex items-center">
-                    <i class="material-icons-round mr-3 text-xl">${icons[type]}</i>
+                    <i class="material-icons-round mr-3">${icon}</i>
                     <span>${message}</span>
                 </div>
-                <button class="ml-4 text-white hover:text-gray-200" onclick="this.parentElement.remove()">
-                    <i class="material-icons-round">close</i>
-                </button>
             `;
             container.appendChild(toast);
-            setTimeout(() => toast.remove(), 5000);
+            setTimeout(() => toast.remove(), 4000);
         };
 
-        // Loading overlay
         window.loading = {
-            show: function(message = 'Loading...') {
-                const overlay = document.getElementById('loading-overlay');
-                overlay.querySelector('p').textContent = message;
-                overlay.classList.remove('hidden');
-                overlay.classList.add('flex');
-            },
-            hide: function() {
-                const overlay = document.getElementById('loading-overlay');
-                overlay.classList.add('hidden');
-                overlay.classList.remove('flex');
-            }
+            show: (msg) => document.getElementById('loading-overlay').classList.remove('hidden', 'flex'),
+            hide: () => document.getElementById('loading-overlay').classList.add('hidden')
         };
-
-        // CRITICAL FIX: Enhanced API helper with CSRF Support
+        
         window.apiRequest = async function(url, options = {}) {
-            loading.show(options.loadingMessage || 'Processing...');
-            
-            // Get CSRF Token from meta tag
+            loading.show();
             const csrfMeta = document.querySelector('meta[name="csrf-token"]');
             const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
-            
-            const defaultHeaders = {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken // Send token in header
-            };
+            const defaultHeaders = { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken };
 
             try {
-                const response = await fetch(url, {
-                    ...options,
-                    headers: {
-                        ...defaultHeaders,
-                        ...options.headers
-                    }
-                });
-                
+                const response = await fetch(url, { ...options, headers: { ...defaultHeaders, ...options.headers } });
                 const data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.error || `Request failed with status ${response.status}`);
-                }
-                
+                if (!response.ok) throw new Error(data.error || 'Request failed');
                 loading.hide();
                 return data;
-                
             } catch (error) {
                 loading.hide();
-                showToast(error.message || 'An error occurred', 'error');
-                console.error('API Error:', error);
+                showToast(error.message, 'error');
                 throw error;
             }
         };
-
-        window.debounce = function(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => { clearTimeout(timeout); func(...args); };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        };
     </script>
-    
     {% block extra_js %}{% endblock %}
 </body>
 </html>
