@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - SchoolSync Pro{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <h1 class="text-3xl font-bold text-gray-900">Account Settings</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Profile Settings -->
+        <div class="md:col-span-2 space-y-6">
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                    <i class="material-icons-round text-blue-600 mr-2">badge</i>
+                    Profile Information
+                </h2>
+                <form method="POST" action="/settings/profile">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                            <input type="text" name="full_name" value="{{ current_user.full_name }}" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <input type="email" name="email" value="{{ current_user.email }}" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Phone (for SMS)</label>
+                            <input type="tel" name="phone" value="{{ current_user.phone or '' }}" placeholder="+1234567890" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                    <button class="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-bold">
+                        Save Profile
+                    </button>
+                </form>
+            </div>
+
+            <!-- Password Change -->
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                    <i class="material-icons-round text-yellow-600 mr-2">lock</i>
+                    Change Password
+                </h2>
+                <form id="password-form">
+                    <div class="space-y-3">
+                        <input type="password" id="current_password" placeholder="Current Password" class="w-full px-4 py-2 border rounded-lg">
+                        <input type="password" id="new_password" placeholder="New Password" class="w-full px-4 py-2 border rounded-lg">
+                        <input type="password" id="confirm_password" placeholder="Confirm New Password" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <button type="submit" class="mt-4 bg-yellow-600 text-white px-6 py-2 rounded-lg hover:bg-yellow-700 transition font-bold">
+                        Update Password
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 2FA Settings -->
+        <div class="md:col-span-1">
+            <div class="bg-white rounded-2xl shadow-lg p-6 h-full">
+                <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                    <i class="material-icons-round text-purple-600 mr-2">security</i>
+                    Two-Factor Auth
+                </h2>
+                <p class="text-sm text-gray-500 mb-6">Secure your account by requiring a code when logging in.</p>
+                
+                <form method="POST" action="/settings/2fa">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="space-y-4">
+                        <label class="flex items-center p-3 border rounded-xl cursor-pointer hover:bg-gray-50 transition {{ 'border-blue-500 bg-blue-50' if current_user.two_factor_method == 'email' }}">
+                            <input type="radio" name="2fa_method" value="email" {{ 'checked' if current_user.two_factor_method == 'email' }} class="mr-3">
+                            <div>
+                                <span class="font-bold block">Email</span>
+                                <span class="text-xs text-gray-500">Send code to {{ current_user.email }}</span>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center p-3 border rounded-xl cursor-pointer hover:bg-gray-50 transition {{ 'border-green-500 bg-green-50' if current_user.two_factor_method == 'sms' }}">
+                            <input type="radio" name="2fa_method" value="sms" {{ 'checked' if current_user.two_factor_method == 'sms' }} class="mr-3">
+                            <div>
+                                <span class="font-bold block">SMS Text</span>
+                                <span class="text-xs text-gray-500">Send code to phone</span>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center p-3 border rounded-xl cursor-pointer hover:bg-gray-50 transition {{ 'border-red-500 bg-red-50' if not current_user.two_factor_method }}">
+                            <input type="radio" name="2fa_method" value="off" {{ 'checked' if not current_user.two_factor_method }} class="mr-3">
+                            <div>
+                                <span class="font-bold block">Disabled</span>
+                                <span class="text-xs text-gray-500">Only password required</span>
+                            </div>
+                        </label>
+                    </div>
+                    <button class="mt-6 w-full bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition font-bold">
+                        Update Security
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('password-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const current = document.getElementById('current_password').value;
+    const new_pass = document.getElementById('new_password').value;
+    const confirm = document.getElementById('confirm_password').value;
+
+    try {
+        const result = await apiRequest('/api/auth/change-password', {
+            method: 'POST',
+            body: JSON.stringify({
+                current_password: current,
+                new_password: new_pass,
+                confirm_password: confirm
+            })
+        });
+        showToast(result.message, 'success');
+        e.target.reset();
+    } catch (error) {
+        // Error handling is done by apiRequest
+    }
+});
+</script>
+{% endblock %}

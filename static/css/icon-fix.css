@@ -1,0 +1,214 @@
+/* ============================================
+   FONTAWESOME ICON EMERGENCY FIX
+   This fixes icons broken by Tailwind's reset
+   ============================================ */
+
+/* RE-ADD FONTAWESOME FONT FACES */
+@font-face {
+  font-family: 'Font Awesome 6 Free';
+  font-style: normal;
+  font-weight: 900;
+  font-display: block;
+  src: url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/webfonts/fa-solid-900.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: 'Font Awesome 6 Brands';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/webfonts/fa-brands-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: 'Font Awesome 6 Free';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/webfonts/fa-regular-400.woff2") format("woff2");
+}
+
+/* OVERRIDE TAILWIND'S RESET FOR ICONS */
+.fa,
+.fas,
+.far,
+.fal,
+.fab,
+.fa-solid,
+.fa-regular,
+.fa-light,
+.fa-thin,
+.fa-duotone,
+.fa-home::before,
+.fa-users::before,
+.fa-file-import::before,
+.fa-chart-bar::before,
+.fa-user::before,
+.fa-cog::before,
+.fa-sign-out-alt::before,
+.fa-bars::before,
+.fa-arrow-right::before,
+.fa-chevron-right::before,
+.fa-check::before,
+.fa-exclamation-circle::before,
+.fa-exclamation-triangle::before,
+.fa-info-circle::before,
+.fa-times::before,
+.fa-arrow-up::before,
+.fa-spinner::before,
+.fa-check-circle::before,
+.fa-exclamation::before,
+.fa-redo::before,
+.fa-download::before,
+.fa-file-csv::before,
+.fa-file-excel::before,
+.fa-cloud-upload-alt::before,
+.fa-calendar-alt::before,
+.fa-filter::before,
+.fa-calendar-check::before,
+.fa-exclamation-triangle::before,
+.fa-user-check::before,
+.fa-user-plus::before,
+.fa-graduation-cap::before,
+.fa-save::before,
+.fa-trash::before,
+.fa-edit::before,
+.fa-envelope::before,
+.fa-eye::before,
+.fa-plus::before,
+.fa-book::before,
+.fa-building::before,
+.fa-calendar::before,
+.fa-birthday-cake::before,
+.fa-plus-circle::before,
+.fa-chevron-down::before,
+.fa-chevron-up::before,
+.fa-chart-pie::before,
+.fa-male::before,
+.fa-female::before,
+.fa-th-large::before,
+.fa-table::before,
+.fa-list::before,
+.fa-chevron-left::before,
+.fa-paper-plane::before,
+.fa-asterisk::before,
+.fa-lightbulb::before,
+.fa-shield-alt::before,
+.fa-arrow-up::before,
+.fa-arrow-down::before,
+.fa-sign-in-alt::before,
+.fa-lock::before {
+    font-family: 'Font Awesome 6 Free' !important;
+    font-weight: 900 !important;
+    font-style: normal !important;
+    font-variant: normal !important;
+    text-rendering: auto !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+    display: inline-block !important;
+    line-height: 1 !important;
+}
+
+/* Specific icon content definitions */
+.fa-home::before { content: "\f015" !important; }
+.fa-users::before { content: "\f0c0" !important; }
+.fa-file-import::before { content: "\f56f" !important; }
+.fa-chart-bar::before { content: "\f080" !important; }
+.fa-user::before { content: "\f007" !important; }
+.fa-cog::before { content: "\f013" !important; }
+.fa-sign-out-alt::before { content: "\f2f5" !important; }
+.fa-bars::before { content: "\f0c9" !important; }
+.fa-arrow-right::before { content: "\f061" !important; }
+.fa-chevron-right::before { content: "\f054" !important; }
+.fa-check::before { content: "\f00c" !important; }
+.fa-exclamation-circle::before { content: "\f06a" !important; }
+.fa-exclamation-triangle::before { content: "\f071" !important; }
+.fa-info-circle::before { content: "\f05a" !important; }
+.fa-times::before { content: "\f00d" !important; }
+.fa-arrow-up::before { content: "\f062" !important; }
+.fa-spinner::before { content: "\f110" !important; }
+.fa-check-circle::before { content: "\f058" !important; }
+.fa-exclamation::before { content: "\f12a" !important; }
+.fa-redo::before { content: "\f01e" !important; }
+.fa-download::before { content: "\f019" !important; }
+.fa-file-csv::before { content: "\f6dd" !important; }
+.fa-file-excel::before { content: "\f1c3" !important; }
+.fa-cloud-upload-alt::before { content: "\f382" !important; }
+.fa-calendar-alt::before { content: "\f073" !important; }
+.fa-filter::before { content: "\f0b0" !important; }
+.fa-calendar-check::before { content: "\f274" !important; }
+.fa-user-check::before { content: "\f4fc" !important; }
+.fa-user-plus::before { content: "\f234" !important; }
+.fa-graduation-cap::before { content: "\f19d" !important; }
+.fa-save::before { content: "\f0c7" !important; }
+.fa-trash::before { content: "\f1f8" !important; }
+.fa-edit::before { content: "\f044" !important; }
+.fa-envelope::before { content: "\f0e0" !important; }
+.fa-eye::before { content: "\f06e" !important; }
+.fa-plus::before { content: "\f067" !important; }
+.fa-book::before { content: "\f02d" !important; }
+.fa-building::before { content: "\f1ad" !important; }
+.fa-calendar::before { content: "\f133" !important; }
+.fa-birthday-cake::before { content: "\f1fd" !important; }
+.fa-plus-circle::before { content: "\f055" !important; }
+.fa-chevron-down::before { content: "\f078" !important; }
+.fa-chevron-up::before { content: "\f077" !important; }
+.fa-chart-pie::before { content: "\f200" !important; }
+.fa-male::before { content: "\f183" !important; }
+.fa-female::before { content: "\f182" !important; }
+.fa-th-large::before { content: "\f009" !important; }
+.fa-table::before { content: "\f0ce" !important; }
+.fa-list::before { content: "\f03a" !important; }
+.fa-chevron-left::before { content: "\f053" !important; }
+.fa-paper-plane::before { content: "\f1d8" !important; }
+.fa-asterisk::before { content: "\f069" !important; }
+.fa-lightbulb::before { content: "\f0eb" !important; }
+.fa-shield-alt::before { content: "\f3ed" !important; }
+.fa-arrow-down::before { content: "\f063" !important; }
+.fa-sign-in-alt::before { content: "\f2f6" !important; }
+.fa-lock::before { content: "\f023" !important; }
+
+/* Fix for Font Awesome 6 Brands */
+.fab,
+.fa-brands {
+    font-family: 'Font Awesome 6 Brands' !important;
+    font-weight: 400 !important;
+}
+
+/* FIX DASHBOARD ICONS */
+.gradient-primary i,
+.gradient-success i,
+.gradient-warning i,
+.gradient-danger i {
+    color: white !important;
+    font-size: 1.5rem !important;
+}
+
+/* FIX NAVIGATION ICONS */
+.nav-link i,
+.mobile-nav-link i {
+    width: 1.25rem !important;
+    text-align: center !important;
+    margin-right: 0.5rem !important;
+}
+
+/* FIX BUTTON ICONS */
+.btn i,
+button i {
+    margin-right: 0.5rem !important;
+}
+
+/* FIX STAT CARD ICONS */
+.stat-card i {
+    font-size: 2rem !important;
+    color: white !important;
+}
+
+/* FIX FORM ICONS */
+.form-group i {
+    position: absolute !important;
+    left: 0.75rem !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: #6b7280 !important;
+}

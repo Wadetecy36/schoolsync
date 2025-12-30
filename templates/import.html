@@ -1,0 +1,537 @@
+{% extends "base.html" %}
+
+{% block title %}Import Students - SchoolSync Pro{% endblock %}
+
+{% block subtitle %}Bulk import students from CSV or Excel files{% endblock %}
+
+{% block content %}
+<div class="space-y-8 animate-fade-in">
+    <!-- Download Templates Section -->
+    <div class="bg-white rounded-2xl shadow-lg p-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <i class="material-icons-round text-blue-600 mr-3">file_download</i>
+            Download Templates
+        </h2>
+        <p class="text-gray-600 mb-6">Use these templates to ensure proper formatting</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- CSV Template -->
+            <div class="border-2 border-dashed border-blue-200 rounded-2xl p-6 hover:border-blue-400 transition-colors">
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-3">
+                            <i class="material-icons-round text-blue-600 text-xl">description</i>
+                        </div>
+                        <h4 class="text-lg font-bold text-gray-900">CSV Template</h4>
+                        <p class="text-sm text-gray-500 mt-1">Comma-separated values format</p>
+                    </div>
+                    <span class="px-3 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-800">Recommended</span>
+                </div>
+                <p class="text-sm text-gray-600 mb-4">Simple text format that works with any spreadsheet software.</p>
+                <a href="/api/download-template/csv" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl flex items-center justify-center space-x-2 transition font-bold">
+                    <i class="material-icons-round mr-2">download</i>
+                    <span>Download CSV Template</span>
+                </a>
+            </div>
+
+            <!-- Excel Template -->
+            <div class="border-2 border-dashed border-green-200 rounded-2xl p-6 hover:border-green-400 transition-colors">
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-3">
+                            <i class="material-icons-round text-green-600 text-xl">table_view</i>
+                        </div>
+                        <h4 class="text-lg font-bold text-gray-900">Excel Template</h4>
+                        <p class="text-sm text-gray-500 mt-1">Microsoft Excel format</p>
+                    </div>
+                    <span class="px-3 py-1 text-xs font-bold rounded-full bg-green-100 text-green-800">Advanced</span>
+                </div>
+                <p class="text-sm text-gray-600 mb-4">Includes formatting and data validation for better editing.</p>
+                <a href="/api/download-template/excel" class="w-full bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl flex items-center justify-center space-x-2 transition font-bold">
+                    <i class="material-icons-round mr-2">download</i>
+                    <span>Download Excel Template</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Section -->
+    <div class="bg-white rounded-2xl shadow-lg p-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <i class="material-icons-round text-blue-600 mr-3">cloud_upload</i>
+            Upload Student Data
+        </h2>
+        <p class="text-gray-600 mb-6">Select your formatted file to begin import</p>
+        
+        <form id="upload-form" enctype="multipart/form-data">
+            <!-- CSRF Token stored here for JS to grab -->
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <!-- File Drop Zone -->
+            <div id="drop-zone" class="relative border-4 border-dashed border-gray-300 rounded-2xl p-12 text-center cursor-pointer hover:border-blue-400 transition-colors">
+                <div class="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-50/50 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                
+                <div class="relative z-10">
+                    <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                        <i class="material-icons-round text-white text-3xl">cloud_upload</i>
+                    </div>
+                    
+                    <h4 class="text-xl font-bold text-gray-900 mb-2">Drop your file here</h4>
+                    <p class="text-gray-600 mb-4">or click to browse your computer</p>
+                    
+                    <div class="space-y-2 max-w-sm mx-auto">
+                        <div class="flex items-center justify-center text-sm text-gray-500 space-x-4">
+                            <span class="flex items-center">
+                                <i class="material-icons-round text-blue-500 mr-2">description</i>
+                                .csv
+                            </span>
+                            <span class="flex items-center">
+                                <i class="material-icons-round text-green-500 mr-2">table_view</i>
+                                .xlsx
+                            </span>
+                            <span class="flex items-center">
+                                <i class="material-icons-round text-yellow-500 mr-2">table_view</i>
+                                .xls
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-500">Maximum file size: 16MB</p>
+                    </div>
+                    
+                    <input type="file" id="file-input" name="file" accept=".csv,.xlsx,.xls" class="hidden">
+                </div>
+            </div>
+            
+            <!-- File Info -->
+            <div id="file-info" class="hidden mt-6 p-6 bg-gradient-to-r from-blue-50 to-blue-100 rounded-2xl border border-blue-200">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                            <i class="material-icons-round text-blue-600 text-xl">insert_drive_file</i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-gray-900" id="file-name"></p>
+                            <p class="text-sm text-gray-600" id="file-size"></p>
+                        </div>
+                    </div>
+                    <button type="button" onclick="resetUpload()" class="text-red-600 hover:text-red-800">
+                        <i class="material-icons-round text-xl">close</i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex space-x-4 mt-6">
+                <button type="submit" id="upload-btn" class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-xl flex items-center justify-center space-x-2 transition font-bold disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="material-icons-round mr-2">cloud_upload</i>
+                    <span id="upload-text">Import Students</span>
+                </button>
+                <button type="button" onclick="resetUpload()" class="px-8 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-xl flex items-center justify-center space-x-2 transition font-bold">
+                    <i class="material-icons-round mr-2">refresh</i>
+                    <span>Clear</span>
+                </button>
+            </div>
+        </form>
+
+        <!-- Progress Bar -->
+        <div id="progress-container" class="hidden mt-6 space-y-3">
+            <div class="flex justify-between text-sm">
+                <span class="font-medium text-gray-700">Import Progress</span>
+                <span id="progress-percent" class="font-bold text-blue-600">0%</span>
+            </div>
+            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div id="progress-bar" class="h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <p id="progress-text" class="text-sm text-center text-gray-500">Preparing import...</p>
+        </div>
+
+        <!-- Results -->
+        <div id="results" class="hidden mt-6">
+            <div class="rounded-2xl border overflow-hidden">
+                <div id="results-header" class="p-4">
+                    <h4 id="results-title" class="font-bold text-lg"></h4>
+                    <p id="results-message" class="text-sm"></p>
+                </div>
+                <div id="error-list" class="p-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instructions Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Required Fields -->
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            <div class="flex items-center mb-4">
+                <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center mr-3">
+                    <i class="material-icons-round text-red-600">error_outline</i>
+                </div>
+                <h4 class="text-lg font-bold text-gray-900">Required Fields</h4>
+            </div>
+            <div class="space-y-3">
+                <div class="flex items-center p-3 bg-red-50 rounded-lg">
+                    <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center mr-3">
+                        <i class="material-icons-round text-red-600 text-xs">star</i>
+                    </div>
+                    <div>
+                        <p class="font-bold text-gray-900">name</p>
+                        <p class="text-sm text-gray-600">Full name of student</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Optional Fields -->
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            <div class="flex items-center mb-4">
+                <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center mr-3">
+                    <i class="material-icons-round text-blue-600">list</i>
+                </div>
+                <h4 class="text-lg font-bold text-gray-900">Optional Fields</h4>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-blue-50 p-3 rounded-lg">
+                    <p class="font-medium text-blue-800 text-sm">gender</p>
+                </div>
+                <div class="bg-blue-50 p-3 rounded-lg">
+                    <p class="font-medium text-blue-800 text-sm">date_of_birth</p>
+                </div>
+                <div class="bg-blue-50 p-3 rounded-lg">
+                    <p class="font-medium text-blue-800 text-sm">program</p>
+                </div>
+                <div class="bg-blue-50 p-3 rounded-lg">
+                    <p class="font-medium text-blue-800 text-sm">hall</p>
+                </div>
+                <div class="bg-blue-50 p-3 rounded-lg">
+                    <p class="font-medium text-blue-800 text-sm">class_room</p>
+                </div>
+                <div class="bg-blue-50 p-3 rounded-lg">
+                    <p class="font-medium text-blue-800 text-sm">email</p>
+                </div>
+                <div class="bg-blue-50 p-3 rounded-lg">
+                    <p class="font-medium text-blue-800 text-sm">phone</p>
+                </div>
+                <div class="bg-blue-50 p-3 rounded-lg">
+                    <p class="font-medium text-blue-800 text-sm">guardian_name</p>
+                </div>
+                <div class="bg-blue-50 p-3 rounded-lg">
+                    <p class="font-medium text-blue-800 text-sm">guardian_phone</p>
+                </div>
+                <div class="bg-blue-50 p-3 rounded-lg">
+                    <p class="font-medium text-blue-800 text-sm">enrollment_year</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Format Tips -->
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            <div class="flex items-center mb-4">
+                <div class="w-10 h-10 bg-yellow-100 rounded-xl flex items-center justify-center mr-3">
+                    <i class="material-icons-round text-yellow-600">lightbulb</i>
+                </div>
+                <h4 class="text-lg font-bold text-gray-900">Format Tips</h4>
+            </div>
+            <div class="space-y-4">
+                <div class="flex items-start">
+                    <div class="w-8 h-8 bg-yellow-50 rounded-lg flex items-center justify-center mr-3 mt-1">
+                        <i class="material-icons-round text-yellow-600">event</i>
+                    </div>
+                    <div>
+                        <p class="font-bold text-gray-900">Dates</p>
+                        <p class="text-sm text-gray-600">Use YYYY-MM-DD format (e.g., 2005-01-15)</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start">
+                    <div class="w-8 h-8 bg-yellow-50 rounded-lg flex items-center justify-center mr-3 mt-1">
+                        <i class="material-icons-round text-yellow-600">table_rows</i>
+                    </div>
+                    <div>
+                        <p class="font-bold text-gray-900">Empty Rows</p>
+                        <p class="text-sm text-gray-600">Rows without names will be skipped</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start">
+                    <div class="w-8 h-8 bg-yellow-50 rounded-lg flex items-center justify-center mr-3 mt-1">
+                        <i class="material-icons-round text-yellow-600">calendar_today</i>
+                    </div>
+                    <div>
+                        <p class="font-bold text-gray-900">Enrollment Year</p>
+                        <p class="text-sm text-gray-600">Current year used if not provided</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start">
+                    <div class="w-8 h-8 bg-yellow-50 rounded-lg flex items-center justify-center mr-3 mt-1">
+                        <i class="material-icons-round text-yellow-600">bug_report</i>
+                    </div>
+                    <div>
+                        <p class="font-bold text-gray-900">Error Display</p>
+                        <p class="text-sm text-gray-600">First 10 errors shown for debugging</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div id="success-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-slide-up">
+        <div class="p-6">
+            <div class="flex flex-col items-center text-center">
+                <div class="w-20 h-20 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mb-6">
+                    <i class="material-icons-round text-white text-3xl">check_circle</i>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 mb-2">Import Successful!</h3>
+                <p id="success-message" class="text-gray-600 mb-6"></p>
+                <button onclick="closeSuccessModal()" class="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-3 rounded-xl flex items-center justify-center space-x-2 transition font-bold">
+                    <i class="material-icons-round mr-2">arrow_forward</i>
+                    <span>Continue</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div id="error-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-slide-up">
+        <div class="p-6">
+            <div class="flex flex-col items-center text-center">
+                <div class="w-20 h-20 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center mb-6">
+                    <i class="material-icons-round text-white text-3xl md-28">error</i>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 mb-2">Import Failed</h3>
+                <p id="error-message" class="text-gray-600 mb-6"></p>
+                <button onclick="closeErrorModal()" class="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-6 py-3 rounded-xl flex items-center justify-center space-x-2 transition font-bold">
+                    <i class="material-icons-round mr-2">refresh</i>
+                    <span>Try Again</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const fileInfo = document.getElementById('file-info');
+    const uploadForm = document.getElementById('upload-form');
+    const uploadBtn = document.getElementById('upload-btn');
+    const progressContainer = document.getElementById('progress-container');
+    const results = document.getElementById('results');
+    
+    let selectedFile = null;
+
+    // Click to upload
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    // Drag and drop
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('border-blue-400', 'bg-blue-50');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('border-blue-400', 'bg-blue-50');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('border-blue-400', 'bg-blue-50');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFile(files[0]);
+        }
+    });
+
+    // File input change
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFile(e.target.files[0]);
+        }
+    });
+
+    function handleFile(file) {
+        // Check file type
+        const validTypes = ['.csv', '.xlsx', '.xls'];
+        const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+        
+        if (!validTypes.includes(fileExt)) {
+            showToast('Invalid file type. Please upload CSV or Excel file.', 'error');
+            return;
+        }
+
+        selectedFile = file;
+        fileInfo.classList.remove('hidden');
+        document.getElementById('file-name').textContent = file.name;
+        document.getElementById('file-size').textContent = formatFileSize(file.size);
+        uploadBtn.disabled = false;
+        
+        // Animate file info appearance
+        fileInfo.style.opacity = '0';
+        fileInfo.style.transform = 'translateY(-10px)';
+        setTimeout(() => {
+            fileInfo.style.transition = 'all 0.3s ease-out';
+            fileInfo.style.opacity = '1';
+            fileInfo.style.transform = 'translateY(0)';
+        }, 10);
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    }
+
+    function resetUpload() {
+        selectedFile = null;
+        fileInput.value = '';
+        fileInfo.classList.add('hidden');
+        progressContainer.classList.add('hidden');
+        results.classList.add('hidden');
+        uploadBtn.disabled = false;
+        document.getElementById('upload-text').textContent = 'Import Students';
+        
+        // Reset animations
+        dropZone.style.opacity = '1';
+    }
+
+    function showSuccessModal(message) {
+        document.getElementById('success-message').textContent = message;
+        document.getElementById('success-modal').classList.remove('hidden');
+        document.getElementById('success-modal').classList.add('flex');
+    }
+
+    function closeSuccessModal() {
+        document.getElementById('success-modal').classList.add('hidden');
+        document.getElementById('success-modal').classList.remove('flex');
+        resetUpload();
+    }
+
+    function showErrorModal(message) {
+        document.getElementById('error-message').textContent = message;
+        document.getElementById('error-modal').classList.remove('hidden');
+        document.getElementById('error-modal').classList.add('flex');
+    }
+
+    function closeErrorModal() {
+        document.getElementById('error-modal').classList.add('hidden');
+        document.getElementById('error-modal').classList.remove('flex');
+    }
+
+    // Form submission
+    uploadForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        if (!selectedFile) {
+            showToast('Please select a file first', 'warning');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        
+        // --- CRITICAL FIX: Append CSRF Token manually ---
+        // Since we are using fetch with FormData, we need to explicitly add the token
+        // The token is available in the hidden input we added to the form
+        const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+        formData.append('csrf_token', csrfToken);
+
+        // Show progress
+        uploadBtn.disabled = true;
+        document.getElementById('upload-text').textContent = 'Importing...';
+        progressContainer.classList.remove('hidden');
+        results.classList.add('hidden');
+        
+        // Reset progress
+        document.getElementById('progress-bar').style.width = '0%';
+        document.getElementById('progress-percent').textContent = '0%';
+        document.getElementById('progress-text').textContent = 'Uploading file...';
+        
+        // Animate progress (simulated for UX)
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            if (progress < 90) {
+                progress += 10;
+                document.getElementById('progress-bar').style.width = progress + '%';
+                document.getElementById('progress-percent').textContent = progress + '%';
+                document.getElementById('progress-text').textContent = 
+                    progress < 50 ? 'Processing file...' : 
+                    progress < 80 ? 'Validating data...' : 
+                    'Finalizing import...';
+            }
+        }, 200);
+
+        try {
+            const response = await fetch('/api/import', {
+                method: 'POST',
+                body: formData
+                // Note: Content-Type header is NOT set here so browser can set boundary
+            });
+
+            clearInterval(progressInterval);
+            document.getElementById('progress-bar').style.width = '100%';
+            document.getElementById('progress-percent').textContent = '100%';
+            document.getElementById('progress-text').textContent = 'Complete!';
+
+            // Check content type to ensure we got JSON back (not an error page)
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                throw new Error("Server error: Received HTML instead of JSON. Please check server logs.");
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                showSuccessModal(data.message);
+                
+                if (data.errors && data.errors.length > 0) {
+                    setTimeout(() => {
+                        results.classList.remove('hidden');
+                        results.className = 'mt-6';
+                        document.getElementById('results-header').className = 'p-4 bg-yellow-50 border-b border-yellow-200';
+                        document.getElementById('results-title').textContent = '⚠ Partial Import Complete';
+                        document.getElementById('results-title').className = 'font-bold text-lg text-yellow-800';
+                        document.getElementById('results-message').textContent = `${data.message} Some rows had issues:`;
+                        document.getElementById('results-message').className = 'text-sm text-yellow-700';
+                        
+                        const errorList = document.getElementById('error-list');
+                        errorList.innerHTML = `
+                            <div class="max-h-48 overflow-y-auto space-y-2">
+                                ${data.errors.map(err => `
+                                    <div class="p-3 bg-red-50 rounded-lg border border-red-200">
+                                        <p class="text-sm text-red-700">${err}</p>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            ${data.errors.length > 10 ? `
+                                <p class="text-sm text-yellow-700 mt-3 text-center">
+                                    Showing first 10 errors only
+                                </p>
+                            ` : ''}
+                        `;
+                    }, 500);
+                }
+                
+                // Auto-reset after success
+                setTimeout(() => {
+                    resetUpload();
+                }, 5000);
+            } else {
+                throw new Error(data.error);
+            }
+
+        } catch (error) {
+            clearInterval(progressInterval);
+            showErrorModal(error.message);
+            
+            uploadBtn.disabled = false;
+            document.getElementById('upload-text').textContent = 'Try Again';
+        }
+    });
+</script>
+{% endblock %}
