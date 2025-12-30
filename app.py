@@ -1,5 +1,3 @@
-from dotenv import load_dotenv
-load_dotenv() 
 from flask import Flask
 from config import config
 from models import db
@@ -12,7 +10,11 @@ from flask_migrate import Migrate
 from flask_mail import Mail
 import os
 import logging
-from logging.handlers import RotatingFileHandler
+import sys  # Required for Vercel logging
+from dotenv import load_dotenv
+
+# Load environment variables first
+load_dotenv()
 
 # Initialize extensions
 csrf = CSRFProtect()
@@ -60,6 +62,7 @@ def create_app(config_name=None):
     login_manager = LoginManager()
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
+    login_manager.login_message = 'Please log in to access this page.'
     login_manager.login_message_category = 'info'
     
     @login_manager.user_loader
@@ -67,8 +70,12 @@ def create_app(config_name=None):
         from models import User
         return db.session.get(User, int(user_id))
     
-    # Create upload folder
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    # Create upload folder (Only works locally, ignored on Vercel)
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        try:
+            os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+        except OSError:
+            pass  # Read-only filesystem on Vercel
     
     # Setup logging
     setup_logging(app)
@@ -85,13 +92,17 @@ def create_app(config_name=None):
     return app
 
 def setup_logging(app):
+    """Setup application logging (Compatible with Vercel)"""
     if not app.debug and not app.testing:
-        if not os.path.exists('logs'):
-            os.mkdir('logs')
-        file_handler = RotatingFileHandler('logs/schoolsync.log', maxBytes=10240000, backupCount=10)
-        file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s: %(message)s'))
-        file_handler.setLevel(logging.INFO)
-        app.logger.addHandler(file_handler)
+        # Log to stdout (Console) instead of a file
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setFormatter(logging.Formatter(
+            '%(asctime)s %(levelname)s: %(message)s'
+        ))
+        handler.setLevel(logging.INFO)
+        app.logger.addHandler(handler)
+        app.logger.setLevel(logging.INFO)
+        app.logger.info('SchoolSync Pro startup')
 
 def register_cli_commands(app):
     @app.cli.command()
