@@ -312,20 +312,53 @@ def change_password():
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
-# Helper route to enable 2FA for testing
-@auth.route('/enable-test-2fa/<method>')
-@login_required
-def enable_test_2fa(method):
-    if method not in ['email', 'sms', 'off']:
-        return "Invalid method", 400
+@auth.route('/verify-2fa', methods=['GET', 'POST'])
+def verify_2fa():
+    """2FA Verification Page"""
+    user_id = session.get('2fa_user_id')
+    if not user_id:
+        return redirect(url_for('auth.login'))
+    
+    user = User.query.get(user_id)
+    if not user:
+        return redirect(url_for('auth.login'))
         
-    if method == 'off':
-        current_user.two_factor_method = None
-    else:
-        current_user.two_factor_method = method
-        # Set a dummy phone for testing if none exists
-        if method == 'sms' and not current_user.phone:
-            current_user.phone = "+1234567890" 
+    if request.method == 'POST':
+        code = request.form.get('otp_code', '').strip()
+        
+        # Validation
+        if not user.otp_code or not user.otp_expiry:
+            flash('Session invalid. Please login again.', 'error')
+            return redirect(url_for('auth.login'))
             
-    db.session.commit()
-    return f"2FA set to {method}. <a href='/logout'>Logout to test</a>"
+        if datetime.utcnow() > user.otp_expiry:
+            flash('Code expired. Please login again.', 'warning')
+            return redirect(url_for('auth.login'))
+            
+        if code == user.otp_code:
+            try:
+                # Code Correct - Log them in
+                user.otp_code = None
+                user.otp_expiry = None
+                user.last_login = datetime.utcnow()
+                db.session.commit()
+                
+                remember = session.get('remember_me', False)
+                session.pop('2fa_user_id', None)
+                session.pop('remember_me', None)
+                
+                login_user(user, remember=remember)
+                
+                # Check for 'next' parameter in session or url
+                next_page = request.args.get('next')
+                return redirect(next_page if next_page else url_for('main.index'))
+                
+            except Exception as e:
+                db.session.rollback()
+                print(f"Login Error: {e}") # This will show in Vercel logs
+                flash('An system error occurred during login. Please try again.', 'error')
+                return redirect(url_for('auth.login'))
+        else:
+            flash('Invalid code. Please try again.', 'error')
+            
+    return render_template('verify_2fa.html', method=user.two_factor_method)
