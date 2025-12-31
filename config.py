@@ -4,18 +4,18 @@ from datetime import timedelta
 class Config:
     """Base configuration"""
     # Security
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-key-please-change'
     
     # Database
-    # Checks for DATABASE_URL (Vercel), falls back to sqlite (Local)
-    uri = os.environ.get('DATABASE_URL') or 'sqlite:///school.db'
-    if uri.startswith("postgres://"):
+    # Vercel provides DATABASE_URL. If missing, fallback to sqlite.
+    uri = os.environ.get('DATABASE_URL')
+    if uri and uri.startswith("postgres://"):
         uri = uri.replace("postgres://", "postgresql://", 1)
     
-    SQLALCHEMY_DATABASE_URI = uri
+    SQLALCHEMY_DATABASE_URI = uri or 'sqlite:///school.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
-    # CRITICAL FIX FOR VERCEL/NEON: Keep connections alive
+    # Connection Pool Settings (Prevents Vercel 500 Errors)
     SQLALCHEMY_ENGINE_OPTIONS = {
         "pool_pre_ping": True,
         "pool_recycle": 300,
@@ -24,7 +24,6 @@ class Config:
     # Upload settings
     UPLOAD_FOLDER = '/tmp' if os.environ.get('VERCEL') else 'static/uploads'
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'csv', 'xlsx', 'xls'}
     
     # Session
     PERMANENT_SESSION_LIFETIME = timedelta(hours=1)
