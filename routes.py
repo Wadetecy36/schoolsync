@@ -7,7 +7,7 @@ from functools import wraps
 import pandas as pd
 import io
 import os
-import magic
+import filetype
 from werkzeug.utils import secure_filename
 
 main = Blueprint('main', __name__)
@@ -27,6 +27,7 @@ def permission_required(permission):
             return f(*args, **kwargs)
         return decorated_function
     return decorator
+
 
 def validate_file(file):
     """Validate uploaded file for security"""
@@ -53,21 +54,33 @@ def validate_file(file):
         return False, "File too large (max 16MB)"
     
     # Read first few bytes to check magic number
-    file_content = file.read(1024)
+    file_content = file.read(2048)
     file.seek(0)
+   
+   
+    # --- CHANGED: Use filetype instead of magic ---
+    kind = filetype.guess(file_content)
     
-    mime = magic.Magic(mime=True)
-    mime_type = mime.from_buffer(file_content)
+    # CSV files are often detected as None (plain text) by filetype, which is safe to assume text/csv if extension matches
+    if kind is None:
+        # If it's a CSV extension and detection failed, we assume it's text/csv
+        if file_ext == 'csv':
+            return True, filename
+        else:
+            return False, "Could not determine file type"
+            
+    mime_type = kind.mime
     
     allowed_mime_types = {
-        'text/csv',
+         'text/csv',
         'text/plain',
         'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/zip', # xlsx is basically a zip
     }
     
-    if mime_type not in allowed_mime_types:
-        return False, f"Invalid file type detected: {mime_type}"
+    if mime_type not in allowed_mime_types and file_ext != 'csv':
+         return False, f"Invalid file type detected: {mime_type}"
     
     return True, filename
 
