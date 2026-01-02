@@ -9,6 +9,8 @@ import io
 import os
 import filetype
 from werkzeug.utils import secure_filename
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
+from utils import send_password_reset_email # Import the new function
 
 main = Blueprint('main', __name__)
 
@@ -101,6 +103,62 @@ def student_detail(id):
     if not student.has_permission(current_user):
         return jsonify({'error': 'Unauthorized access'}), 403
     return render_template('student_detail.html', student=student)
+
+
+
+@auth.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+        
+    if request.method == 'POST':
+        email = request.form.get('email').strip()
+        user = User.query.filter_by(email=email).first()
+        
+        if user:
+            send_password_reset_email(user.email)
+            flash('An email has been sent with instructions to reset your password.', 'info')
+            return redirect(url_for('auth.login'))
+        else:
+            # Security: Don't reveal if email exists or not
+            flash('An email has been sent with instructions to reset your password.', 'info')
+            
+    return render_template('forgot_password.html')
+
+@auth.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+        
+    try:
+        serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        email = serializer.loads(token, salt='password-reset-salt', max_age=3600) # 1 Hour Expiry
+    except SignatureExpired:
+        flash('The reset link has expired.', 'error')
+        return redirect(url_for('auth.forgot_password'))
+    except BadSignature:
+        flash('Invalid reset link.', 'error')
+        return redirect(url_for('auth.forgot_password'))
+        
+    if request.method == 'POST':
+        password = request.form.get('password')
+        confirm = request.form.get('confirm_password')
+        
+        if password != confirm:
+            flash('Passwords do not match.', 'error')
+            return render_template('reset_password.html', token=token)
+            
+        user = User.query.filter_by(email=email).first()
+        if user:
+            try:
+                user.set_password(password)
+                db.session.commit()
+                flash('Your password has been updated! You can now log in.', 'success')
+                return redirect(url_for('auth.login'))
+            except ValueError as e:
+                flash(str(e), 'error')
+                
+    return render_template('reset_password.html', token=token)
 
 # ============ API ENDPOINTS ============
 
