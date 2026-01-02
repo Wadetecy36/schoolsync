@@ -23,34 +23,6 @@
         </div>
     </div>
 
-    <!-- Top Stats Bar -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-        <div class="glass-card p-6 relative overflow-hidden group">
-            <div class="absolute right-0 top-0 w-24 h-24 bg-blue-500/10 rounded-bl-full -mr-4 -mt-4 transition group-hover:bg-blue-500/20"></div>
-            <p class="text-theme-muted text-sm">Total Students</p>
-            <p class="text-2xl font-bold text-theme-main mt-1" id="total-count">0</p>
-            <i class="material-icons-round absolute bottom-4 right-4 text-3xl text-blue-500/20">groups</i>
-        </div>
-        <div class="glass-card p-6 relative overflow-hidden group">
-            <div class="absolute right-0 top-0 w-24 h-24 bg-green-500/10 rounded-bl-full -mr-4 -mt-4 transition group-hover:bg-green-500/20"></div>
-            <p class="text-theme-muted text-sm">Avg Age</p>
-            <p class="text-2xl font-bold text-theme-main mt-1" id="avg-age">0</p>
-            <i class="material-icons-round absolute bottom-4 right-4 text-3xl text-green-500/20">cake</i>
-        </div>
-        <div class="glass-card p-6 relative overflow-hidden group">
-            <div class="absolute right-0 top-0 w-24 h-24 bg-purple-500/10 rounded-bl-full -mr-4 -mt-4 transition group-hover:bg-purple-500/20"></div>
-            <p class="text-theme-muted text-sm">Top Program</p>
-            <p class="text-xl font-bold text-theme-main mt-1 truncate" id="top-program">-</p>
-            <i class="material-icons-round absolute bottom-4 right-4 text-3xl text-purple-500/20">school</i>
-        </div>
-        <div class="glass-card p-6 relative overflow-hidden group">
-            <div class="absolute right-0 top-0 w-24 h-24 bg-yellow-500/10 rounded-bl-full -mr-4 -mt-4 transition group-hover:bg-yellow-500/20"></div>
-            <p class="text-theme-muted text-sm">New This Month</p>
-            <p class="text-2xl font-bold text-theme-main mt-1" id="new-this-month">0</p>
-            <i class="material-icons-round absolute bottom-4 right-4 text-3xl text-yellow-500/20">person_add</i>
-        </div>
-    </div>
-
     <!-- Quick Add Form -->
     <div class="glass-card p-6">
         <div class="flex items-center justify-between cursor-pointer" onclick="toggleQuickAdd()">
@@ -73,10 +45,12 @@
                         <option value="General Arts">General Arts</option>
                         <option value="Visual Arts">Visual Arts</option>
                         <option value="Agriculture">Agriculture</option>
+                        <option value="Home Economics">Home Economics</option>
                     </select>
 
                     <select name="class_room" required class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
                         <option value="">Select Class...</option>
+                        <!-- Dynamic Class Generation based on typical structure -->
                         {% for i in range(1, 4) %}
                             {% for stream in ['Science', 'Business', 'GeneralArts', 'VisualArts', 'Agriculture'] %}
                                 {% set count = 13 if stream == 'Science' else (9 if stream in ['Business', 'GeneralArts'] else (3 if stream == 'VisualArts' else 2)) %}
@@ -117,7 +91,7 @@
                 <option value="12">12</option>
                 <option value="24">24</option>
                 <option value="48">48</option>
-                <option value="all">All</option>
+                <option value="1000">All</option>
             </select>
         </div>
         
@@ -125,7 +99,6 @@
         <div class="flex space-x-2">
             <button onclick="exportToCSV()" class="p-2 rounded-lg hover:bg-white/10 text-green-400 transition" title="Export CSV"><i class="material-icons-round">description</i></button>
             <button onclick="exportToExcel()" class="p-2 rounded-lg hover:bg-white/10 text-blue-400 transition" title="Export Excel"><i class="material-icons-round">table_view</i></button>
-            <button onclick="generateReport()" class="p-2 rounded-lg hover:bg-white/10 text-purple-400 transition" title="Analytics"><i class="material-icons-round">analytics</i></button>
         </div>
     </div>
 
@@ -164,17 +137,22 @@
                 <div class="space-y-4">
                     <div>
                         <label class="text-xs text-theme-muted uppercase tracking-wider mb-1 block">Search</label>
-                        <div class="relative">
-                            <i class="material-icons-round absolute left-3 top-2.5 text-theme-muted text-sm">search</i>
-                            <input type="text" id="name-search" placeholder="Name, ID..." class="w-full pl-9 pr-3 py-2 bg-black/20 border border-white/10 rounded-lg text-theme-main text-sm focus:border-gold-500 transition">
-                        </div>
+                        <input type="text" id="name-search" placeholder="Name, ID..." class="w-full pl-3 pr-3 py-2 bg-black/20 border border-white/10 rounded-lg text-theme-main text-sm focus:border-gold-500 transition">
                     </div>
                     <div>
-                        <label class="text-xs text-theme-muted uppercase tracking-wider mb-2 block">Quick Filters</label>
-                        <div class="flex gap-2 mb-2">
-                            <button onclick="filterByGender('Male')" class="flex-1 py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border border-blue-500/20 rounded-md text-xs transition">Male</button>
-                            <button onclick="filterByGender('Female')" class="flex-1 py-2 bg-pink-500/10 hover:bg-pink-500/20 text-pink-300 border border-pink-500/20 rounded-md text-xs transition">Female</button>
-                        </div>
+                        <label class="text-xs text-theme-muted uppercase tracking-wider mb-1 block">Hall</label>
+                        <select id="quick-hall-filter" onchange="filterByHall(this.value)" class="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-theme-main text-sm transition">
+                            <option value="">All Halls</option>
+                            <option value="Alema Hall">Alema Hall</option>
+                            <option value="Ellen Hall">Ellen Hall</option>
+                            <option value="Halm Addo Hall">Halm Addo Hall</option>
+                            <option value="Nana Wereko Ampem II Hall">Nana Wereko Ampem II Hall</option>
+                            <option value="Wilson Q .Tei Hall">Wilson Q .Tei Hall</option>
+                            <option value="Awuletey Hall">Awuletey Hall</option>
+                            <option value="Peter Ala Adjetey Hall">Peter Ala Adjetey Hall</option>
+                            <option value="Nana Akuako Sarpong Hall">Nana Akuako Sarpong Hall</option>
+                            <option value="Nana Awuah Darko Ampem Hall">Nana Awuah Darko Ampem Hall</option>
+                        </select>
                     </div>
                     <button onclick="resetAllFilters()" class="w-full py-2 border border-white/10 rounded-lg text-theme-muted hover:text-white hover:bg-white/5 transition text-sm flex items-center justify-center">
                         <i class="material-icons-round text-sm mr-2">refresh</i> Reset Filters
@@ -225,7 +203,7 @@
     </div>
 </div>
 
-<!-- Add/Edit Modal (Updated with Halls & Classes) -->
+<!-- Add/Edit Modal (Updated with Full Halls & Classes) -->
 <div id="add-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
     <div class="glass-card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-8 animate-fade-in shadow-2xl border border-white/10">
         <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
@@ -252,7 +230,7 @@
                     </select>
                 </div>
 
-                <!-- Program (Updated) -->
+                <!-- Program -->
                 <div class="space-y-1">
                     <label class="text-xs text-theme-muted uppercase font-bold">Program</label>
                     <select name="program" id="modal-program" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
@@ -262,10 +240,11 @@
                         <option value="General Arts">General Arts</option>
                         <option value="Visual Arts">Visual Arts</option>
                         <option value="Agriculture">Agriculture</option>
+                        <option value="Home Economics">Home Economics</option>
                     </select>
                 </div>
 
-                <!-- Hall (Updated from CSV) -->
+                <!-- Hall (Fixed List) -->
                 <div class="space-y-1">
                     <label class="text-xs text-theme-muted uppercase font-bold">Hall of Residence</label>
                     <select name="hall" id="modal-hall" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
@@ -282,7 +261,7 @@
                     </select>
                 </div>
 
-                <!-- Class (Generated from CSV Logic) -->
+                <!-- Class (Fixed List) -->
                 <div class="space-y-1">
                     <label class="text-xs text-theme-muted uppercase font-bold">Class</label>
                     <select name="class_room" id="modal-class" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
@@ -330,7 +309,7 @@
     </div>
 </div>
 
-<!-- Move Hall Modal (Added Back) -->
+<!-- Move Hall Modal -->
 <div id="move-hall-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
     <div class="glass-card w-full max-w-md p-8 animate-fade-in">
         <h3 class="text-xl font-bold text-theme-main mb-4">Move Students</h3>
@@ -355,7 +334,7 @@
     </div>
 </div>
 
-<!-- Update Program Modal (Added Back) -->
+<!-- Update Program Modal -->
 <div id="update-program-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
     <div class="glass-card w-full max-w-md p-8 animate-fade-in">
         <h3 class="text-xl font-bold text-theme-main mb-4">Update Program</h3>
@@ -367,6 +346,7 @@
                 <option value="General Arts">General Arts</option>
                 <option value="Visual Arts">Visual Arts</option>
                 <option value="Agriculture">Agriculture</option>
+                <option value="Home Economics">Home Economics</option>
             </select>
             <div class="flex gap-3">
                 <button onclick="confirmUpdateProgram()" class="flex-1 btn-gold py-2 rounded-lg text-black font-bold">Update</button>
@@ -376,18 +356,18 @@
     </div>
 </div>
 
-<!-- Delete Modal -->
-<div id="delete-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
-    <div class="glass-card w-full max-w-sm p-8 text-center animate-fade-in border border-red-500/30">
-        <div class="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500">
-            <i class="material-icons-round text-3xl">delete_forever</i>
-        </div>
-        <h3 class="text-xl font-bold text-theme-main mb-2">Delete Student?</h3>
-        <p class="text-theme-muted mb-6">Are you sure you want to delete <span id="delete-student-name" class="text-white font-bold"></span>?</p>
-        <div class="flex gap-3">
-            <button onclick="confirmDelete()" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-bold">Delete</button>
-            <button onclick="closeDeleteModal()" class="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg">Cancel</button>
-        </div>
+<!-- Bulk Email Modal -->
+<div id="bulk-email-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
+    <div class="glass-card w-full max-w-lg p-8 animate-fade-in">
+        <h3 class="text-xl font-bold text-theme-main mb-4 flex items-center"><i class="material-icons-round text-blue-400 mr-2">email</i> Send Email</h3>
+        <form id="bulk-email-form" class="space-y-4">
+            <input type="text" id="email-subject" placeholder="Subject" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-blue-500">
+            <textarea id="email-message" rows="5" placeholder="Message..." class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-blue-500"></textarea>
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="closeBulkEmailModal()" class="px-4 py-2 text-theme-muted hover:text-white transition">Cancel</button>
+                <button type="submit" class="btn-gold px-6 py-2 rounded-lg text-black font-bold">Send</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -396,6 +376,21 @@
     <div class="glass-card w-full max-w-md p-8 animate-fade-in relative">
         <button onclick="closeQuickViewModal()" class="absolute top-4 right-4 text-theme-muted hover:text-white transition"><i class="material-icons-round text-2xl">close</i></button>
         <div id="quick-view-content"></div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div id="delete-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
+    <div class="glass-card w-full max-w-sm p-8 text-center animate-fade-in border border-red-500/30">
+        <div class="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
+            <i class="material-icons-round text-3xl">delete_forever</i>
+        </div>
+        <h3 class="text-xl font-bold text-theme-main mb-2">Delete Student?</h3>
+        <p class="text-theme-muted mb-6">Are you sure you want to delete <span id="delete-student-name" class="text-white font-bold"></span>?</p>
+        <div class="flex gap-3">
+            <button onclick="confirmDelete()" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-bold shadow-lg">Delete</button>
+            <button onclick="closeDeleteModal()" class="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg">Cancel</button>
+        </div>
     </div>
 </div>
 
@@ -428,16 +423,18 @@
             allStudents = data.students || [];
             filteredStudents = [...allStudents];
             
+            console.log(`Loaded ${allStudents.length} students`);
             updateStats();
             renderStudents();
         } catch (error) {
-            console.error(error);
+            console.error('Data Load Error:', error);
+            showToast('Failed to load data', 'error');
         } finally {
             document.getElementById('loading-state').classList.add('hidden');
         }
     }
 
-    // --- RENDERING ---
+    // --- RENDERING (CRASH-PROOF) ---
     function renderStudents() {
         const grid = document.getElementById('students-grid-view');
         const table = document.getElementById('students-table-view');
@@ -466,31 +463,35 @@
         document.getElementById('next-page').disabled = end >= filteredStudents.length;
         pagination.classList.remove('hidden');
 
+        // Safe rendering function to handle null values
+        const safe = (val) => (val === null || val === undefined) ? '' : val;
+        const getInitial = (name) => (name ? name.charAt(0) : '?');
+
         if (currentViewMode === 'grid') {
             grid.classList.remove('hidden');
             grid.innerHTML = pageData.map(s => `
                 <div class="glass-card p-6 relative group hover:border-gold-500/50 transition duration-300">
                     <div class="flex justify-between items-start mb-4">
                         <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-900 flex items-center justify-center text-white font-bold text-lg shadow-lg">
-                            ${s.name.charAt(0)}
+                            ${getInitial(s.name)}
                         </div>
                         <input type="checkbox" class="student-checkbox w-5 h-5 rounded border-white/20 bg-black/20 text-gold focus:ring-0 cursor-pointer" 
                                value="${s.id}" ${selectedStudents.has(s.id) ? 'checked' : ''} 
                                onchange="toggleSelection(${s.id}, this.checked)">
                     </div>
-                    <h3 class="text-lg font-bold text-theme-main truncate" title="${s.name}">${s.name}</h3>
-                    <p class="text-sm text-theme-muted mb-4 truncate">${s.program || 'No Program'}</p>
+                    <h3 class="text-lg font-bold text-theme-main truncate" title="${safe(s.name)}">${safe(s.name)}</h3>
+                    <p class="text-sm text-theme-muted mb-4 truncate">${safe(s.program) || 'No Program'}</p>
                     
                     <div class="space-y-2 text-xs text-theme-muted border-t border-white/10 pt-3">
-                        <div class="flex items-center"><i class="material-icons-round text-sm mr-2 text-blue-400">school</i> ${s.current_form}</div>
-                        <div class="flex items-center"><i class="material-icons-round text-sm mr-2 text-green-400">location_on</i> ${s.hall || 'N/A'}</div>
+                        <div class="flex items-center"><i class="material-icons-round text-sm mr-2 text-blue-400">school</i> ${safe(s.current_form)}</div>
+                        <div class="flex items-center"><i class="material-icons-round text-sm mr-2 text-green-400">location_on</i> ${safe(s.hall) || 'N/A'}</div>
                     </div>
 
                     <div class="flex justify-between items-center mt-4 pt-3 border-t border-white/5 opacity-0 group-hover:opacity-100 transition duration-300">
                         <button onclick="quickView(${s.id})" class="text-blue-400 hover:text-white transition"><i class="material-icons-round">visibility</i></button>
                         <button onclick="editStudent(${s.id})" class="text-yellow-400 hover:text-white transition"><i class="material-icons-round">edit</i></button>
                         ${s.email ? `<a href="mailto:${s.email}" class="text-green-400 hover:text-white transition"><i class="material-icons-round">email</i></a>` : ''}
-                        <button onclick="openDeleteModal(${s.id}, '${s.name.replace(/'/g, "\\'")}')" class="text-red-400 hover:text-white transition"><i class="material-icons-round">delete</i></button>
+                        <button onclick="openDeleteModal(${s.id}, '${safe(s.name).replace(/'/g, "\\'")}')" class="text-red-400 hover:text-white transition"><i class="material-icons-round">delete</i></button>
                     </div>
                 </div>
             `).join('');
@@ -502,16 +503,16 @@
                     <td class="px-6 py-4"><input type="checkbox" class="student-checkbox rounded bg-black/20 border-white/20 text-gold focus:ring-0 cursor-pointer" value="${s.id}" ${selectedStudents.has(s.id) ? 'checked' : ''} onchange="toggleSelection(${s.id}, this.checked)"></td>
                     <td class="px-6 py-4 font-medium text-theme-main">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-blue-900 flex items-center justify-center text-xs text-white font-bold">${s.name.charAt(0)}</div>
-                            ${s.name}
+                            <div class="w-8 h-8 rounded-full bg-blue-900 flex items-center justify-center text-xs text-white font-bold">${getInitial(s.name)}</div>
+                            ${safe(s.name)}
                         </div>
                     </td>
-                    <td class="px-6 py-4 text-theme-muted">${s.program || '-'}</td>
-                    <td class="px-6 py-4"><span class="px-2 py-1 rounded bg-blue-500/10 text-blue-300 text-xs border border-blue-500/20">${s.class_room || '-'}</span></td>
-                    <td class="px-6 py-4 text-theme-muted">${s.hall || '-'}</td>
+                    <td class="px-6 py-4 text-theme-muted">${safe(s.program) || '-'}</td>
+                    <td class="px-6 py-4"><span class="px-2 py-1 rounded bg-blue-500/10 text-blue-300 text-xs border border-blue-500/20">${safe(s.class_room) || '-'}</span></td>
+                    <td class="px-6 py-4 text-theme-muted">${safe(s.hall) || '-'}</td>
                     <td class="px-6 py-4 flex gap-2 opacity-50 group-hover:opacity-100 transition">
                         <button onclick="editStudent(${s.id})" class="text-gold hover:scale-110 transition"><i class="material-icons-round text-sm">edit</i></button>
-                        <button onclick="openDeleteModal(${s.id}, '${s.name}')" class="text-red-400 hover:scale-110 transition"><i class="material-icons-round text-sm">delete</i></button>
+                        <button onclick="openDeleteModal(${s.id}, '${safe(s.name)}')" class="text-red-400 hover:scale-110 transition"><i class="material-icons-round text-sm">delete</i></button>
                     </td>
                 </tr>
             `).join('');
@@ -521,10 +522,10 @@
             list.innerHTML = pageData.map(s => `
                 <div class="glass-card p-4 flex items-center justify-between hover:border-gold-500/30 transition group">
                     <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center text-white font-bold border border-white/10">${s.name.charAt(0)}</div>
+                        <div class="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center text-white font-bold border border-white/10">${getInitial(s.name)}</div>
                         <div>
-                            <h4 class="font-bold text-theme-main">${s.name}</h4>
-                            <p class="text-xs text-theme-muted">${s.program} • ${s.class_room}</p>
+                            <h4 class="font-bold text-theme-main">${safe(s.name)}</h4>
+                            <p class="text-xs text-theme-muted">${safe(s.program)} • ${safe(s.class_room)}</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition">
@@ -575,29 +576,14 @@
         document.getElementById('quick-add-arrow').textContent = form.classList.contains('hidden') ? 'keyboard_arrow_down' : 'keyboard_arrow_up';
     }
 
-    // --- STATS ---
-    function updateStats() {
-        document.getElementById('total-count').innerText = allStudents.length;
-        const ages = allStudents.filter(s => s.age).map(s => s.age);
-        const avg = ages.length ? Math.round(ages.reduce((a,b)=>a+b,0)/ages.length) : 0;
-        document.getElementById('avg-age').innerText = avg;
-        const counts = {};
-        allStudents.forEach(s => s.program && (counts[s.program] = (counts[s.program] || 0) + 1));
-        const top = Object.entries(counts).sort((a,b) => b[1]-a[1])[0];
-        document.getElementById('top-program').innerText = top ? top[0] : '-';
-        const now = new Date();
-        const count = allStudents.filter(s => {
-            const d = new Date(s.created_at);
-            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-        }).length;
-        document.getElementById('new-this-month').innerText = count;
-    }
-
     // --- FILTERING ---
     function applyAdvancedFilters() {
         const term = document.getElementById('name-search').value.toLowerCase();
+        const hall = document.getElementById('quick-hall-filter').value;
+        
         filteredStudents = allStudents.filter(s => {
             if(term && !s.name.toLowerCase().includes(term) && !String(s.id).includes(term)) return false;
+            if(hall && s.hall !== hall) return false;
             return true;
         });
         document.getElementById('filtered-count').innerText = filteredStudents.length;
@@ -606,6 +592,10 @@
     }
 
     document.getElementById('name-search').addEventListener('input', debounce(applyAdvancedFilters, 300));
+
+    function filterByHall(val) {
+        applyAdvancedFilters();
+    }
 
     function filterByGender(g) {
         document.getElementById('name-search').value = ''; 
@@ -616,6 +606,7 @@
     function resetAllFilters() {
         filteredStudents = [...allStudents];
         document.getElementById('name-search').value = '';
+        document.getElementById('quick-hall-filter').value = '';
         renderStudents();
     }
 
@@ -634,8 +625,12 @@
     }
 
     function editStudent(id) {
+        // Loose equality (==) allows string ID from HTML to match number ID from JSON
         const s = allStudents.find(x => x.id == id);
-        if(!s) return;
+        if(!s) {
+            console.error('Student not found:', id);
+            return;
+        }
         
         document.getElementById('edit-student-id').value = s.id;
         document.getElementById('modal-name').value = s.name;
@@ -692,7 +687,7 @@
         document.getElementById('quick-view-modal').classList.remove('flex');
     }
 
-    // --- BULK ACTION MODAL HANDLERS (FIXED) ---
+    // --- BULK ACTION MODAL HANDLERS ---
     function openMoveHallModal() {
         document.getElementById('move-hall-modal').classList.remove('hidden');
         document.getElementById('move-hall-modal').classList.add('flex');
@@ -709,17 +704,13 @@
         document.getElementById('update-program-modal').classList.add('hidden');
         document.getElementById('update-program-modal').classList.remove('flex');
     }
-
-    async function executeBulkAction() {
-        const action = document.getElementById('bulk-action').value;
-        if (selectedStudents.size === 0) return showToast('Select at least one student', 'warning');
-        
-        if (action === 'move-hall') openMoveHallModal();
-        else if (action === 'update-program') openUpdateProgramModal();
-        else if (action === 'export') exportSelectedStudents();
-        else if (action === 'archive') showToast('Archive feature pending implementation', 'info');
-        
-        document.getElementById('bulk-action').value = "";
+    function openBulkEmailModal() {
+        document.getElementById('bulk-email-modal').classList.remove('hidden');
+        document.getElementById('bulk-email-modal').classList.add('flex');
+    }
+    function closeBulkEmailModal() {
+        document.getElementById('bulk-email-modal').classList.add('hidden');
+        document.getElementById('bulk-email-modal').classList.remove('flex');
     }
 
     // --- FORM HANDLING ---
@@ -735,8 +726,10 @@
             await apiRequest(url, { method, body: JSON.stringify(data) });
             showToast(id ? 'Updated successfully' : 'Created successfully');
             closeAddModal();
-            loadStudents();
-        } catch(e) { console.error(e); }
+            loadStudents(); 
+        } catch(e) {
+            console.error(e);
+        }
     });
 
     document.getElementById('quick-add').addEventListener('submit', async (e) => {
@@ -771,6 +764,19 @@
         } catch(e) {}
     }
 
+    async function executeBulkAction() {
+        const action = document.getElementById('bulk-action').value;
+        if (selectedStudents.size === 0) return showToast('Select at least one student', 'warning');
+        
+        if (action === 'move-hall') openMoveHallModal();
+        else if (action === 'update-program') openUpdateProgramModal();
+        else if (action === 'email') openBulkEmailModal();
+        else if (action === 'archive') showToast('Archive feature pending implementation', 'info');
+        else if (action === 'export') showToast('Export started...', 'info'); 
+        
+        document.getElementById('bulk-action').value = "";
+    }
+
     function setupEventListeners() {
         document.getElementById('items-per-page').addEventListener('change', (e) => {
             itemsPerPage = e.target.value === 'all' ? 10000 : parseInt(e.target.value);
@@ -779,6 +785,24 @@
         });
         document.getElementById('next-page').addEventListener('click', () => { currentPage++; renderStudents(); });
         document.getElementById('prev-page').addEventListener('click', () => { currentPage--; renderStudents(); });
+    }
+
+    // --- UPDATE STATS ---
+    function updateStats() {
+        document.getElementById('total-count').innerText = allStudents.length;
+        const ages = allStudents.filter(s => s.age).map(s => s.age);
+        const avg = ages.length ? Math.round(ages.reduce((a,b)=>a+b,0)/ages.length) : 0;
+        document.getElementById('avg-age').innerText = avg;
+        const counts = {};
+        allStudents.forEach(s => s.program && (counts[s.program] = (counts[s.program] || 0) + 1));
+        const top = Object.entries(counts).sort((a,b) => b[1]-a[1])[0];
+        document.getElementById('top-program').innerText = top ? top[0] : '-';
+        const now = new Date();
+        const count = allStudents.filter(s => {
+            const d = new Date(s.created_at);
+            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        }).length;
+        document.getElementById('new-this-month').innerText = count;
     }
 </script>
 {% endblock %}
