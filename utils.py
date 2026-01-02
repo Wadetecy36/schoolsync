@@ -5,11 +5,11 @@ import string
 from twilio.rest import Client
 import sys
 from threading import Thread
-from itsdangerous import URLSafeTimedSerializer
 import pyotp
 import qrcode
 import io
 import base64
+from itsdangerous import URLSafeTimedSerializer
 
 def generate_otp():
     """Generate a 6-digit numeric code"""
@@ -41,26 +41,39 @@ def send_email_otp(email, otp):
         print(f"❌ Error starting email task: {e}", file=sys.stderr)
         return True
 
-
-# --- GOOGLE AUTHENTICATOR HELPERS ---
-
+# --- TOTP (Google Authenticator) HELPERS ---
 def get_totp_uri(user):
-    """Generate the URL for the QR Code"""
-    # 1. Generate a random secret if user doesn't have one
+    """Generate a strict, clean otpauth URL"""
     if not user.totp_secret:
         return None, None
         
     totp = pyotp.TOTP(user.totp_secret)
-    # This creates the link that the QR code stores
-    uri = totp.provisioning_uri(name=user.username, issuer_name="SchoolSync Pro")
+    
+    # FIX: Remove spaces/special chars from issuer/name to prevent parsing errors
+    clean_username = user.username.replace(" ", "")
+    
+    # Manually build string to ensure 100% standard format
+    # Format: otpauth://totp/Issuer:Account?secret=SECRET&issuer=Issuer
+    uri = totp.provisioning_uri(name=clean_username, issuer_name="SchoolSync Pro")
+    
+    print(f"🔑 Generated 2FA URI: {uri}", file=sys.stdout) # Debug logging
     return uri, user.totp_secret
 
 def generate_qr_code(uri):
     """Convert the URI into a PNG image string"""
-    qr = qrcode.make(uri)
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(uri)
+    qr.make(fit=True)
+
+    img = qr.make_image(fill_color="black", back_color="white")
+    
     buf = io.BytesIO()
-    qr.save(buf, format='PNG')
-    # Encode as Base64 to show in HTML
+    img.save(buf, format='PNG')
     img_str = base64.b64encode(buf.getvalue()).decode('utf-8')
     return f"data:image/png;base64,{img_str}"
 
@@ -68,10 +81,9 @@ def verify_totp(user, code):
     """Check if the code from the App is correct"""
     if not user.totp_secret:
         return False
-    totp = pyotp.TOTP(user.totp_secret)
-    return totp.verify(code)
+    return pyotp.TOTP(user.totp_secret).verify(code)
 
-# --- NEW: Password Reset Email ---
+# --- Password Reset Email ---
 def send_password_reset_email(email):
     try:
         # Generate Token
@@ -100,7 +112,7 @@ This link expires in 1 hour.
         print(f"❌ Error generating reset link: {e}", file=sys.stderr)
         return False
 
-# --- SMS (Existing) ---
+# --- SMS ---
 def send_sms_otp(phone, otp):
     try:
         account = current_app.config.get('TWILIO_ACCOUNT_SID')
