@@ -369,6 +369,41 @@ def bulk_delete_students():
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
+
+# ... existing imports ...
+
+@main.route('/api/students/delete-all', methods=['POST'])
+@login_required
+def delete_all_students():
+    """Securely delete all students"""
+    try:
+        data = request.get_json()
+        password = data.get('password')
+
+        if not password:
+            return jsonify({'success': False, 'error': 'Password required'}), 400
+
+        # Verify Admin Password
+        if not current_user.check_password(password):
+            return jsonify({'success': False, 'error': 'Incorrect password'}), 403
+
+        # Delete all records
+        # Note: We delete academic records first to maintain integrity if cascades aren't set
+        try:
+            num_records = AcademicRecord.query.delete()
+            num_students = Student.query.delete()
+            db.session.commit()
+            
+            return jsonify({
+                'success': True, 
+                'message': f'Successfully deleted {num_students} students.'
+            })
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'success': False, 'error': f'Database error: {str(e)}'}), 500
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 @main.route('/api/stats', methods=['GET'])
 @login_required
 def get_stats():

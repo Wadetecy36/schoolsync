@@ -12,14 +12,48 @@
             <p class="text-theme-muted">Browse and manage student records</p>
         </div>
         <div class="flex space-x-3">
-            <a href="/import" class="px-6 py-3 rounded-xl border border-white/10 hover:bg-white/10 text-theme-main transition flex items-center group">
+            <!-- Delete All Button -->
+            <button onclick="openDeleteAllModal()" class="px-4 py-2 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition flex items-center group">
+                <i class="material-icons-round mr-2">delete_sweep</i>
+                <span>Delete All</span>
+            </button>
+
+            <a href="/import" class="px-6 py-2 rounded-xl border border-white/10 hover:bg-white/10 text-theme-main transition flex items-center group">
                 <i class="material-icons-round mr-2 text-gold group-hover:scale-110 transition">cloud_upload</i>
                 <span>Import</span>
             </a>
-            <button onclick="openAddModal()" class="btn-gold px-6 py-3 rounded-xl text-black flex items-center font-bold shadow-lg hover:shadow-yellow-500/20 transition">
+            <button onclick="openAddModal()" class="btn-gold px-6 py-2 rounded-xl text-black flex items-center font-bold shadow-lg hover:shadow-yellow-500/20 transition">
                 <i class="material-icons-round mr-2">person_add</i>
                 <span>Add Student</span>
             </button>
+        </div>
+    </div>
+
+    <!-- Top Stats Bar (Fixed Missing ID Errors) -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div class="glass-card p-6 relative overflow-hidden group">
+            <div class="absolute right-0 top-0 w-24 h-24 bg-blue-500/10 rounded-bl-full -mr-4 -mt-4 transition group-hover:bg-blue-500/20"></div>
+            <p class="text-theme-muted text-sm">Total Students</p>
+            <p class="text-2xl font-bold text-theme-main mt-1" id="total-count">0</p>
+            <i class="material-icons-round absolute bottom-4 right-4 text-3xl text-blue-500/20">groups</i>
+        </div>
+        <div class="glass-card p-6 relative overflow-hidden group">
+            <div class="absolute right-0 top-0 w-24 h-24 bg-green-500/10 rounded-bl-full -mr-4 -mt-4 transition group-hover:bg-green-500/20"></div>
+            <p class="text-theme-muted text-sm">Avg Age</p>
+            <p class="text-2xl font-bold text-theme-main mt-1" id="avg-age">0</p>
+            <i class="material-icons-round absolute bottom-4 right-4 text-3xl text-green-500/20">cake</i>
+        </div>
+        <div class="glass-card p-6 relative overflow-hidden group">
+            <div class="absolute right-0 top-0 w-24 h-24 bg-purple-500/10 rounded-bl-full -mr-4 -mt-4 transition group-hover:bg-purple-500/20"></div>
+            <p class="text-theme-muted text-sm">Top Program</p>
+            <p class="text-xl font-bold text-theme-main mt-1 truncate" id="top-program">-</p>
+            <i class="material-icons-round absolute bottom-4 right-4 text-3xl text-purple-500/20">school</i>
+        </div>
+        <div class="glass-card p-6 relative overflow-hidden group">
+            <div class="absolute right-0 top-0 w-24 h-24 bg-yellow-500/10 rounded-bl-full -mr-4 -mt-4 transition group-hover:bg-yellow-500/20"></div>
+            <p class="text-theme-muted text-sm">New This Month</p>
+            <p class="text-2xl font-bold text-theme-main mt-1" id="new-this-month">0</p>
+            <i class="material-icons-round absolute bottom-4 right-4 text-3xl text-yellow-500/20">person_add</i>
         </div>
     </div>
 
@@ -50,7 +84,6 @@
 
                     <select name="class_room" required class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
                         <option value="">Select Class...</option>
-                        <!-- Dynamic Class Generation based on typical structure -->
                         {% for i in range(1, 4) %}
                             {% for stream in ['Science', 'Business', 'GeneralArts', 'VisualArts', 'Agriculture'] %}
                                 {% set count = 13 if stream == 'Science' else (9 if stream in ['Business', 'GeneralArts'] else (3 if stream == 'VisualArts' else 2)) %}
@@ -203,7 +236,27 @@
     </div>
 </div>
 
-<!-- Add/Edit Modal (Updated with Full Halls & Classes) -->
+<!-- ================= MODALS ================= -->
+
+<!-- Delete All Students Modal -->
+<div id="delete-all-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
+    <div class="glass-card w-full max-w-sm p-8 text-center animate-fade-in border border-red-500/50 shadow-[0_0_50px_rgba(239,68,68,0.2)]">
+        <div class="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500 border border-red-500/30">
+            <i class="material-icons-round text-4xl">warning</i>
+        </div>
+        <h3 class="text-2xl font-bold text-theme-main mb-2">Delete Everything?</h3>
+        <p class="text-theme-muted mb-6">This will wipe all students and records database. This action is irreversible.</p>
+        
+        <input type="password" id="admin-password" placeholder="Enter Admin Password" class="w-full px-4 py-3 bg-black/40 border border-red-500/30 rounded-xl text-white mb-6 focus:border-red-500 focus:ring-1 focus:ring-red-500">
+        
+        <div class="flex gap-3">
+            <button onclick="confirmDeleteAll()" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-bold shadow-lg">Wipe Data</button>
+            <button onclick="closeDeleteAllModal()" class="flex-1 bg-white/10 hover:bg-white/20 text-white py-3 rounded-xl">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Modal -->
 <div id="add-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
     <div class="glass-card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-8 animate-fade-in shadow-2xl border border-white/10">
         <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
@@ -214,13 +267,10 @@
         <form id="add-student-form" class="space-y-6">
             <input type="hidden" id="edit-student-id">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Full Name -->
                 <div class="space-y-1">
                     <label class="text-xs text-theme-muted uppercase font-bold">Full Name</label>
                     <input type="text" name="name" id="modal-name" required class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
                 </div>
-                
-                <!-- Gender -->
                 <div class="space-y-1">
                     <label class="text-xs text-theme-muted uppercase font-bold">Gender</label>
                     <select name="gender" id="modal-gender" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
@@ -229,8 +279,6 @@
                         <option value="Female">Female</option>
                     </select>
                 </div>
-
-                <!-- Program -->
                 <div class="space-y-1">
                     <label class="text-xs text-theme-muted uppercase font-bold">Program</label>
                     <select name="program" id="modal-program" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
@@ -240,13 +288,10 @@
                         <option value="General Arts">General Arts</option>
                         <option value="Visual Arts">Visual Arts</option>
                         <option value="Agriculture">Agriculture</option>
-                        <option value="Home Economics">Home Economics</option>
                     </select>
                 </div>
-
-                <!-- Hall (Fixed List) -->
                 <div class="space-y-1">
-                    <label class="text-xs text-theme-muted uppercase font-bold">Hall of Residence</label>
+                    <label class="text-xs text-theme-muted uppercase font-bold">Hall</label>
                     <select name="hall" id="modal-hall" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
                         <option value="">Select Hall...</option>
                         <option value="Alema Hall">Alema Hall</option>
@@ -260,8 +305,6 @@
                         <option value="Nana Awuah Darko Ampem Hall">Nana Awuah Darko Ampem Hall</option>
                     </select>
                 </div>
-
-                <!-- Class (Fixed List) -->
                 <div class="space-y-1">
                     <label class="text-xs text-theme-muted uppercase font-bold">Class</label>
                     <select name="class_room" id="modal-class" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
@@ -276,13 +319,10 @@
                         {% endfor %}
                     </select>
                 </div>
-
-                <!-- Date of Birth -->
                 <div class="space-y-1">
                     <label class="text-xs text-theme-muted uppercase font-bold">Date of Birth</label>
                     <input type="date" name="date_of_birth" id="modal-dob" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
                 </div>
-
                 <div class="space-y-1">
                     <label class="text-xs text-theme-muted uppercase font-bold">Email</label>
                     <input type="email" name="email" id="modal-email" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
@@ -346,7 +386,6 @@
                 <option value="General Arts">General Arts</option>
                 <option value="Visual Arts">Visual Arts</option>
                 <option value="Agriculture">Agriculture</option>
-                <option value="Home Economics">Home Economics</option>
             </select>
             <div class="flex gap-3">
                 <button onclick="confirmUpdateProgram()" class="flex-1 btn-gold py-2 rounded-lg text-black font-bold">Update</button>
@@ -398,6 +437,19 @@
 
 {% block extra_js %}
 <script>
+    // --- UTILS ---
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
     // --- STATE MANAGEMENT ---
     let allStudents = [];
     let filteredStudents = [];
@@ -412,7 +464,7 @@
         setupEventListeners();
     });
 
-    // --- DATA LOADING (FIXED CACHING) ---
+    // --- DATA LOADING ---
     async function loadStudents() {
         document.getElementById('loading-state').classList.remove('hidden');
         document.getElementById('empty-state').classList.add('hidden');
@@ -434,7 +486,7 @@
         }
     }
 
-    // --- RENDERING (CRASH-PROOF) ---
+    // --- RENDERING ---
     function renderStudents() {
         const grid = document.getElementById('students-grid-view');
         const table = document.getElementById('students-table-view');
@@ -463,7 +515,6 @@
         document.getElementById('next-page').disabled = end >= filteredStudents.length;
         pagination.classList.remove('hidden');
 
-        // Safe rendering function to handle null values
         const safe = (val) => (val === null || val === undefined) ? '' : val;
         const getInitial = (name) => (name ? name.charAt(0) : '?');
 
@@ -537,6 +588,26 @@
         }
     }
 
+    function updateStats() {
+        if(document.getElementById('total-count')) document.getElementById('total-count').innerText = allStudents.length;
+        
+        const ages = allStudents.filter(s => s.age).map(s => s.age);
+        const avg = ages.length ? Math.round(ages.reduce((a,b)=>a+b,0)/ages.length) : 0;
+        if(document.getElementById('avg-age')) document.getElementById('avg-age').innerText = avg;
+
+        const counts = {};
+        allStudents.forEach(s => s.program && (counts[s.program] = (counts[s.program] || 0) + 1));
+        const top = Object.entries(counts).sort((a,b) => b[1]-a[1])[0];
+        if(document.getElementById('top-program')) document.getElementById('top-program').innerText = top ? top[0] : '-';
+
+        const now = new Date();
+        const count = allStudents.filter(s => {
+            const d = new Date(s.created_at);
+            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        }).length;
+        if(document.getElementById('new-this-month')) document.getElementById('new-this-month').innerText = count;
+    }
+
     // --- INTERACTIONS ---
     function setViewMode(mode) {
         currentViewMode = mode;
@@ -593,9 +664,7 @@
 
     document.getElementById('name-search').addEventListener('input', debounce(applyAdvancedFilters, 300));
 
-    function filterByHall(val) {
-        applyAdvancedFilters();
-    }
+    function filterByHall(val) { applyAdvancedFilters(); }
 
     function filterByGender(g) {
         document.getElementById('name-search').value = ''; 
@@ -610,7 +679,36 @@
         renderStudents();
     }
 
-    // --- MODAL ACTIONS ---
+    // --- MODALS (Secure Delete) ---
+    function openDeleteAllModal() {
+        document.getElementById('admin-password').value = '';
+        document.getElementById('delete-all-modal').classList.remove('hidden');
+        document.getElementById('delete-all-modal').classList.add('flex');
+    }
+
+    function closeDeleteAllModal() {
+        document.getElementById('delete-all-modal').classList.add('hidden');
+        document.getElementById('delete-all-modal').classList.remove('flex');
+    }
+
+    async function confirmDeleteAll() {
+        const password = document.getElementById('admin-password').value;
+        if (!password) return showToast('Password required', 'error');
+
+        try {
+            const res = await apiRequest('/api/students/delete-all', {
+                method: 'POST',
+                body: JSON.stringify({ password })
+            });
+            showToast(res.message);
+            closeDeleteAllModal();
+            loadStudents();
+        } catch (e) {
+            // Error handled by apiRequest
+        }
+    }
+
+    // --- ADD/EDIT ---
     function openAddModal() {
         document.getElementById('add-student-form').reset();
         document.getElementById('edit-student-id').value = ''; 
@@ -625,26 +723,14 @@
     }
 
     function editStudent(id) {
-        // Loose equality (==) allows string ID from HTML to match number ID from JSON
         const s = allStudents.find(x => x.id == id);
-        if(!s) {
-            console.error('Student not found:', id);
-            return;
-        }
+        if(!s) return;
         
         document.getElementById('edit-student-id').value = s.id;
         document.getElementById('modal-name').value = s.name;
-        
-        // Handle Select Elements specifically
-        const programSelect = document.getElementById('modal-program');
-        if(programSelect) programSelect.value = s.program || '';
-        
-        const hallSelect = document.getElementById('modal-hall');
-        if(hallSelect) hallSelect.value = s.hall || '';
-        
-        const classSelect = document.getElementById('modal-class');
-        if(classSelect) classSelect.value = s.class_room || '';
-        
+        document.getElementById('modal-program').value = s.program || '';
+        document.getElementById('modal-hall').value = s.hall || '';
+        document.getElementById('modal-class').value = s.class_room || '';
         document.getElementById('modal-email').value = s.email || '';
         document.getElementById('modal-phone').value = s.phone || '';
         document.getElementById('modal-gender').value = s.gender || '';
@@ -657,6 +743,7 @@
         document.getElementById('add-modal').classList.add('flex');
     }
 
+    // --- QUICK VIEW ---
     async function quickView(id) {
         const s = allStudents.find(x => x.id == id);
         if(!s) return;
@@ -713,7 +800,7 @@
         document.getElementById('bulk-email-modal').classList.remove('flex');
     }
 
-    // --- FORM HANDLING ---
+    // --- FORM SUBMISSION HANDLERS ---
     document.getElementById('add-student-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = document.getElementById('edit-student-id').value;
@@ -727,9 +814,7 @@
             showToast(id ? 'Updated successfully' : 'Created successfully');
             closeAddModal();
             loadStudents(); 
-        } catch(e) {
-            console.error(e);
-        }
+        } catch(e) { console.error(e); }
     });
 
     document.getElementById('quick-add').addEventListener('submit', async (e) => {
@@ -771,8 +856,8 @@
         if (action === 'move-hall') openMoveHallModal();
         else if (action === 'update-program') openUpdateProgramModal();
         else if (action === 'email') openBulkEmailModal();
+        else if (action === 'export') exportSelectedStudents();
         else if (action === 'archive') showToast('Archive feature pending implementation', 'info');
-        else if (action === 'export') showToast('Export started...', 'info'); 
         
         document.getElementById('bulk-action').value = "";
     }
@@ -785,24 +870,6 @@
         });
         document.getElementById('next-page').addEventListener('click', () => { currentPage++; renderStudents(); });
         document.getElementById('prev-page').addEventListener('click', () => { currentPage--; renderStudents(); });
-    }
-
-    // --- UPDATE STATS ---
-    function updateStats() {
-        document.getElementById('total-count').innerText = allStudents.length;
-        const ages = allStudents.filter(s => s.age).map(s => s.age);
-        const avg = ages.length ? Math.round(ages.reduce((a,b)=>a+b,0)/ages.length) : 0;
-        document.getElementById('avg-age').innerText = avg;
-        const counts = {};
-        allStudents.forEach(s => s.program && (counts[s.program] = (counts[s.program] || 0) + 1));
-        const top = Object.entries(counts).sort((a,b) => b[1]-a[1])[0];
-        document.getElementById('top-program').innerText = top ? top[0] : '-';
-        const now = new Date();
-        const count = allStudents.filter(s => {
-            const d = new Date(s.created_at);
-            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-        }).length;
-        document.getElementById('new-this-month').innerText = count;
     }
 </script>
 {% endblock %}
