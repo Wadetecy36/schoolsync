@@ -11,8 +11,8 @@
             <p class="text-theme-muted">Welcome back, {{ current_user.full_name }}</p>
         </div>
         <div class="text-right hidden md:block">
-            <p class="text-gold text-sm font-bold">{{ now.strftime('%A, %B %d') if now else 'Today' }}</p>
-            <p class="text-theme-muted text-xs">Academic Year 2025-2026</p>
+            <!-- Using Python datetime directly in template is messy, assuming 'now' is passed or just static for now -->
+            <p class="text-gold text-sm font-bold">Academic Year 2025-2026</p>
         </div>
     </div>
 
@@ -92,137 +92,37 @@
             </a>
         </div>
     </div>
-</div>
 
-<script>
-    // Simple script to load stats (replace with real API call if needed)
-    document.addEventListener('DOMContentLoaded', async () => {
-        try {
-            const data = await apiRequest('/api/stats');
-            if (data.success) {
-                const stats = data.stats;
-                document.getElementById('total-students').innerText = stats.total_students;
-                document.getElementById('new-this-month').innerText = stats.new_this_month;
-                document.getElementById('active-today').innerText = Math.floor(stats.total_students * 0.92);
-            }
-        } catch (e) { console.error(e); }
-    });
-</script>
-{% endblock %}
     <!-- Recent Students & Stats -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Recent Students -->
-        <div class="bg-white rounded-2xl shadow-lg p-6">
+        <div class="glass-card p-6">
             <div class="flex items-center justify-between mb-6">
-                <h2 class="text-xl font-bold text-gray-900">Recent Students</h2>
-                <a href="/students" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                    View all <i class="material-icons-round md-16">arrow_forward</i>
+                <h2 class="text-xl font-bold text-theme-main">Recent Students</h2>
+                <a href="/students" class="text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center">
+                    View all <i class="material-icons-round text-sm ml-1">arrow_forward</i>
                 </a>
             </div>
             <div id="recent-students" class="space-y-4">
                 <!-- Students will be loaded here -->
             </div>
             <div id="recent-empty" class="hidden text-center py-8">
-                <i class="material-icons-round md-48 text-gray-300 mb-3">people</i>
-                <p class="text-gray-500">No students yet</p>
+                <i class="material-icons-round text-4xl text-theme-muted mb-3">people</i>
+                <p class="text-theme-muted">No students yet</p>
             </div>
         </div>
 
         <!-- Form Distribution -->
-        <div class="bg-white rounded-2xl shadow-lg p-6">
-            <h2 class="text-xl font-bold text-gray-900 mb-6">Form Distribution</h2>
+        <div class="glass-card p-6">
+            <h2 class="text-xl font-bold text-theme-main mb-6">Form Distribution</h2>
             <div id="form-distribution" class="space-y-4">
                 <!-- Distribution will be loaded here -->
             </div>
             <div id="distribution-empty" class="hidden text-center py-8">
-                <i class="material-icons-round md-48 text-gray-300 mb-3">pie_chart</i>
-                <p class="text-gray-500">No data available</p>
+                <i class="material-icons-round text-4xl text-theme-muted mb-3">pie_chart</i>
+                <p class="text-theme-muted">No data available</p>
             </div>
         </div>
-    </div>
-</div>
-
-<!-- Add Student Modal -->
-<div id="add-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
-            <h3 class="text-2xl font-bold text-gray-900">Add New Student</h3>
-            <button onclick="closeAddModal()" class="text-gray-400 hover:text-gray-600">
-                <i class="material-icons-round">close</i>
-            </button>
-        </div>
-        
-        <form id="add-student-form" class="p-6 space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-gray-700">Full Name *</label>
-                    <input type="text" name="name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                </div>
-                
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-gray-700">Gender</label>
-                    <select name="gender" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">Select...</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                    </select>
-                </div>
-                
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-gray-700">Date of Birth</label>
-                    <input type="date" name="date_of_birth" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                </div>
-                
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-gray-700">Program</label>
-                    <input type="text" name="program" placeholder="e.g. Science, Arts" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                </div>
-                
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-gray-700">Hall</label>
-                    <input type="text" name="hall" placeholder="e.g. Newton Hall" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                </div>
-                
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-gray-700">Class</label>
-                    <input type="text" name="class_room" placeholder="e.g. 1A" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                </div>
-                
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-gray-700">Email</label>
-                    <input type="email" name="email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                </div>
-                
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-gray-700">Phone</label>
-                    <input type="tel" name="phone" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                </div>
-            </div>
-            
-            <div class="pt-4 border-t">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="space-y-2">
-                        <label class="block text-sm font-medium text-gray-700">Guardian Name</label>
-                        <input type="text" name="guardian_name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    </div>
-                    
-                    <div class="space-y-2">
-                        <label class="block text-sm font-medium text-gray-700">Guardian Phone</label>
-                        <input type="tel" name="guardian_phone" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    </div>
-                </div>
-            </div>
-            
-            <div class="flex space-x-4 pt-6">
-                <button type="submit" class="flex-1 gradient-primary text-white font-bold py-4 rounded-xl hover:opacity-90 transition">
-                    <i class="material-icons-round mr-2">save</i>
-                    Save Student
-                </button>
-                <button type="button" onclick="closeAddModal()" class="px-8 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-4 rounded-xl transition">
-                    Cancel
-                </button>
-            </div>
-        </form>
     </div>
 </div>
 
@@ -235,9 +135,8 @@
             if (statsData.success) {
                 const stats = statsData.stats;
                 document.getElementById('total-students').textContent = stats.total_students;
-                document.getElementById('active-today').textContent = Math.floor(stats.total_students * 0.85);
-                document.getElementById('new-this-month').textContent = Math.floor(stats.total_students * 0.1);
-                document.getElementById('graduation-rate').textContent = '95%';
+                document.getElementById('active-today').textContent = Math.floor(stats.total_students * 0.92);
+                document.getElementById('new-this-month').textContent = stats.new_this_month;
                 
                 // Update form distribution
                 const formContainer = document.getElementById('form-distribution');
@@ -245,10 +144,10 @@
                     formContainer.innerHTML = Object.entries(stats.by_form).map(([form, count]) => `
                         <div class="space-y-2">
                             <div class="flex justify-between text-sm">
-                                <span class="font-medium text-gray-700">${form}</span>
-                                <span class="font-bold text-gray-900">${count}</span>
+                                <span class="font-medium text-theme-muted">${form}</span>
+                                <span class="font-bold text-theme-main">${count}</span>
                             </div>
-                            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div class="h-2 bg-black/30 rounded-full overflow-hidden">
                                 <div class="h-full ${getFormColor(form)} rounded-full" style="width: ${(count / stats.total_students) * 100}%"></div>
                             </div>
                         </div>
@@ -260,7 +159,7 @@
             }
             
             // Load recent students
-            const studentsData = await apiRequest('/api/students?limit=5');
+            const studentsData = await apiRequest('/api/students?per_page=5&sort=created_at&order=desc');
             if (studentsData.success) {
                 const container = document.getElementById('recent-students');
                 const emptyState = document.getElementById('recent-empty');
@@ -268,24 +167,19 @@
                 if (studentsData.students.length > 0) {
                     emptyState.classList.add('hidden');
                     container.innerHTML = studentsData.students.map(student => `
-                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition">
+                        <div class="flex items-center justify-between p-4 bg-white/5 rounded-xl hover:bg-white/10 transition border border-white/5">
                             <div class="flex items-center space-x-4">
-                                <div class="w-12 h-12 gradient-primary rounded-xl flex items-center justify-center text-white font-bold text-lg">
+                                <div class="w-10 h-10 rounded-full bg-blue-900 flex items-center justify-center text-white font-bold text-sm border border-white/10">
                                     ${student.name.charAt(0)}
                                 </div>
                                 <div>
-                                    <h4 class="font-bold text-gray-900">${student.name}</h4>
-                                    <p class="text-sm text-gray-500">${student.program || 'No program'} • ${student.class_room || 'No class'}</p>
+                                    <h4 class="font-bold text-theme-main text-sm">${student.name}</h4>
+                                    <p class="text-xs text-theme-muted">${student.program || 'No program'}</p>
                                 </div>
                             </div>
-                            <div class="flex items-center space-x-3">
-                                <span class="px-3 py-1 text-xs font-bold rounded-full ${getFormColor(student.current_form)}">
-                                    ${student.current_form}
-                                </span>
-                                <a href="/student/${student.id}" class="text-blue-600 hover:text-blue-800">
-                                    <i class="material-icons-round md-18">arrow_forward</i>
-                                </a>
-                            </div>
+                            <span class="px-2 py-1 text-xs font-bold rounded bg-white/10 text-theme-muted border border-white/10">
+                                ${student.current_form}
+                            </span>
                         </div>
                     `).join('');
                 } else {
@@ -308,40 +202,7 @@
         }
     }
 
-    // Modal functions
-    function openAddModal() {
-        document.getElementById('add-modal').classList.remove('hidden');
-        document.getElementById('add-modal').classList.add('flex');
-    }
-
-    function closeAddModal() {
-        document.getElementById('add-modal').classList.add('hidden');
-        document.getElementById('add-modal').classList.remove('flex');
-        document.getElementById('add-student-form').reset();
-    }
-
-    // Form submission
-    document.getElementById('add-student-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const formData = new FormData(e.target);
-        const data = Object.fromEntries(formData.entries());
-        
-        try {
-            const result = await apiRequest('/api/students', {
-                method: 'POST',
-                body: JSON.stringify(data)
-            });
-            
-            showToast('Student added successfully!', 'success');
-            closeAddModal();
-            loadDashboard();
-        } catch (error) {
-            // Error already shown by apiRequest
-        }
-    });
-
     // Load dashboard on page load
-    loadDashboard();
+    document.addEventListener('DOMContentLoaded', loadDashboard);
 </script>
 {% endblock %}
