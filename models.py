@@ -6,8 +6,7 @@ import re
 
 db = SQLAlchemy()
 
-
-# --- CONSTANTS FOR VALIDATION ---
+# --- VALIDATION LISTS ---
 VALID_HALLS = [
     "Alema Hall", "Ellen Hall", "Halm Addo Hall", "Nana Wereko Ampem II Hall",
     "Wilson Q .Tei Hall", "Awuletey Hall", "Peter Ala Adjetey Hall",
@@ -18,7 +17,6 @@ VALID_PROGRAMS = [
     "General Science", "Business", "General Arts", 
     "Visual Arts", "Agriculture", "Home Economics"
 ]
-
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -33,18 +31,18 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login = db.Column(db.DateTime)
     
-    # New 2FA Columns
+    # 2FA
     phone = db.Column(db.String(20))
     two_factor_method = db.Column(db.String(10), default=None) 
     otp_code = db.Column(db.String(6))
     otp_expiry = db.Column(db.DateTime)
-    totp_secret = db.Column(db.String(32)) 
-    # Relationship
+    totp_secret = db.Column(db.String(32))
+    
     created_students = db.relationship('Student', backref='creator', lazy='dynamic', foreign_keys='Student.created_by')
     
     def set_password(self, password):
         if not self.validate_password(password):
-            raise ValueError("Password must be at least 8 characters with uppercase, lowercase, number, and special character")
+            raise ValueError("Password weak: 8+ chars, upper, lower, number, special char required")
         self.password_hash = generate_password_hash(password)
     
     def check_password(self, password):
@@ -60,25 +58,21 @@ class User(UserMixin, db.Model):
         return True
     
     @property
-    def is_super_admin(self):
-        return self.role == 'super_admin'
-    
-    def __repr__(self):
-        return f'<User {self.username}>'
+    def is_super_admin(self): return self.role == 'super_admin'
+    def __repr__(self): return f'<User {self.username}>'
 
 class Student(db.Model):
     __tablename__ = 'students'
     
     id = db.Column(db.Integer, primary_key=True)
-    # FIX: Removed index=True from columns because they are in __table_args__
-    name = db.Column(db.String(100), nullable=False) 
+    name = db.Column(db.String(100), nullable=False)
     gender = db.Column(db.String(20))
     date_of_birth = db.Column(db.Date)
     program = db.Column(db.String(100))
     hall = db.Column(db.String(100))
     class_room = db.Column(db.String(20))
     enrollment_year = db.Column(db.Integer, nullable=False)
-    photo = db.Column(db.String(200), default='default.jpg')
+    photo_file = db.Column(db.String(255)) # Storing Filename
     email = db.Column(db.String(120))
     phone = db.Column(db.String(20))
     guardian_name = db.Column(db.String(100))
@@ -87,7 +81,6 @@ class Student(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     
-    # Relationships
     academic_history = db.relationship('AcademicRecord', backref='student', lazy='dynamic', cascade='all, delete-orphan')
     
     __table_args__ = (
@@ -100,6 +93,7 @@ class Student(db.Model):
     @property
     def current_form(self):
         current_year = datetime.now().year
+        # Assuming academic year starts in September/Jan, simple year math:
         diff = current_year - self.enrollment_year
         if diff >= 3: return "Completed"
         elif diff == 2: return "Third Form"
@@ -119,24 +113,21 @@ class Student(db.Model):
             'name': self.name,
             'gender': self.gender,
             'date_of_birth': self.date_of_birth.isoformat() if self.date_of_birth else None,
+            'age': self.age,
             'program': self.program,
             'hall': self.hall,
             'class_room': self.class_room,
             'enrollment_year': self.enrollment_year,
             'current_form': self.current_form,
-            'photo': self.photo,
+            'photo_url': f"/static/uploads/{self.photo_file}" if self.photo_file else None,
             'email': self.email,
             'phone': self.phone,
-            'age': self.age,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'created_by': self.created_by
+            'guardian_name': self.guardian_name,
+            'guardian_phone': self.guardian_phone
         }
     
     def has_permission(self, user):
         return user.is_super_admin or self.created_by == user.id
-    
-    def __repr__(self):
-        return f'<Student {self.name}>'
 
 class AcademicRecord(db.Model):
     __tablename__ = 'academic_records'
@@ -153,6 +144,5 @@ class AcademicRecord(db.Model):
         db.Index('ix_academic_records_student_id', 'student_id'),
         db.Index('ix_academic_records_year', 'year'),
     )
-    
     def __repr__(self):
         return f'<AcademicRecord {self.form} - {self.year}>'

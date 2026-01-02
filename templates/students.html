@@ -91,39 +91,19 @@
         </div>
     </div>
 
-    <!-- Actions Toolbar -->
-    <div class="glass-card p-4 flex flex-col lg:flex-row items-center justify-between gap-4">
+    <!-- Actions & Bulk -->
+    <div class="glass-card p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
         <div class="flex bg-black/20 rounded-lg p-1">
-            <button id="view-grid" onclick="setViewMode('grid')" class="px-4 py-2 rounded-md text-gold bg-white/10 transition flex items-center">
+            <button onclick="setViewMode('grid')" id="view-grid" class="px-4 py-2 rounded-md text-gold bg-white/10 flex items-center">
                 <i class="material-icons-round mr-2">grid_view</i> Grid
             </button>
-            <button id="view-table" onclick="setViewMode('table')" class="px-4 py-2 rounded-md text-theme-muted hover:text-white transition flex items-center">
+            <button onclick="setViewMode('table')" id="view-table" class="px-4 py-2 rounded-md text-theme-muted flex items-center">
                 <i class="material-icons-round mr-2">table_rows</i> Table
             </button>
-            <button id="view-list" onclick="setViewMode('list')" class="px-4 py-2 rounded-md text-theme-muted hover:text-white transition flex items-center">
-                <i class="material-icons-round mr-2">view_list</i> List
-            </button>
-        </div>
-
-        <div class="flex items-center space-x-3">
-            <span class="text-sm text-theme-muted">Show:</span>
-            <select id="items-per-page" class="px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-theme-main focus:border-gold-500">
-                <option value="12">12</option>
-                <option value="24">24</option>
-                <option value="48">48</option>
-                <option value="1000">All</option>
-            </select>
         </div>
         
-        <div class="flex space-x-2">
-            <button onclick="exportToCSV()" class="p-2 rounded-lg hover:bg-white/10 text-green-400 transition" title="Export CSV"><i class="material-icons-round">description</i></button>
-            <button onclick="exportToExcel()" class="p-2 rounded-lg hover:bg-white/10 text-blue-400 transition" title="Export Excel"><i class="material-icons-round">table_view</i></button>
-        </div>
-    </div>
-
-    <!-- Bulk Actions Panel (Fixed Blue Section) -->
-    <div id="bulk-actions-panel" class="hidden glass-card p-4 border-l-4 border-gold-500 animate-fade-in flex flex-col md:flex-row items-center justify-between gap-4">
-        <div class="flex flex-wrap items-center gap-4">
+        <!-- Bulk Action Logic (Appears when items selected) -->
+        <div id="bulk-actions-panel" class="hidden flex gap-4 items-center bg-gold-500/10 px-4 py-2 rounded-xl border border-gold-500/20">
             <div class="flex items-center bg-gold-500/20 px-3 py-1 rounded-lg text-gold border border-gold-500/30">
                 <i class="material-icons-round text-sm mr-2">check_box</i>
                 <span id="selected-count" class="font-bold">0</span> &nbsp;Selected
@@ -132,15 +112,23 @@
             <div class="flex items-center gap-2">
                 <select id="bulk-action" class="px-4 py-2 bg-black/20 border border-white/10 rounded-lg text-theme-main text-sm focus:border-gold-500">
                     <option value="">Select Action...</option>
-                    <option value="email">Send Email</option>
+                    <option value="move-form">Change Form Level</option>
                     <option value="move-hall">Move Hall</option>
                     <option value="update-program">Update Program</option>
-                    <option value="export">Export Selected</option>
+                    <option value="email">Send Email</option>
+                    <option value="delete">Delete</option>
                 </select>
                 <button onclick="executeBulkAction()" class="btn-gold px-4 py-2 rounded-lg text-sm text-black font-bold">Apply</button>
             </div>
+            <button onclick="clearSelections()" class="text-theme-muted hover:text-white text-sm flex items-center"><i class="material-icons-round text-sm mr-1">close</i> Clear</button>
         </div>
-        <button onclick="clearSelections()" class="text-theme-muted hover:text-white text-sm flex items-center"><i class="material-icons-round text-sm mr-1">close</i> Clear</button>
+        
+        <!-- Export -->
+        <div class="flex gap-2">
+            <button onclick="exportToCSV()" class="p-2 text-green-400 hover:bg-white/10 rounded-lg transition" title="Export CSV">
+                <i class="material-icons-round">description</i>
+            </button>
+        </div>
     </div>
 
     <!-- Main Grid -->
@@ -179,6 +167,7 @@
         
         <!-- Results Area -->
         <div class="lg:col-span-3">
+            <!-- Results Grid -->
             <div id="students-grid-view" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             <div id="students-table-view" class="hidden glass-card overflow-hidden">
                 <div class="overflow-x-auto">
@@ -197,9 +186,8 @@
                     </table>
                 </div>
             </div>
-            <div id="students-list-view" class="hidden space-y-3"></div>
 
-            <div id="loading-state" class="text-center py-20">
+            <div id="loading-state" class="text-center py-20 hidden">
                 <div class="w-12 h-12 border-4 border-gold-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                 <p class="text-theme-muted">Loading students...</p>
             </div>
@@ -224,9 +212,9 @@
 
 <!-- ================= MODALS ================= -->
 
-<!-- Add/Edit Modal (Updated with Full Halls & Classes) -->
+<!-- ADD/EDIT STUDENT (With Photo Upload) -->
 <div id="add-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
-    <div class="glass-card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-8 animate-fade-in shadow-2xl border border-white/10">
+    <div class="glass-card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-8 animate-fade-in border border-white/10">
         <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
             <h3 class="text-2xl font-bold text-theme-main" id="modal-title">Student Details</h3>
             <button onclick="closeAddModal()" class="text-theme-muted hover:text-white transition"><i class="material-icons-round text-2xl">close</i></button>
@@ -234,6 +222,7 @@
         
         <form id="form-main-student" class="space-y-6">
             <input type="hidden" id="edit-student-id">
+            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="space-y-1">
                     <label class="text-xs text-theme-muted uppercase font-bold">Full Name</label>
@@ -282,12 +271,22 @@
                     <label class="text-xs text-theme-muted uppercase font-bold">Email</label>
                     <input type="email" name="email" id="modal-email" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
                 </div>
+                
                 <div class="space-y-1">
                     <label class="text-xs text-theme-muted uppercase font-bold">Phone</label>
                     <input type="tel" name="phone" id="modal-phone" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
                 </div>
             </div>
-            
+
+            <!-- Photo Upload Field -->
+            <div class="mt-4 p-4 border border-dashed border-white/20 rounded-xl text-center hover:bg-white/5 transition cursor-pointer">
+                <label class="cursor-pointer block">
+                    <i class="material-icons-round text-gold text-2xl block mb-2">add_a_photo</i>
+                    <span class="text-sm text-theme-muted">Upload Profile Picture</span>
+                    <input type="file" name="photo" accept="image/*" class="hidden">
+                </label>
+            </div>
+
             <div class="border-t border-white/10 pt-4">
                 <p class="text-gold text-sm font-bold mb-3 uppercase tracking-wider">Guardian Information</p>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -296,11 +295,30 @@
                 </div>
             </div>
             
-            <div class="flex space-x-4 pt-2">
+            <div class="flex gap-4 pt-2">
                 <button type="submit" class="flex-1 btn-gold py-3 rounded-xl text-black font-bold shadow-lg hover:scale-[1.02] transition">Save Student</button>
-                <button type="button" onclick="closeAddModal()" class="px-8 border border-white/10 rounded-xl text-theme-muted hover:bg-white/10 hover:text-white transition">Cancel</button>
+                <button type="button" onclick="closeAddModal()" class="flex-1 py-3 border border-white/10 rounded-xl text-theme-muted hover:text-white hover:bg-white/10 transition">Cancel</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- CHANGE FORM LEVEL MODAL -->
+<div id="move-form-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
+    <div class="glass-card w-full max-w-sm p-8 text-center animate-fade-in border border-blue-500/30">
+        <i class="material-icons-round text-4xl text-blue-400 mb-4">school</i>
+        <h3 class="text-xl font-bold text-theme-main mb-2">Change Form Level</h3>
+        <p class="text-sm text-theme-muted mb-4">Promote or move selected students to:</p>
+        <select id="target-form-select" class="w-full p-3 bg-black/30 border border-white/10 rounded-xl text-theme-main mb-6 focus:border-blue-500">
+            <option value="Form 1">Form 1 (Freshman)</option>
+            <option value="Form 2">Form 2</option>
+            <option value="Form 3">Form 3</option>
+            <option value="Completed">Graduated</option>
+        </select>
+        <div class="flex gap-3">
+            <button onclick="confirmMoveForm()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg font-bold">Update</button>
+            <button onclick="toggleModal('move-form-modal', false)" class="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg">Cancel</button>
+        </div>
     </div>
 </div>
 
@@ -402,7 +420,7 @@
             "Nana Akuako Sarpong Hall", "Nana Awuah Darko Ampem Hall"
         ],
         programs: [
-            "General Science", "Business", "General Arts", "Visual Arts", "Agriculture"
+            "General Science", "Business", "General Arts", "Visual Arts", "Agriculture", "Home Economics"
         ],
         // Logic to generate classes: "1-Science-1" to "3-Science-13" based on your CSV structure
         classConfig: {
@@ -410,7 +428,8 @@
             "Business": { code: "Business", count: 9 },
             "General Arts": { code: "GeneralArts", count: 9 },
             "Visual Arts": { code: "VisualArts", count: 3 },
-            "Agriculture": { code: "Agriculture", count: 2 }
+            "Agriculture": { code: "Agriculture", count: 2 },
+            "Home Economics": { code: "HomeEcons", count: 2 }
         }
     };
 
@@ -463,6 +482,7 @@
         fill('modal-hall', CONFIG.halls);
         fill('filter-hall', CONFIG.halls);
         fill('bulk-new-hall', CONFIG.halls);
+        fill('target-form-select', ['Form 1', 'Form 2', 'Form 3', 'Completed']);
     }
 
     function updateClassOptions(context) {
@@ -510,14 +530,14 @@
         }
     }
 
-    // --- RENDERING ---
+    // --- RENDERING WITH PHOTO SUPPORT ---
     function renderStudents() {
         const grid = document.getElementById('students-grid-view');
         const table = document.getElementById('students-table-view');
-        const list = document.getElementById('students-list-view');
         const pagination = document.getElementById('pagination');
 
-        grid.classList.add('hidden'); table.classList.add('hidden'); list.classList.add('hidden');
+        grid.classList.add('hidden'); 
+        table.classList.add('hidden');
 
         if(filteredStudents.length === 0) {
             document.getElementById('empty-state').classList.remove('hidden');
@@ -527,7 +547,7 @@
         document.getElementById('empty-state').classList.add('hidden');
 
         const start = (currentPage - 1) * itemsPerPage;
-        const end = itemsPerPage === 10000 ? filteredStudents.length : Math.min(start + itemsPerPage, filteredStudents.length);
+        const end = Math.min(start + itemsPerPage, filteredStudents.length);
         const pageData = filteredStudents.slice(start, end);
 
         document.getElementById('pagination-start').textContent = start + 1;
@@ -540,39 +560,79 @@
         const safe = (val) => (val === null || val === undefined) ? '' : val;
         const getInitial = (name) => (name ? name.charAt(0) : '?');
 
-        const renderItem = (s) => `
-            <div class="glass-card p-6 relative group hover:border-gold-500/50 transition duration-300">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-900 flex items-center justify-center text-white font-bold text-lg shadow-lg">
-                        ${getInitial(s.name)}
-                    </div>
-                    <input type="checkbox" class="student-checkbox w-5 h-5 rounded border-white/20 bg-black/20 text-gold focus:ring-0 cursor-pointer" 
-                           value="${s.id}" ${selectedStudents.has(s.id) ? 'checked' : ''} 
-                           onchange="toggleSelection(${s.id}, this.checked)">
-                </div>
-                <h3 class="text-lg font-bold text-theme-main truncate" title="${safe(s.name)}">${safe(s.name)}</h3>
-                <p class="text-sm text-theme-muted mb-4 truncate">${safe(s.program) || 'No Program'}</p>
-                <div class="border-t border-white/10 pt-3 text-xs text-theme-muted space-y-1">
-                    <div class="flex items-center"><i class="material-icons-round text-sm mr-2 text-blue-400">school</i> ${safe(s.class_room) || safe(s.current_form)}</div>
-                    <div class="flex items-center"><i class="material-icons-round text-sm mr-2 text-green-400">location_on</i> ${safe(s.hall) || 'N/A'}</div>
-                </div>
-                <div class="flex justify-between items-center mt-4 pt-3 border-t border-white/5 opacity-0 group-hover:opacity-100 transition duration-300">
-                    <button onclick="quickView(${s.id})" class="text-blue-400 hover:text-white transition"><i class="material-icons-round">visibility</i></button>
-                    <button onclick="editStudent(${s.id})" class="text-yellow-400 hover:text-white transition"><i class="material-icons-round">edit</i></button>
-                    <button onclick="openDeleteModal(${s.id}, '${safe(s.name).replace(/'/g, "\\'")}')" class="text-red-400 hover:text-white transition"><i class="material-icons-round">delete</i></button>
-                </div>
-            </div>`;
+        // Calculate age from date_of_birth
+        const calculateAge = (dob) => {
+            if (!dob) return null;
+            const birthDate = new Date(dob);
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            return age;
+        };
 
+        // Grid View with Photo Support
         if (currentViewMode === 'grid') {
             grid.classList.remove('hidden');
-            grid.innerHTML = pageData.map(renderItem).join('');
+            grid.innerHTML = pageData.map(s => {
+                const age = calculateAge(s.date_of_birth);
+                return `
+                <div class="glass-card p-6 group hover:border-gold-500/50 transition relative overflow-hidden">
+                    <div class="flex justify-between items-start mb-3">
+                        <!-- Profile Pic Logic -->
+                        <div class="relative">
+                            ${s.photo_url 
+                                ? `<img src="${s.photo_url}" class="w-16 h-16 rounded-xl object-cover shadow-lg border border-white/10">` 
+                                : `<div class="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-700 to-indigo-900 flex items-center justify-center text-xl font-bold shadow-lg border border-white/10">${getInitial(s.name)}</div>`
+                            }
+                            <!-- Age Badge -->
+                            ${age ? `<span class="absolute -bottom-1 -right-1 bg-black/60 backdrop-blur-md text-[10px] px-1.5 py-0.5 rounded border border-white/10">${age}y</span>` : ''}
+                        </div>
+                        <input type="checkbox" class="student-checkbox w-5 h-5 rounded bg-black/20 border-white/30 text-gold cursor-pointer focus:ring-0" 
+                                onchange="toggleSelection(${s.id}, this.checked)" ${selectedStudents.has(s.id)?'checked':''}>
+                    </div>
+
+                    <h3 class="font-bold text-lg text-theme-main truncate" title="${safe(s.name)}">${safe(s.name)}</h3>
+                    
+                    <!-- BADGES -->
+                    <div class="flex flex-wrap gap-2 mt-2 mb-3">
+                        <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-gold-500/10 text-gold border border-gold-500/20">${s.current_form || 'Form 1'}</span>
+                        <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/20">${s.class_room || 'N/A'}</span>
+                    </div>
+
+                    <div class="pt-3 border-t border-white/5 flex justify-between items-center text-theme-muted">
+                        <span class="text-xs truncate max-w-[50%]" title="${s.program || 'No Program'}">${s.program || 'No Program'}</span>
+                        <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition">
+                            <button onclick="quickView(${s.id})" class="text-blue-400 hover:text-white transition"><i class="material-icons-round text-sm">visibility</i></button>
+                            <button onclick="editStudent(${s.id})" class="text-gold hover:text-white transition"><i class="material-icons-round text-sm">edit</i></button>
+                            <button onclick="openDeleteModal(${s.id}, '${safe(s.name).replace(/'/g, "\\'")}')" class="text-red-400 hover:text-white transition"><i class="material-icons-round text-sm">delete</i></button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
         } 
+        // Table View
         else if (currentViewMode === 'table') {
             table.classList.remove('hidden');
-            document.getElementById('students-table-body').innerHTML = pageData.map(s => `
+            document.getElementById('students-table-body').innerHTML = pageData.map(s => {
+                const age = calculateAge(s.date_of_birth);
+                return `
                 <tr class="hover:bg-white/5 transition group">
                     <td class="px-6 py-4"><input type="checkbox" class="student-checkbox rounded bg-black/20 border-white/20 text-gold focus:ring-0 cursor-pointer" value="${s.id}" ${selectedStudents.has(s.id) ? 'checked' : ''} onchange="toggleSelection(${s.id}, this.checked)"></td>
-                    <td class="px-6 py-4 font-medium text-theme-main">${safe(s.name)}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            ${s.photo_url 
+                                ? `<img src="${s.photo_url}" class="w-10 h-10 rounded-lg object-cover border border-white/10">` 
+                                : `<div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-900 flex items-center justify-center text-white font-bold border border-white/10">${getInitial(s.name)}</div>`
+                            }
+                            <div>
+                                <div class="font-medium text-theme-main">${safe(s.name)}</div>
+                                ${age ? `<div class="text-xs text-theme-muted">${age} years</div>` : ''}
+                            </div>
+                        </div>
+                    </td>
                     <td class="px-6 py-4 text-theme-muted">${safe(s.program) || '-'}</td>
                     <td class="px-6 py-4"><span class="px-2 py-1 rounded bg-blue-500/10 text-blue-300 text-xs border border-blue-500/20">${safe(s.class_room) || '-'}</span></td>
                     <td class="px-6 py-4 text-theme-muted">${safe(s.hall) || '-'}</td>
@@ -580,26 +640,8 @@
                         <button onclick="editStudent(${s.id})" class="text-gold hover:scale-110 transition"><i class="material-icons-round text-sm">edit</i></button>
                         <button onclick="openDeleteModal(${s.id}, '${safe(s.name)}')" class="text-red-400 hover:scale-110 transition"><i class="material-icons-round text-sm">delete</i></button>
                     </td>
-                </tr>
-            `).join('');
-        }
-        else if (currentViewMode === 'list') {
-            list.classList.remove('hidden');
-            list.innerHTML = pageData.map(s => `
-                <div class="glass-card p-4 flex items-center justify-between hover:border-gold-500/30 transition group">
-                    <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center text-white font-bold border border-white/10">${getInitial(s.name)}</div>
-                        <div>
-                            <h4 class="font-bold text-theme-main">${safe(s.name)}</h4>
-                            <p class="text-xs text-theme-muted">${safe(s.program)} • ${safe(s.class_room)}</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition">
-                        <button onclick="quickView(${s.id})" class="p-2 bg-white/5 rounded-lg hover:bg-white/10 text-blue-400"><i class="material-icons-round">visibility</i></button>
-                        <button onclick="editStudent(${s.id})" class="p-2 bg-white/5 rounded-lg hover:bg-white/10 text-yellow-400"><i class="material-icons-round">edit</i></button>
-                    </div>
-                </div>
-            `).join('');
+                </tr>`;
+            }).join('');
         }
     }
 
@@ -637,16 +679,49 @@
 
     // --- STATS ---
     function updateStats() {
-        if(document.getElementById('total-count')) document.getElementById('total-count').innerText = allStudents.length;
-        // ... (Stats Logic reused from previous)
-        const counts = {};
-        allStudents.forEach(s => s.program && (counts[s.program] = (counts[s.program] || 0) + 1));
-        const top = Object.entries(counts).sort((a,b) => b[1]-a[1])[0];
-        if(document.getElementById('top-program')) document.getElementById('top-program').innerText = top ? top[0] : '-';
+        if (!allStudents.length) return;
+        
+        // Total Count
+        document.getElementById('total-count').innerText = allStudents.length;
+        
+        // Average Age
+        const ages = allStudents
+            .map(s => {
+                if (!s.date_of_birth) return null;
+                const birthDate = new Date(s.date_of_birth);
+                const today = new Date();
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) age--;
+                return age;
+            })
+            .filter(age => age !== null);
+        
+        const avgAge = ages.length ? Math.round(ages.reduce((a, b) => a + b, 0) / ages.length) : 0;
+        document.getElementById('avg-age').innerText = avgAge;
+        
+        // Top Program
+        const programCounts = {};
+        allStudents.forEach(s => {
+            if (s.program) programCounts[s.program] = (programCounts[s.program] || 0) + 1;
+        });
+        const topProgram = Object.entries(programCounts).sort((a, b) => b[1] - a[1])[0];
+        document.getElementById('top-program').innerText = topProgram ? topProgram[0] : '-';
+        
+        // New This Month
+        const now = new Date();
+        const thisMonth = now.getMonth();
+        const thisYear = now.getFullYear();
+        const newThisMonth = allStudents.filter(s => {
+            if (!s.created_at) return false;
+            const created = new Date(s.created_at);
+            return created.getMonth() === thisMonth && created.getFullYear() === thisYear;
+        }).length;
+        document.getElementById('new-this-month').innerText = newThisMonth;
     }
 
     // --- FILTERING ---
-    function applyAdvancedFilters() {
+    function applyFilters() {
         const term = document.getElementById('name-search').value.toLowerCase();
         const hall = document.getElementById('filter-hall').value;
         const prog = document.getElementById('filter-program').value;
@@ -662,22 +737,15 @@
         renderStudents();
     }
 
-    document.getElementById('name-search').addEventListener('input', debounce(applyAdvancedFilters, 300));
-
-    function filterByHall(val) { currentFilters.hall = val; applyAdvancedFilters(); }
-    function filterByProgram(val) { currentFilters.program = val; applyAdvancedFilters(); }
-
-    function filterByGender(g) {
-        document.getElementById('name-search').value = ''; 
-        filteredStudents = allStudents.filter(s => s.gender === g);
-        renderStudents();
-    }
+    document.getElementById('name-search').addEventListener('input', debounce(applyFilters, 300));
 
     function resetAllFilters() {
         filteredStudents = [...allStudents];
         document.getElementById('name-search').value = '';
         document.getElementById('filter-hall').value = '';
         document.getElementById('filter-program').value = '';
+        document.getElementById('filtered-count').innerText = allStudents.length;
+        currentPage = 1;
         renderStudents();
     }
 
@@ -697,8 +765,48 @@
         else { el.classList.add('hidden'); el.classList.remove('flex'); }
     }
 
+    // --- FORM SUBMISSION WITH FILE UPLOAD ---
+    async function handleFormSubmit(formId, isQuick=false) {
+        const form = document.getElementById(formId);
+        const formData = new FormData(form);
+        const csrf = document.querySelector('meta[name="csrf-token"]').content;
+        
+        let url = '/api/students';
+        let method = 'POST';
+
+        if (!isQuick) {
+            const id = document.getElementById('edit-student-id').value;
+            if (id) {
+                url = `/api/students/${id}`;
+                method = 'PUT';
+            }
+        }
+
+        try {
+            // Use fetch directly for file uploads
+            const res = await fetch(url, {
+                method: method,
+                body: formData,
+                headers: { 'X-CSRFToken': csrf }
+            });
+            
+            if(res.ok) {
+                showToast(method === 'POST' ? 'Student added!' : 'Student updated!');
+                if(!isQuick) closeAddModal();
+                else form.reset();
+                loadStudents();
+            } else {
+                showToast('Operation failed', 'error');
+            }
+        } catch (e) { 
+            console.error(e);
+            showToast('Error occurred', 'error');
+        }
+    }
+
+    // Edit Student with Photo Support
     function editStudent(id) {
-        const s = allStudents.find(x => x.id == id); // Loose match for string IDs
+        const s = allStudents.find(x => x.id == id);
         if(!s) return;
         
         document.getElementById('edit-student-id').value = s.id;
@@ -722,8 +830,10 @@
         updateClassOptions('modal');
         
         // Set class value after options exist
-        const classSelect = document.getElementById('modal-class');
-        classSelect.value = s.class_room || '';
+        setTimeout(() => {
+            const classSelect = document.getElementById('modal-class');
+            classSelect.value = s.class_room || '';
+        }, 100);
         
         document.getElementById('modal-title').innerText = 'Edit Student';
         toggleModal('add-modal', true);
@@ -748,43 +858,51 @@
     }
     function closeDeleteModal() { toggleModal('delete-modal', false); }
 
-    // --- FORM SUBMISSION ---
-    async function handleFormSubmit(formId, isQuick=false) {
-        const form = document.getElementById(formId);
-        const data = Object.fromEntries(new FormData(form));
-        let url = '/api/students';
-        let method = 'POST';
-
-        if (!isQuick) {
-            const id = document.getElementById('edit-student-id').value;
-            if (id) {
-                url = `/api/students/${id}`;
-                method = 'PUT';
-            }
-        }
-
-        try {
-            await apiRequest(url, { method, body: JSON.stringify(data) });
-            showToast(method === 'POST' ? 'Student added!' : 'Student updated!');
-            if(!isQuick) closeAddModal();
-            else form.reset();
-            loadStudents();
-        } catch (e) { console.error(e); }
-    }
-
-    document.getElementById('form-main-student').addEventListener('submit', (e) => { e.preventDefault(); handleFormSubmit('form-main-student'); });
-    document.getElementById('form-quick-add').addEventListener('submit', (e) => { e.preventDefault(); handleFormSubmit('form-quick-add', true); });
-
+    // --- BULK ACTIONS ---
     async function executeBulkAction() {
         const action = document.getElementById('bulk-action').value;
         if (selectedStudents.size === 0) return showToast('Select at least one student', 'warning');
         
-        if (action === 'move-hall') openMoveHallModal();
+        if (action === 'move-form') toggleModal('move-form-modal', true);
+        else if (action === 'move-hall') openMoveHallModal();
         else if (action === 'update-program') openUpdateProgramModal();
         else if (action === 'email') openBulkEmailModal();
-        else if (action === 'export') showToast('Exporting...', 'info');
+        else if (action === 'delete') {
+            if(confirm(`Delete ${selectedStudents.size} student(s)?`)) {
+                try {
+                    const ids = Array.from(selectedStudents);
+                    await apiRequest('/api/students/bulk-delete', {
+                        method: 'POST',
+                        body: JSON.stringify({ ids })
+                    });
+                    showToast(`Deleted ${ids.length} student(s)`);
+                    clearSelections();
+                    loadStudents();
+                } catch(e) {
+                    showToast('Deletion failed', 'error');
+                }
+            }
+        }
         
         document.getElementById('bulk-action').value = "";
+    }
+
+    // --- MOVE FORM LOGIC ---
+    async function confirmMoveForm() {
+        const target = document.getElementById('target-form-select').value;
+        const ids = Array.from(selectedStudents);
+        try {
+            await apiRequest('/api/students/move-form', {
+                method: 'POST', 
+                body: JSON.stringify({ ids, target_form: target })
+            });
+            showToast('Form Levels Updated');
+            toggleModal('move-form-modal', false);
+            clearSelections();
+            loadStudents();
+        } catch(e) {
+            showToast('Update failed', 'error');
+        }
     }
 
     async function confirmDelete() {
@@ -793,7 +911,9 @@
             showToast('Deleted successfully');
             closeDeleteModal();
             loadStudents();
-        } catch(e) {}
+        } catch(e) {
+            showToast('Deletion failed', 'error');
+        }
     }
     
     async function confirmDeleteAll() {
@@ -803,17 +923,132 @@
             showToast(res.message);
             closeDeleteAllModal();
             loadStudents();
-        } catch(e) {}
+        } catch(e) {
+            showToast('Operation failed', 'error');
+        }
     }
 
     function setupEventListeners() {
-        document.getElementById('items-per-page').addEventListener('change', (e) => {
+        // Form submissions
+        document.getElementById('form-main-student').addEventListener('submit', (e) => { 
+            e.preventDefault(); 
+            handleFormSubmit('form-main-student'); 
+        });
+        
+        document.getElementById('form-quick-add').addEventListener('submit', (e) => { 
+            e.preventDefault(); 
+            handleFormSubmit('form-quick-add', true); 
+        });
+
+        // Bulk email form
+        document.getElementById('bulk-email-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const subject = document.getElementById('email-subject').value;
+            const message = document.getElementById('email-message').value;
+            const ids = Array.from(selectedStudents);
+            
+            try {
+                await apiRequest('/api/students/send-bulk-email', {
+                    method: 'POST',
+                    body: JSON.stringify({ ids, subject, message })
+                });
+                showToast('Email sent to selected students');
+                closeBulkEmailModal();
+            } catch(e) {
+                showToast('Email sending failed', 'error');
+            }
+        });
+
+        // Pagination
+        document.getElementById('items-per-page')?.addEventListener('change', (e) => {
             itemsPerPage = e.target.value === 'all' ? 10000 : parseInt(e.target.value);
             currentPage = 1;
             renderStudents();
         });
-        document.getElementById('next-page').addEventListener('click', () => { currentPage++; renderStudents(); });
-        document.getElementById('prev-page').addEventListener('click', () => { currentPage--; renderStudents(); });
+        document.getElementById('next-page').addEventListener('click', () => { 
+            currentPage++; 
+            renderStudents(); 
+        });
+        document.getElementById('prev-page').addEventListener('click', () => { 
+            currentPage--; 
+            renderStudents(); 
+        });
+    }
+
+    // Quick View Function
+    async function quickView(id) {
+        try {
+            const data = await apiRequest(`/api/students/${id}`);
+            const s = data.student;
+            const content = document.getElementById('quick-view-content');
+            
+            const age = s.date_of_birth ? calculateAge(s.date_of_birth) : null;
+            
+            content.innerHTML = `
+                <div class="text-center mb-6">
+                    ${s.photo_url 
+                        ? `<img src="${s.photo_url}" class="w-32 h-32 rounded-full object-cover border-4 border-gold-500/30 mx-auto mb-4 shadow-xl">` 
+                        : `<div class="w-32 h-32 rounded-full bg-gradient-to-br from-blue-600 to-indigo-900 flex items-center justify-center text-4xl font-bold text-white border-4 border-gold-500/30 mx-auto mb-4 shadow-xl">${s.name.charAt(0)}</div>`
+                    }
+                    <h3 class="text-2xl font-bold text-theme-main">${s.name}</h3>
+                    <p class="text-theme-muted">${s.program || 'No Program'} • ${age ? `${age} years` : ''}</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div class="bg-white/5 p-3 rounded-lg">
+                        <div class="text-theme-muted text-xs uppercase mb-1">Class</div>
+                        <div class="font-bold">${s.class_room || '-'}</div>
+                    </div>
+                    <div class="bg-white/5 p-3 rounded-lg">
+                        <div class="text-theme-muted text-xs uppercase mb-1">Hall</div>
+                        <div class="font-bold">${s.hall || '-'}</div>
+                    </div>
+                    <div class="bg-white/5 p-3 rounded-lg">
+                        <div class="text-theme-muted text-xs uppercase mb-1">Email</div>
+                        <div class="font-bold truncate">${s.email || '-'}</div>
+                    </div>
+                    <div class="bg-white/5 p-3 rounded-lg">
+                        <div class="text-theme-muted text-xs uppercase mb-1">Phone</div>
+                        <div class="font-bold">${s.phone || '-'}</div>
+                    </div>
+                </div>
+                ${s.guardian_name || s.guardian_phone ? `
+                <div class="mt-6 pt-6 border-t border-white/10">
+                    <h4 class="text-gold font-bold mb-3">Guardian Info</h4>
+                    <div class="text-sm">
+                        ${s.guardian_name ? `<div><span class="text-theme-muted">Name:</span> ${s.guardian_name}</div>` : ''}
+                        ${s.guardian_phone ? `<div class="mt-1"><span class="text-theme-muted">Phone:</span> ${s.guardian_phone}</div>` : ''}
+                    </div>
+                </div>` : ''}
+            `;
+            
+            toggleModal('quick-view-modal', true);
+        } catch(e) {
+            showToast('Failed to load student details', 'error');
+        }
+    }
+
+    // Helper function for age calculation
+    function calculateAge(dob) {
+        if (!dob) return null;
+        const birthDate = new Date(dob);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    }
+
+    // Export functions
+    function exportToCSV() {
+        showToast('CSV export started', 'info');
+        // Implement CSV export logic here
+    }
+
+    function exportToExcel() {
+        showToast('Excel export started', 'info');
+        // Implement Excel export logic here
     }
 </script>
 {% endblock %}
