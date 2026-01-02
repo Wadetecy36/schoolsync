@@ -38,7 +38,7 @@ class User(UserMixin, db.Model):
     two_factor_method = db.Column(db.String(10), default=None) 
     otp_code = db.Column(db.String(6))
     otp_expiry = db.Column(db.DateTime)
-    
+    totp_secret = db.Column(db.String(32)) 
     # Relationship
     created_students = db.relationship('Student', backref='creator', lazy='dynamic', foreign_keys='Student.created_by')
     
