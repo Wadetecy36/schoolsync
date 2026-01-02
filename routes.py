@@ -303,39 +303,48 @@ def update_profile():
 @main.route('/settings/2fa', methods=['POST'])
 @login_required
 def update_2fa():
-    mode = request.form.get('2fa_method')
-    current_user.two_factor_method = mode if mode != 'off' else None
-    db.session.commit()
-    flash('Security settings updated', 'success')
-    return redirect(url_for('main.settings'))
-
-
-@main.route('/settings/2fa', methods=['POST'])
-@login_required
-def update_2fa():
-    method = request.form.get('2fa_method')
-    
-    if method == 'app':
-        # If they selected App, we must save the secret provided in the hidden form field
-        secret = request.form.get('totp_secret')
-        if secret:
-            current_user.totp_secret = secret
-            current_user.two_factor_method = 'app'
-            current_user.phone = None # Clear phone if switching away from SMS
-        else:
-            # Already set up? Just enable
-            if current_user.totp_secret:
+    try:
+        method = request.form.get('2fa_method')
+        
+        # --- LOGIC FOR GOOGLE AUTH (APP) ---
+        if method == 'app':
+            # Only save the secret if one was provided in the hidden form
+            # (Meaning they scanned a NEW QR code)
+            secret = request.form.get('totp_secret')
+            if secret:
+                current_user.totp_secret = secret
                 current_user.two_factor_method = 'app'
-    
-    elif method == 'email':
-        current_user.two_factor_method = 'email'
+                current_user.phone = None # Clean up phone if switching
+            else:
+                # If no new secret, they are just re-enabling it
+                if current_user.totp_secret:
+                    current_user.two_factor_method = 'app'
         
-    elif method == 'off':
-        current_user.two_factor_method = None
-        current_user.totp_secret = None # Reset secret
+        # --- LOGIC FOR EMAIL ---
+        elif method == 'email':
+            current_user.two_factor_method = 'email'
         
-    db.session.commit()
-    flash(f'Two-Factor Authentication updated to: {current_user.two_factor_method}', 'success')
+        # --- LOGIC FOR SMS ---
+        elif method == 'sms':
+            if not current_user.phone:
+                flash('Please save your phone number first!', 'warning')
+                return redirect(url_for('main.settings'))
+            current_user.two_factor_method = 'sms'
+
+        # --- LOGIC FOR OFF ---
+        elif method == 'off':
+            current_user.two_factor_method = None
+            current_user.totp_secret = None # Reset for security
+        
+        db.session.commit()
+        
+        status = current_user.two_factor_method.upper() if current_user.two_factor_method else "DISABLED"
+        flash(f'Security settings updated: 2FA is now {status}', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error updating 2FA: {str(e)}', 'error')
+
     return redirect(url_for('main.settings'))
 @main.route('/api/download-template/<fmt>')
 def download_template(fmt):
