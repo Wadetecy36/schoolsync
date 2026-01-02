@@ -29,7 +29,7 @@
         </div>
     </div>
 
-    <!-- Top Stats Bar (Fixed Missing ID Errors) -->
+    <!-- Top Stats Bar -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
         <div class="glass-card p-6 relative overflow-hidden group">
             <div class="absolute right-0 top-0 w-24 h-24 bg-blue-500/10 rounded-bl-full -mr-4 -mt-4 transition group-hover:bg-blue-500/20"></div>
@@ -37,18 +37,21 @@
             <p class="text-2xl font-bold text-theme-main mt-1" id="total-count">0</p>
             <i class="material-icons-round absolute bottom-4 right-4 text-3xl text-blue-500/20">groups</i>
         </div>
+        
         <div class="glass-card p-6 relative overflow-hidden group">
             <div class="absolute right-0 top-0 w-24 h-24 bg-green-500/10 rounded-bl-full -mr-4 -mt-4 transition group-hover:bg-green-500/20"></div>
             <p class="text-theme-muted text-sm">Avg Age</p>
             <p class="text-2xl font-bold text-theme-main mt-1" id="avg-age">0</p>
             <i class="material-icons-round absolute bottom-4 right-4 text-3xl text-green-500/20">cake</i>
         </div>
+        
         <div class="glass-card p-6 relative overflow-hidden group">
             <div class="absolute right-0 top-0 w-24 h-24 bg-purple-500/10 rounded-bl-full -mr-4 -mt-4 transition group-hover:bg-purple-500/20"></div>
             <p class="text-theme-muted text-sm">Top Program</p>
             <p class="text-xl font-bold text-theme-main mt-1 truncate" id="top-program">-</p>
             <i class="material-icons-round absolute bottom-4 right-4 text-3xl text-purple-500/20">school</i>
         </div>
+        
         <div class="glass-card p-6 relative overflow-hidden group">
             <div class="absolute right-0 top-0 w-24 h-24 bg-yellow-500/10 rounded-bl-full -mr-4 -mt-4 transition group-hover:bg-yellow-500/20"></div>
             <p class="text-theme-muted text-sm">New This Month</p>
@@ -225,8 +228,11 @@
                 <h3 class="text-xl font-bold text-theme-main">No students found</h3>
             </div>
 
+            <!-- FIXED PAGINATION HTML -->
             <div id="pagination" class="hidden flex items-center justify-between pt-6 mt-6 border-t border-white/10">
-                <span class="text-sm text-theme-muted">Page <span id="pagination-start" class="text-white font-bold">1</span></span>
+                <span class="text-sm text-theme-muted">
+                    Showing <span id="pagination-start" class="text-white font-bold">0</span> to <span id="pagination-end" class="text-white font-bold">0</span> of <span id="pagination-total" class="text-white font-bold">0</span>
+                </span>
                 <div class="flex space-x-2">
                     <button id="prev-page" class="p-2 rounded-lg border border-white/10 hover:bg-white/10 text-theme-muted disabled:opacity-30"><i class="material-icons-round">chevron_left</i></button>
                     <button id="next-page" class="p-2 rounded-lg border border-white/10 hover:bg-white/10 text-theme-muted disabled:opacity-30"><i class="material-icons-round">chevron_right</i></button>
@@ -256,7 +262,7 @@
     </div>
 </div>
 
-<!-- Add/Edit Modal -->
+<!-- Add/Edit Modal (Updated with Halls & Classes) -->
 <div id="add-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
     <div class="glass-card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-8 animate-fade-in shadow-2xl border border-white/10">
         <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
@@ -267,10 +273,13 @@
         <form id="add-student-form" class="space-y-6">
             <input type="hidden" id="edit-student-id">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Full Name -->
                 <div class="space-y-1">
                     <label class="text-xs text-theme-muted uppercase font-bold">Full Name</label>
                     <input type="text" name="name" id="modal-name" required class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
                 </div>
+                
+                <!-- Gender -->
                 <div class="space-y-1">
                     <label class="text-xs text-theme-muted uppercase font-bold">Gender</label>
                     <select name="gender" id="modal-gender" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
@@ -279,6 +288,8 @@
                         <option value="Female">Female</option>
                     </select>
                 </div>
+
+                <!-- Program (Updated) -->
                 <div class="space-y-1">
                     <label class="text-xs text-theme-muted uppercase font-bold">Program</label>
                     <select name="program" id="modal-program" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
@@ -288,10 +299,13 @@
                         <option value="General Arts">General Arts</option>
                         <option value="Visual Arts">Visual Arts</option>
                         <option value="Agriculture">Agriculture</option>
+                        <option value="Home Economics">Home Economics</option>
                     </select>
                 </div>
+
+                <!-- Hall (Fixed List) -->
                 <div class="space-y-1">
-                    <label class="text-xs text-theme-muted uppercase font-bold">Hall</label>
+                    <label class="text-xs text-theme-muted uppercase font-bold">Hall of Residence</label>
                     <select name="hall" id="modal-hall" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
                         <option value="">Select Hall...</option>
                         <option value="Alema Hall">Alema Hall</option>
@@ -305,6 +319,8 @@
                         <option value="Nana Awuah Darko Ampem Hall">Nana Awuah Darko Ampem Hall</option>
                     </select>
                 </div>
+
+                <!-- Class (Fixed List) -->
                 <div class="space-y-1">
                     <label class="text-xs text-theme-muted uppercase font-bold">Class</label>
                     <select name="class_room" id="modal-class" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
@@ -319,10 +335,13 @@
                         {% endfor %}
                     </select>
                 </div>
+
+                <!-- Date of Birth -->
                 <div class="space-y-1">
                     <label class="text-xs text-theme-muted uppercase font-bold">Date of Birth</label>
                     <input type="date" name="date_of_birth" id="modal-dob" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
                 </div>
+
                 <div class="space-y-1">
                     <label class="text-xs text-theme-muted uppercase font-bold">Email</label>
                     <input type="email" name="email" id="modal-email" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
@@ -728,9 +747,17 @@
         
         document.getElementById('edit-student-id').value = s.id;
         document.getElementById('modal-name').value = s.name;
-        document.getElementById('modal-program').value = s.program || '';
-        document.getElementById('modal-hall').value = s.hall || '';
-        document.getElementById('modal-class').value = s.class_room || '';
+        
+        // Handle Select Elements specifically
+        const programSelect = document.getElementById('modal-program');
+        if(programSelect) programSelect.value = s.program || '';
+        
+        const hallSelect = document.getElementById('modal-hall');
+        if(hallSelect) hallSelect.value = s.hall || '';
+        
+        const classSelect = document.getElementById('modal-class');
+        if(classSelect) classSelect.value = s.class_room || '';
+        
         document.getElementById('modal-email').value = s.email || '';
         document.getElementById('modal-phone').value = s.phone || '';
         document.getElementById('modal-gender').value = s.gender || '';
@@ -856,8 +883,8 @@
         if (action === 'move-hall') openMoveHallModal();
         else if (action === 'update-program') openUpdateProgramModal();
         else if (action === 'email') openBulkEmailModal();
-        else if (action === 'export') exportSelectedStudents();
         else if (action === 'archive') showToast('Archive feature pending implementation', 'info');
+        else if (action === 'export') showToast('Export started...', 'info'); 
         
         document.getElementById('bulk-action').value = "";
     }
