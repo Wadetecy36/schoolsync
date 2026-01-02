@@ -31,18 +31,15 @@ class Config:
     SESSION_COOKIE_SECURE = True if os.environ.get('VERCEL') else False
     SESSION_COOKIE_SAMESITE = 'Lax'
     
-    # Mail & 2FA
+     # Mail & 2FA
     MAIL_SERVER = os.environ.get('MAIL_SERVER')
     MAIL_PORT = int(os.environ.get('MAIL_PORT') or 587)
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS') == 'True'
+    MAIL_USE_SSL = os.environ.get('MAIL_USE_SSL') == 'True'  # <--- ADD THIS
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER')
-    
-    TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
-    TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
-    TWILIO_PHONE_NUMBER = os.environ.get('TWILIO_PHONE_NUMBER')
-
+   
 config = {
     'development': Config,
     'production': Config,
