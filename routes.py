@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, jsonify, send_file, redirect, url_for, flash
-from models import db, Student, AcademicRecord, User
+from models import db, Student, AcademicRecord, User, VALID_HALLS, VALID_PROGRAMS
 from datetime import datetime
 from sqlalchemy import or_, and_
 from flask_login import login_required, current_user
@@ -27,7 +27,6 @@ def permission_required(permission):
             return f(*args, **kwargs)
         return decorated_function
     return decorator
-
 
 def validate_file(file):
     """Validate uploaded file for security"""
@@ -57,13 +56,11 @@ def validate_file(file):
     file_content = file.read(2048)
     file.seek(0)
    
-   
-    # --- CHANGED: Use filetype instead of magic ---
+    # Use filetype to guess
     kind = filetype.guess(file_content)
     
-    # CSV files are often detected as None (plain text) by filetype, which is safe to assume text/csv if extension matches
+    # CSV files are often detected as None (plain text)
     if kind is None:
-        # If it's a CSV extension and detection failed, we assume it's text/csv
         if file_ext == 'csv':
             return True, filename
         else:
@@ -112,17 +109,16 @@ def student_detail(id):
 def get_students():
     """Get all students with filtering and search"""
     try:
-        # Get query parameters with defaults
+        # Get query parameters
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 20, type=int)
         search = request.args.get('search', '').strip()
-        form_filter = request.args.get('form', '')
         program_filter = request.args.get('program', '')
         hall_filter = request.args.get('hall', '')
         sort_by = request.args.get('sort', 'name')
         sort_order = request.args.get('order', 'asc')
         
-        # Base query with permission check
+        # Base query
         if current_user.is_super_admin:
             query = Student.query
         else:
@@ -192,28 +188,38 @@ def create_student():
         if not data.get('name'):
             return jsonify({'success': False, 'error': 'Name is required'}), 400
         
-        # Validate email format if provided
+        # Validate Program
+        program = data.get('program')
+        if program and program not in VALID_PROGRAMS:
+             return jsonify({'success': False, 'error': f'Invalid Program. Must be: {", ".join(VALID_PROGRAMS)}'}), 400
+
+        # Validate Hall
+        hall = data.get('hall')
+        if hall and hall not in VALID_HALLS:
+             return jsonify({'success': False, 'error': 'Invalid Hall selected'}), 400
+
+        # Validate email format
         if data.get('email'):
             import re
             email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
             if not re.match(email_regex, data['email']):
                 return jsonify({'success': False, 'error': 'Invalid email format'}), 400
         
-        # Parse date of birth if provided
+        # Parse date of birth
         dob = None
         if data.get('date_of_birth'):
             try:
                 dob = datetime.strptime(data['date_of_birth'], '%Y-%m-%d').date()
             except ValueError:
-                return jsonify({'success': False, 'error': 'Invalid date format. Use YYYY-MM-DD'}), 400
-        
+                pass # Allow saving without failing if date is weird, or return error
+
         # Create student
         student = Student(
             name=data['name'].strip(),
             gender=data.get('gender'),
             date_of_birth=dob,
-            program=data.get('program'),
-            hall=data.get('hall'),
+            program=program,
+            hall=hall,
             class_room=data.get('class_room'),
             enrollment_year=data.get('enrollment_year', datetime.now().year),
             email=data.get('email'),
@@ -252,12 +258,18 @@ def update_student(id):
     try:
         student = Student.query.get_or_404(id)
         
-        # Check permission
         if not student.has_permission(current_user):
             return jsonify({'success': False, 'error': 'Unauthorized'}), 403
         
         data = request.get_json()
         
+        # Validation for Updates
+        if 'program' in data and data['program'] not in VALID_PROGRAMS:
+             return jsonify({'success': False, 'error': 'Invalid Program'}), 400
+             
+        if 'hall' in data and data['hall'] not in VALID_HALLS:
+             return jsonify({'success': False, 'error': 'Invalid Hall'}), 400
+
         # Update fields
         update_fields = ['name', 'gender', 'program', 'hall', 'class_room', 
                         'email', 'phone', 'guardian_name', 'guardian_phone']
@@ -266,19 +278,13 @@ def update_student(id):
             if field in data:
                 setattr(student, field, data[field])
         
-        # Handle date of birth separately
         if 'date_of_birth' in data and data['date_of_birth']:
             try:
                 student.date_of_birth = datetime.strptime(data['date_of_birth'], '%Y-%m-%d').date()
             except ValueError:
-                return jsonify({'success': False, 'error': 'Invalid date format'}), 400
-        
-        # Handle enrollment year
-        if 'enrollment_year' in data:
-            student.enrollment_year = data['enrollment_year']
+                pass
         
         student.updated_at = datetime.utcnow()
-        
         db.session.commit()
         
         return jsonify({
@@ -297,8 +303,6 @@ def delete_student(id):
     """Delete a student"""
     try:
         student = Student.query.get_or_404(id)
-        
-        # Check permission
         if not student.has_permission(current_user):
             return jsonify({'success': False, 'error': 'Unauthorized'}), 403
         
@@ -313,64 +317,6 @@ def delete_student(id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
-
-@main.route('/api/students/bulk-delete', methods=['POST'])
-@login_required
-@permission_required('super_admin')
-def bulk_delete_students():
-    """Delete all students (super admin only)"""
-    try:
-        data = request.get_json()
-        
-        # Verify password
-        if not data.get('password'):
-            return jsonify({'success': False, 'error': 'Password required'}), 400
-        
-        if not current_user.check_password(data['password']):
-            return jsonify({'success': False, 'error': 'Invalid password'}), 401
-        
-        # Get confirmation
-        if not data.get('confirm'):
-            return jsonify({'success': False, 'error': 'Confirmation required'}), 400
-        
-        # Delete all students
-        student_count = Student.query.count()
-        academic_count = AcademicRecord.query.count()
-        
-        # Delete in batches to avoid memory issues
-        batch_size = 100
-        
-        # Delete academic records first (foreign key constraint)
-        while True:
-            records = AcademicRecord.query.limit(batch_size).all()
-            if not records:
-                break
-            for record in records:
-                db.session.delete(record)
-            db.session.commit()
-        
-        # Delete students
-        while True:
-            students = Student.query.limit(batch_size).all()
-            if not students:
-                break
-            for student in students:
-                db.session.delete(student)
-            db.session.commit()
-        
-        return jsonify({
-            'success': True,
-            'message': f'Deleted {student_count} students and {academic_count} academic records',
-            'deleted_students': student_count,
-            'deleted_records': academic_count
-        })
-        
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-
-# ... existing imports ...
 
 @main.route('/api/students/delete-all', methods=['POST'])
 @login_required
@@ -388,7 +334,6 @@ def delete_all_students():
             return jsonify({'success': False, 'error': 'Incorrect password'}), 403
 
         # Delete all records
-        # Note: We delete academic records first to maintain integrity if cascades aren't set
         try:
             num_records = AcademicRecord.query.delete()
             num_students = Student.query.delete()
@@ -404,12 +349,12 @@ def delete_all_students():
 
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
 @main.route('/api/stats', methods=['GET'])
 @login_required
 def get_stats():
     """Get dashboard statistics"""
     try:
-        # Get counts based on user role
         if current_user.is_super_admin:
             total_students = Student.query.count()
             students = Student.query.all()
@@ -417,24 +362,16 @@ def get_stats():
             total_students = Student.query.filter_by(created_by=current_user.id).count()
             students = Student.query.filter_by(created_by=current_user.id).all()
         
-        # Count by form
-        form_counts = {
-            'First Form': 0,
-            'Second Form': 0,
-            'Third Form': 0,
-            'Completed': 0
-        }
+        form_counts = { 'First Form': 0, 'Second Form': 0, 'Third Form': 0, 'Completed': 0 }
         
         for student in students:
             form_counts[student.current_form] = form_counts.get(student.current_form, 0) + 1
         
-        # Count by program
         program_counts = {}
         for student in students:
             if student.program:
                 program_counts[student.program] = program_counts.get(student.program, 0) + 1
         
-        # New this month
         current_month = datetime.now().month
         current_year = datetime.now().year
         new_this_month = len([
@@ -442,7 +379,6 @@ def get_stats():
             if s.created_at.month == current_month and s.created_at.year == current_year
         ])
         
-        # Students with email
         with_email = len([s for s in students if s.email])
         
         return jsonify({
@@ -463,7 +399,6 @@ def get_stats():
 @main.route('/import')
 @login_required
 def import_page():
-    """Import students page"""
     return render_template('import.html')
 
 @main.route('/api/import', methods=['POST'])
@@ -475,13 +410,10 @@ def import_students():
             return jsonify({'success': False, 'error': 'No file provided'}), 400
         
         file = request.files['file']
-        
-        # Validate file
         is_valid, message = validate_file(file)
         if not is_valid:
             return jsonify({'success': False, 'error': message}), 400
         
-        # Read file based on type
         filename = secure_filename(file.filename)
         file_ext = filename.rsplit('.', 1)[1].lower()
         
@@ -493,62 +425,51 @@ def import_students():
         except Exception as e:
             return jsonify({'success': False, 'error': f'Error reading file: {str(e)}'}), 400
         
-        # Validate required columns
         required_columns = ['name']
         missing_columns = [col for col in required_columns if col not in df.columns]
         
         if missing_columns:
-            return jsonify({
-                'success': False, 
-                'error': f'Missing required columns: {", ".join(missing_columns)}'
-            }), 400
+            return jsonify({'success': False, 'error': f'Missing: {", ".join(missing_columns)}'}), 400
         
-        # Process each row
         imported = 0
         errors = []
         
         for index, row in df.iterrows():
             try:
-                # Skip rows without name
-                if pd.isna(row.get('name')) or str(row.get('name')).strip() == '':
-                    continue
+                name = str(row.get('name', '')).strip()
+                if not name: continue
                 
-                # Parse date of birth if provided
+                # --- NEW VALIDATION: Check Hall/Program against valid lists ---
+                hall = str(row.get('hall', '')).strip()
+                if hall and hall not in VALID_HALLS:
+                    hall = None # or raise Error "Invalid Hall"
+                
+                program = str(row.get('program', '')).strip()
+                if program and program not in VALID_PROGRAMS:
+                    program = None
+
                 dob = None
                 if 'date_of_birth' in row and not pd.isna(row['date_of_birth']):
                     try:
                         dob = pd.to_datetime(row['date_of_birth']).date()
                     except:
-                        errors.append(f'Row {index + 2}: Invalid date format')
-                        continue
-                
-                # Get enrollment year
-                enrollment_year = datetime.now().year
-                if 'enrollment_year' in row and not pd.isna(row['enrollment_year']):
-                    try:
-                        enrollment_year = int(row['enrollment_year'])
-                    except:
                         pass
                 
-                # Validate email if provided
+                enrollment_year = datetime.now().year
+                if 'enrollment_year' in row and not pd.isna(row['enrollment_year']):
+                    try: enrollment_year = int(row['enrollment_year'])
+                    except: pass
+                
                 email = None
                 if 'email' in row and not pd.isna(row.get('email')):
-                    email_str = str(row['email']).strip()
-                    import re
-                    email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-                    if email_str and re.match(email_regex, email_str):
-                        email = email_str
-                    elif email_str:
-                        errors.append(f'Row {index + 2}: Invalid email format')
-                        continue
+                    email = str(row['email']).strip()
                 
-                # Create student
                 student = Student(
-                    name=str(row['name']).strip(),
+                    name=name,
                     gender=str(row.get('gender', '')).strip() if not pd.isna(row.get('gender')) else None,
                     date_of_birth=dob,
-                    program=str(row.get('program', '')).strip() if not pd.isna(row.get('program')) else None,
-                    hall=str(row.get('hall', '')).strip() if not pd.isna(row.get('hall')) else None,
+                    program=program,
+                    hall=hall,
                     class_room=str(row.get('class_room', '')).strip() if not pd.isna(row.get('class_room')) else None,
                     enrollment_year=enrollment_year,
                     email=email,
@@ -561,31 +482,22 @@ def import_students():
                 db.session.add(student)
                 db.session.flush()
                 
-                # Create initial academic record
-                record = AcademicRecord(
-                    student_id=student.id,
-                    form=student.current_form,
-                    year=student.enrollment_year
-                )
+                record = AcademicRecord(student_id=student.id, form=student.current_form, year=student.enrollment_year)
                 db.session.add(record)
                 
                 imported += 1
-                
-                # Commit every 50 records to avoid large transactions
-                if imported % 50 == 0:
-                    db.session.commit()
+                if imported % 50 == 0: db.session.commit()
                 
             except Exception as e:
                 errors.append(f'Row {index + 2}: {str(e)}')
                 continue
         
         db.session.commit()
-        
         return jsonify({
             'success': True,
             'message': f'Successfully imported {imported} students',
             'imported': imported,
-            'errors': errors[:10]  # Return first 10 errors only
+            'errors': errors[:10]
         })
         
     except Exception as e:
@@ -597,14 +509,14 @@ def import_students():
 def download_template(file_type):
     """Download import template"""
     try:
-        # Create template dataframe
+        # Create template with sample data that MATCHES our valid options
         template_data = {
             'name': ['John Doe', 'Jane Smith'],
             'gender': ['Male', 'Female'],
             'date_of_birth': ['2005-01-15', '2006-03-20'],
-            'program': ['Science', 'Arts'],
-            'hall': ['Newton Hall', 'Einstein Hall'],
-            'class_room': ['1A', '1B'],
+            'program': ['General Science', 'Business'], # Updated to match VALID_PROGRAMS
+            'hall': ['Alema Hall', 'Ellen Hall'],       # Updated to match VALID_HALLS
+            'class_room': ['1-Science-1', '2-Business-3'],
             'email': ['john@example.com', 'jane@example.com'],
             'phone': ['0241234567', '0501234567'],
             'guardian_name': ['Mr. Doe', 'Mrs. Smith'],
@@ -613,42 +525,29 @@ def download_template(file_type):
         }
         
         df = pd.DataFrame(template_data)
-        
-        # Create file in memory
         output = io.BytesIO()
         
         if file_type == 'csv':
             df.to_csv(output, index=False)
             output.seek(0)
-            return send_file(
-                output,
-                mimetype='text/csv',
-                as_attachment=True,
-                download_name='student_import_template.csv'
-            )
+            return send_file(output, mimetype='text/csv', as_attachment=True, download_name='student_import_template.csv')
         elif file_type == 'excel':
             with pd.ExcelWriter(output, engine='openpyxl') as writer:
                 df.to_excel(writer, index=False, sheet_name='Students')
             output.seek(0)
-            return send_file(
-                output,
-                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                as_attachment=True,
-                download_name='student_import_template.xlsx'
-            )
+            return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='student_import_template.xlsx')
         else:
             return jsonify({'error': 'Invalid file type'}), 400
             
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# --- NEW SETTINGS ROUTES ---
+# --- SETTINGS ROUTES ---
 
 @main.route('/settings', methods=['GET'])
 @login_required
 def settings():
     return render_template('settings.html')
-
 
 @main.route('/settings/profile', methods=['POST'])
 @login_required
@@ -659,21 +558,17 @@ def update_profile():
         new_fullname = request.form.get('full_name').strip()
         new_phone = request.form.get('phone').strip()
 
-        # 1. Check if Username is taken (by someone else)
+        # Check for duplicates
         if new_username != current_user.username:
-            existing_user = User.query.filter_by(username=new_username).first()
-            if existing_user:
-                flash('Username already taken. Please choose another.', 'error')
+            if User.query.filter_by(username=new_username).first():
+                flash('Username already taken.', 'error')
                 return redirect(url_for('main.settings'))
 
-        # 2. Check if Email is taken (by someone else)
         if new_email != current_user.email:
-            existing_email = User.query.filter_by(email=new_email).first()
-            if existing_email:
-                flash('Email already registered by another account.', 'error')
+            if User.query.filter_by(email=new_email).first():
+                flash('Email already registered.', 'error')
                 return redirect(url_for('main.settings'))
 
-        # 3. Update Fields
         current_user.username = new_username
         current_user.full_name = new_fullname
         current_user.email = new_email
@@ -687,6 +582,7 @@ def update_profile():
         flash(f'System Error: {str(e)}', 'error')
         
     return redirect(url_for('main.settings'))
+
 @main.route('/settings/2fa', methods=['POST'])
 @login_required
 def update_2fa():

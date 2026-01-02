@@ -6,6 +6,20 @@ import re
 
 db = SQLAlchemy()
 
+
+# --- CONSTANTS FOR VALIDATION ---
+VALID_HALLS = [
+    "Alema Hall", "Ellen Hall", "Halm Addo Hall", "Nana Wereko Ampem II Hall",
+    "Wilson Q .Tei Hall", "Awuletey Hall", "Peter Ala Adjetey Hall",
+    "Nana Akuako Sarpong Hall", "Nana Awuah Darko Ampem Hall"
+]
+
+VALID_PROGRAMS = [
+    "General Science", "Business", "General Arts", 
+    "Visual Arts", "Agriculture", "Home Economics"
+]
+
+
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     
