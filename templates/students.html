@@ -16,7 +16,7 @@
                 <i class="material-icons-round mr-2 text-gold group-hover:scale-110 transition">cloud_upload</i>
                 <span>Import</span>
             </a>
-            <button onclick="openAddModal()" class="btn-gold px-6 py-3 rounded-xl text-black flex items-center">
+            <button onclick="openAddModal()" class="btn-gold px-6 py-3 rounded-xl text-black flex items-center shadow-lg hover:shadow-yellow-500/20 transition">
                 <i class="material-icons-round mr-2">person_add</i>
                 <span>Add Student</span>
             </button>
@@ -25,7 +25,6 @@
 
     <!-- Top Stats Bar -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-        <!-- Total Students -->
         <div class="glass-card p-6 relative overflow-hidden group">
             <div class="absolute right-0 top-0 w-24 h-24 bg-blue-500/10 rounded-bl-full -mr-4 -mt-4 transition group-hover:bg-blue-500/20"></div>
             <p class="text-theme-muted text-sm">Total Students</p>
@@ -33,7 +32,6 @@
             <i class="material-icons-round absolute bottom-4 right-4 text-3xl text-blue-500/20">groups</i>
         </div>
         
-        <!-- Average Age -->
         <div class="glass-card p-6 relative overflow-hidden group">
             <div class="absolute right-0 top-0 w-24 h-24 bg-green-500/10 rounded-bl-full -mr-4 -mt-4 transition group-hover:bg-green-500/20"></div>
             <p class="text-theme-muted text-sm">Avg Age</p>
@@ -41,7 +39,6 @@
             <i class="material-icons-round absolute bottom-4 right-4 text-3xl text-green-500/20">cake</i>
         </div>
         
-        <!-- Top Program -->
         <div class="glass-card p-6 relative overflow-hidden group">
             <div class="absolute right-0 top-0 w-24 h-24 bg-purple-500/10 rounded-bl-full -mr-4 -mt-4 transition group-hover:bg-purple-500/20"></div>
             <p class="text-theme-muted text-sm">Top Program</p>
@@ -49,7 +46,6 @@
             <i class="material-icons-round absolute bottom-4 right-4 text-3xl text-purple-500/20">school</i>
         </div>
         
-        <!-- New This Month -->
         <div class="glass-card p-6 relative overflow-hidden group">
             <div class="absolute right-0 top-0 w-24 h-24 bg-yellow-500/10 rounded-bl-full -mr-4 -mt-4 transition group-hover:bg-yellow-500/20"></div>
             <p class="text-theme-muted text-sm">New This Month</p>
@@ -71,12 +67,12 @@
         <div id="quick-add-form" class="hidden mt-6 pt-6 border-t border-white/10">
             <form id="quick-add" class="space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <input type="text" name="name" placeholder="Full Name *" required class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
-                    <input type="text" name="program" placeholder="Program" class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
-                    <input type="text" name="class_room" placeholder="Class" class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+                    <input type="text" name="name" placeholder="Full Name *" required class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-theme-main focus:border-gold-500 placeholder-gray-500">
+                    <input type="text" name="program" placeholder="Program" class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-theme-main focus:border-gold-500 placeholder-gray-500">
+                    <input type="text" name="class_room" placeholder="Class" class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-theme-main focus:border-gold-500 placeholder-gray-500">
                 </div>
                 <div class="flex space-x-4">
-                    <button type="submit" class="btn-gold px-6 py-3 rounded-xl text-black flex items-center">
+                    <button type="submit" class="btn-gold px-6 py-3 rounded-xl text-black flex items-center font-bold">
                         <i class="material-icons-round mr-2">add</i> Add
                     </button>
                     <button type="button" onclick="toggleQuickAdd()" class="px-6 py-3 rounded-xl border border-white/10 text-theme-muted hover:bg-white/10 transition">
@@ -115,27 +111,27 @@
         
         <!-- Export Actions -->
         <div class="flex space-x-2">
-            <button onclick="exportToCSV()" class="p-2 rounded-lg hover:bg-white/10 text-green-400" title="Export CSV">
+            <button onclick="exportToCSV()" class="p-2 rounded-lg hover:bg-white/10 text-green-400 transition" title="Export CSV">
                 <i class="material-icons-round">description</i>
             </button>
-            <button onclick="exportToExcel()" class="p-2 rounded-lg hover:bg-white/10 text-blue-400" title="Export Excel">
+            <button onclick="exportToExcel()" class="p-2 rounded-lg hover:bg-white/10 text-blue-400 transition" title="Export Excel">
                 <i class="material-icons-round">table_view</i>
             </button>
-            <button onclick="generateReport()" class="p-2 rounded-lg hover:bg-white/10 text-purple-400" title="Analytics Report">
+            <button onclick="generateReport()" class="p-2 rounded-lg hover:bg-white/10 text-purple-400 transition" title="Analytics Report">
                 <i class="material-icons-round">analytics</i>
             </button>
         </div>
     </div>
 
-    <!-- Bulk Actions Panel (Hidden by default) -->
-    <div id="bulk-actions-panel" class="hidden glass-card p-4 border-l-4 border-gold-500 animate-fade-in">
-        <div class="flex flex-wrap items-center justify-between gap-4">
-            <div class="flex items-center space-x-4">
-                <div class="flex items-center bg-gold-500/20 px-3 py-1 rounded-lg text-gold">
-                    <i class="material-icons-round text-sm mr-2">check_box</i>
-                    <span id="selected-count" class="font-bold">0</span> Selected
-                </div>
-                
+    <!-- Bulk Actions Panel -->
+    <div id="bulk-actions-panel" class="hidden glass-card p-4 border-l-4 border-gold-500 animate-fade-in flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex flex-wrap items-center gap-4">
+            <div class="flex items-center bg-gold-500/20 px-3 py-1 rounded-lg text-gold border border-gold-500/30">
+                <i class="material-icons-round text-sm mr-2">check_box</i>
+                <span id="selected-count" class="font-bold">0</span> &nbsp;Selected
+            </div>
+            
+            <div class="flex items-center gap-2">
                 <select id="bulk-action" class="px-4 py-2 bg-black/20 border border-white/10 rounded-lg text-theme-main text-sm focus:border-gold-500">
                     <option value="">Select Action...</option>
                     <option value="email">Send Email</option>
@@ -145,12 +141,14 @@
                     <option value="archive">Archive</option>
                 </select>
                 
-                <button onclick="executeBulkAction()" class="btn-gold px-4 py-2 rounded-lg text-sm text-black">
+                <button onclick="executeBulkAction()" class="btn-gold px-4 py-2 rounded-lg text-sm text-black font-bold hover:shadow-lg transition">
                     Apply
                 </button>
             </div>
-            <button onclick="clearSelections()" class="text-theme-muted hover:text-white text-sm">Clear Selection</button>
         </div>
+        <button onclick="clearSelections()" class="text-theme-muted hover:text-white text-sm flex items-center">
+            <i class="material-icons-round text-sm mr-1">close</i> Clear Selection
+        </button>
     </div>
 
     <!-- Main Layout Grid -->
@@ -175,7 +173,7 @@
                         <label class="text-xs text-theme-muted uppercase tracking-wider mb-1 block">Search</label>
                         <div class="relative">
                             <i class="material-icons-round absolute left-3 top-2.5 text-theme-muted text-sm">search</i>
-                            <input type="text" id="name-search" placeholder="Name, ID..." class="w-full pl-9 pr-3 py-2 bg-black/20 border border-white/10 rounded-lg text-theme-main text-sm focus:border-gold-500">
+                            <input type="text" id="name-search" placeholder="Name, ID..." class="w-full pl-9 pr-3 py-2 bg-black/20 border border-white/10 rounded-lg text-theme-main text-sm focus:border-gold-500 transition">
                         </div>
                     </div>
 
@@ -183,37 +181,28 @@
                     <div>
                         <label class="text-xs text-theme-muted uppercase tracking-wider mb-2 block">Quick Filters</label>
                         <div class="flex gap-2 mb-2">
-                            <button onclick="filterByGender('Male')" class="flex-1 py-1 bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border border-blue-500/20 rounded-md text-xs transition">Male</button>
-                            <button onclick="filterByGender('Female')" class="flex-1 py-1 bg-pink-500/10 hover:bg-pink-500/20 text-pink-300 border border-pink-500/20 rounded-md text-xs transition">Female</button>
+                            <button onclick="filterByGender('Male')" class="flex-1 py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border border-blue-500/20 rounded-md text-xs transition">Male</button>
+                            <button onclick="filterByGender('Female')" class="flex-1 py-2 bg-pink-500/10 hover:bg-pink-500/20 text-pink-300 border border-pink-500/20 rounded-md text-xs transition">Female</button>
                         </div>
                     </div>
                     
                     <!-- Dropdowns -->
                     <div>
                         <label class="text-xs text-theme-muted uppercase tracking-wider mb-1 block">Program</label>
-                        <select id="quick-program-filter" onchange="filterByProgram(this.value)" class="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-theme-main text-sm">
+                        <select id="quick-program-filter" onchange="filterByProgram(this.value)" class="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-theme-main text-sm transition">
                             <option value="">All Programs</option>
                         </select>
                     </div>
 
                     <div>
                         <label class="text-xs text-theme-muted uppercase tracking-wider mb-1 block">Hall</label>
-                        <select id="quick-hall-filter" onchange="filterByHall(this.value)" class="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-theme-main text-sm">
+                        <select id="quick-hall-filter" onchange="filterByHall(this.value)" class="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-theme-main text-sm transition">
                             <option value="">All Halls</option>
                         </select>
                     </div>
 
-                    <!-- Year Range -->
-                    <div>
-                        <label class="text-xs text-theme-muted uppercase tracking-wider mb-1 block">Enrollment Year</label>
-                        <div class="flex gap-2">
-                            <input type="number" id="year-from" placeholder="From" class="w-1/2 px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-theme-main text-sm">
-                            <input type="number" id="year-to" placeholder="To" class="w-1/2 px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-theme-main text-sm">
-                        </div>
-                    </div>
-
-                    <button onclick="resetAllFilters()" class="w-full py-2 border border-white/10 rounded-lg text-theme-muted hover:text-white hover:bg-white/5 transition text-sm">
-                        Reset Filters
+                    <button onclick="resetAllFilters()" class="w-full py-2 border border-white/10 rounded-lg text-theme-muted hover:text-white hover:bg-white/5 transition text-sm flex items-center justify-center">
+                        <i class="material-icons-round text-sm mr-2">refresh</i> Reset Filters
                     </button>
                 </div>
             </div>
@@ -221,9 +210,6 @@
         
         <!-- Results Area -->
         <div class="lg:col-span-3">
-            <!-- Active Filters Tags -->
-            <div id="active-filters" class="flex flex-wrap gap-2 mb-4 hidden"></div>
-
             <!-- Grid View -->
             <div id="students-grid-view" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
 
@@ -238,7 +224,6 @@
                                 <th class="px-6 py-3">Program</th>
                                 <th class="px-6 py-3">Form</th>
                                 <th class="px-6 py-3">Location</th>
-                                <th class="px-6 py-3">Contact</th>
                                 <th class="px-6 py-3">Actions</th>
                             </tr>
                         </thead>
@@ -257,21 +242,22 @@
             </div>
 
             <div id="empty-state" class="hidden text-center py-20">
-                <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/5">
                     <i class="material-icons-round text-4xl text-theme-muted">search_off</i>
                 </div>
                 <h3 class="text-xl font-bold text-theme-main">No students found</h3>
                 <p class="text-theme-muted mt-2">Try adjusting your filters</p>
+                <button onclick="resetAllFilters()" class="mt-4 px-6 py-2 bg-white/5 border border-white/10 rounded-lg text-theme-main hover:bg-white/10 transition">Clear Filters</button>
             </div>
 
             <!-- Pagination -->
             <div id="pagination" class="hidden flex items-center justify-between pt-6 mt-6 border-t border-white/10">
                 <span class="text-sm text-theme-muted">
-                    Showing <span id="pagination-start" class="text-white">0</span> to <span id="pagination-end" class="text-white">0</span> of <span id="pagination-total" class="text-white">0</span>
+                    Showing <span id="pagination-start" class="text-white font-bold">0</span> to <span id="pagination-end" class="text-white font-bold">0</span> of <span id="pagination-total" class="text-white font-bold">0</span>
                 </span>
                 <div class="flex space-x-2">
-                    <button id="prev-page" class="p-2 rounded-lg border border-white/10 hover:bg-white/10 text-theme-muted disabled:opacity-30"><i class="material-icons-round">chevron_left</i></button>
-                    <button id="next-page" class="p-2 rounded-lg border border-white/10 hover:bg-white/10 text-theme-muted disabled:opacity-30"><i class="material-icons-round">chevron_right</i></button>
+                    <button id="prev-page" class="p-2 rounded-lg border border-white/10 hover:bg-white/10 text-theme-muted disabled:opacity-30 disabled:cursor-not-allowed transition"><i class="material-icons-round">chevron_left</i></button>
+                    <button id="next-page" class="p-2 rounded-lg border border-white/10 hover:bg-white/10 text-theme-muted disabled:opacity-30 disabled:cursor-not-allowed transition"><i class="material-icons-round">chevron_right</i></button>
                 </div>
             </div>
         </div>
@@ -281,109 +267,137 @@
 <!-- ================= MODALS ================= -->
 
 <!-- Add/Edit Modal -->
-<div id="add-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
-    <div class="glass-card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-8 animate-fade-in">
+<div id="add-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
+    <div class="glass-card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-8 animate-fade-in shadow-2xl border border-white/10">
         <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
-            <h3 class="text-2xl font-bold text-theme-main">Student Details</h3>
-            <button onclick="closeAddModal()" class="text-theme-muted hover:text-white"><i class="material-icons-round text-2xl">close</i></button>
+            <h3 class="text-2xl font-bold text-theme-main" id="modal-title">Student Details</h3>
+            <button onclick="closeAddModal()" class="text-theme-muted hover:text-white transition"><i class="material-icons-round text-2xl">close</i></button>
         </div>
         
         <form id="add-student-form" class="space-y-6">
             <input type="hidden" id="edit-student-id">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="space-y-1">
-                    <label class="text-xs text-theme-muted uppercase">Full Name</label>
-                    <input type="text" name="name" id="modal-name" required class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+                    <label class="text-xs text-theme-muted uppercase font-bold">Full Name</label>
+                    <input type="text" name="name" id="modal-name" required class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500 focus:ring-1 focus:ring-gold-500 transition">
                 </div>
                 <div class="space-y-1">
-                    <label class="text-xs text-theme-muted uppercase">Gender</label>
-                    <select name="gender" id="modal-gender" class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+                    <label class="text-xs text-theme-muted uppercase font-bold">Gender</label>
+                    <select name="gender" id="modal-gender" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
                         <option value="">Select...</option>
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
                     </select>
                 </div>
                 <div class="space-y-1">
-                    <label class="text-xs text-theme-muted uppercase">Date of Birth</label>
-                    <input type="date" name="date_of_birth" id="modal-dob" class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+                    <label class="text-xs text-theme-muted uppercase font-bold">Date of Birth</label>
+                    <input type="date" name="date_of_birth" id="modal-dob" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
                 </div>
                 <div class="space-y-1">
-                    <label class="text-xs text-theme-muted uppercase">Program</label>
-                    <input type="text" name="program" id="modal-program" class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+                    <label class="text-xs text-theme-muted uppercase font-bold">Program</label>
+                    <input type="text" name="program" id="modal-program" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
                 </div>
                 <div class="space-y-1">
-                    <label class="text-xs text-theme-muted uppercase">Hall</label>
-                    <input type="text" name="hall" id="modal-hall" class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+                    <label class="text-xs text-theme-muted uppercase font-bold">Hall</label>
+                    <input type="text" name="hall" id="modal-hall" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
                 </div>
                 <div class="space-y-1">
-                    <label class="text-xs text-theme-muted uppercase">Class</label>
-                    <input type="text" name="class_room" id="modal-class" class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+                    <label class="text-xs text-theme-muted uppercase font-bold">Class</label>
+                    <input type="text" name="class_room" id="modal-class" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
                 </div>
                 <div class="space-y-1">
-                    <label class="text-xs text-theme-muted uppercase">Email</label>
-                    <input type="email" name="email" id="modal-email" class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+                    <label class="text-xs text-theme-muted uppercase font-bold">Email</label>
+                    <input type="email" name="email" id="modal-email" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
                 </div>
                 <div class="space-y-1">
-                    <label class="text-xs text-theme-muted uppercase">Phone</label>
-                    <input type="tel" name="phone" id="modal-phone" class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+                    <label class="text-xs text-theme-muted uppercase font-bold">Phone</label>
+                    <input type="tel" name="phone" id="modal-phone" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
                 </div>
             </div>
             
             <div class="border-t border-white/10 pt-4">
-                <p class="text-gold text-sm font-bold mb-3">Guardian Information</p>
+                <p class="text-gold text-sm font-bold mb-3 uppercase tracking-wider">Guardian Information</p>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input type="text" name="guardian_name" id="modal-gname" placeholder="Guardian Name" class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
-                    <input type="tel" name="guardian_phone" id="modal-gphone" placeholder="Guardian Phone" class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+                    <input type="text" name="guardian_name" id="modal-gname" placeholder="Guardian Name" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+                    <input type="tel" name="guardian_phone" id="modal-gphone" placeholder="Guardian Phone" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
                 </div>
             </div>
             
             <div class="flex space-x-4 pt-2">
-                <button type="submit" class="flex-1 btn-gold py-3 rounded-xl text-black font-bold shadow-lg">Save Student</button>
-                <button type="button" onclick="closeAddModal()" class="px-8 border border-white/10 rounded-xl text-theme-muted hover:bg-white/10">Cancel</button>
+                <button type="submit" class="flex-1 btn-gold py-3 rounded-xl text-black font-bold shadow-lg hover:scale-[1.02] transition">Save Student</button>
+                <button type="button" onclick="closeAddModal()" class="px-8 border border-white/10 rounded-xl text-theme-muted hover:bg-white/10 hover:text-white transition">Cancel</button>
             </div>
         </form>
     </div>
 </div>
 
+<!-- Move Hall Modal (Added) -->
+<div id="move-hall-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
+    <div class="glass-card w-full max-w-md p-8 animate-fade-in">
+        <h3 class="text-xl font-bold text-theme-main mb-4">Move Students</h3>
+        <p class="text-sm text-theme-muted mb-4">Enter the new hall name for the selected students.</p>
+        <div class="space-y-4">
+            <input type="text" id="new-hall" placeholder="e.g. Newton Hall" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+            <div class="flex gap-3">
+                <button onclick="confirmMoveHall()" class="flex-1 btn-gold py-2 rounded-lg text-black font-bold">Move</button>
+                <button onclick="closeMoveHallModal()" class="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Program Modal (Added) -->
+<div id="update-program-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
+    <div class="glass-card w-full max-w-md p-8 animate-fade-in">
+        <h3 class="text-xl font-bold text-theme-main mb-4">Update Program</h3>
+        <p class="text-sm text-theme-muted mb-4">Enter the new program for the selected students.</p>
+        <div class="space-y-4">
+            <input type="text" id="new-program" placeholder="e.g. Science" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+            <div class="flex gap-3">
+                <button onclick="confirmUpdateProgram()" class="flex-1 btn-gold py-2 rounded-lg text-black font-bold">Update</button>
+                <button onclick="closeUpdateProgramModal()" class="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Quick View Modal -->
-<div id="quick-view-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
+<div id="quick-view-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
     <div class="glass-card w-full max-w-md p-8 animate-fade-in relative">
-        <button onclick="closeQuickViewModal()" class="absolute top-4 right-4 text-theme-muted hover:text-white"><i class="material-icons-round">close</i></button>
+        <button onclick="closeQuickViewModal()" class="absolute top-4 right-4 text-theme-muted hover:text-white transition"><i class="material-icons-round text-2xl">close</i></button>
         <div id="quick-view-content"></div>
     </div>
 </div>
 
 <!-- Delete Modal -->
-<div id="delete-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
+<div id="delete-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
     <div class="glass-card w-full max-w-sm p-8 text-center animate-fade-in border border-red-500/30">
-        <div class="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500">
+        <div class="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
             <i class="material-icons-round text-3xl">delete_forever</i>
         </div>
         <h3 class="text-xl font-bold text-theme-main mb-2">Delete Student?</h3>
         <p class="text-theme-muted mb-6">Are you sure you want to delete <span id="delete-student-name" class="text-white font-bold"></span>? This cannot be undone.</p>
         <div class="flex gap-3">
-            <button onclick="confirmDelete()" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-bold">Delete</button>
+            <button onclick="confirmDelete()" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-bold shadow-lg">Delete</button>
             <button onclick="closeDeleteModal()" class="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg">Cancel</button>
         </div>
     </div>
 </div>
 
 <!-- Bulk Email Modal -->
-<div id="bulk-email-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
+<div id="bulk-email-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
     <div class="glass-card w-full max-w-lg p-8 animate-fade-in">
         <h3 class="text-xl font-bold text-theme-main mb-4 flex items-center"><i class="material-icons-round text-blue-400 mr-2">email</i> Send Email</h3>
         <form id="bulk-email-form" class="space-y-4">
-            <input type="text" id="email-subject" placeholder="Subject" class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-theme-main">
-            <textarea id="email-message" rows="5" placeholder="Message..." class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-theme-main"></textarea>
+            <input type="text" id="email-subject" placeholder="Subject" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-blue-500">
+            <textarea id="email-message" rows="5" placeholder="Message..." class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-blue-500"></textarea>
             <div class="flex justify-end gap-3">
-                <button type="button" onclick="closeBulkEmailModal()" class="px-4 py-2 text-theme-muted hover:text-white">Cancel</button>
-                <button type="submit" class="btn-gold px-6 py-2 rounded-lg text-black">Send</button>
+                <button type="button" onclick="closeBulkEmailModal()" class="px-4 py-2 text-theme-muted hover:text-white transition">Cancel</button>
+                <button type="submit" class="btn-gold px-6 py-2 rounded-lg text-black font-bold">Send</button>
             </div>
         </form>
     </div>
 </div>
-
-<!-- Move Hall Modal & Update Program Modal placeholders would follow similar glass-card patterns -->
 
 {% endblock %}
 
@@ -412,7 +426,6 @@
             // FIX: Add timestamp to URL to prevent browser caching
             const timestamp = new Date().getTime();
             const data = await apiRequest(`/api/students?per_page=1000&_t=${timestamp}`);
-            
             allStudents = data.students || [];
             filteredStudents = [...allStudents];
             
@@ -421,7 +434,6 @@
             renderStudents();
         } catch (error) {
             console.error(error);
-            showToast('Failed to load data', 'error');
         } finally {
             document.getElementById('loading-state').classList.add('hidden');
         }
@@ -464,23 +476,23 @@
                         <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-900 flex items-center justify-center text-white font-bold text-lg shadow-lg">
                             ${s.name.charAt(0)}
                         </div>
-                        <input type="checkbox" class="student-checkbox w-5 h-5 rounded border-white/20 bg-black/20 text-gold focus:ring-0" 
+                        <input type="checkbox" class="student-checkbox w-5 h-5 rounded border-white/20 bg-black/20 text-gold focus:ring-0 cursor-pointer" 
                                value="${s.id}" ${selectedStudents.has(s.id) ? 'checked' : ''} 
                                onchange="toggleSelection(${s.id}, this.checked)">
                     </div>
-                    <h3 class="text-lg font-bold text-theme-main truncate">${s.name}</h3>
-                    <p class="text-sm text-theme-muted mb-4">${s.program || 'No Program'}</p>
+                    <h3 class="text-lg font-bold text-theme-main truncate" title="${s.name}">${s.name}</h3>
+                    <p class="text-sm text-theme-muted mb-4 truncate">${s.program || 'No Program'}</p>
                     
                     <div class="space-y-2 text-xs text-theme-muted border-t border-white/10 pt-3">
                         <div class="flex items-center"><i class="material-icons-round text-sm mr-2 text-blue-400">school</i> ${s.current_form}</div>
                         <div class="flex items-center"><i class="material-icons-round text-sm mr-2 text-green-400">location_on</i> ${s.hall || 'N/A'}</div>
                     </div>
 
-                    <div class="flex justify-between items-center mt-4 pt-3 border-t border-white/5 opacity-0 group-hover:opacity-100 transition">
-                        <button onclick="quickView(${s.id})" class="text-blue-400 hover:text-white"><i class="material-icons-round">visibility</i></button>
-                        <button onclick="editStudent(${s.id})" class="text-yellow-400 hover:text-white"><i class="material-icons-round">edit</i></button>
-                        ${s.email ? `<a href="mailto:${s.email}" class="text-green-400 hover:text-white"><i class="material-icons-round">email</i></a>` : ''}
-                        <button onclick="openDeleteModal(${s.id}, '${s.name.replace(/'/g, "\\'")}')" class="text-red-400 hover:text-white"><i class="material-icons-round">delete</i></button>
+                    <div class="flex justify-between items-center mt-4 pt-3 border-t border-white/5 opacity-0 group-hover:opacity-100 transition duration-300">
+                        <button onclick="quickView(${s.id})" class="text-blue-400 hover:text-white transition"><i class="material-icons-round">visibility</i></button>
+                        <button onclick="editStudent(${s.id})" class="text-yellow-400 hover:text-white transition"><i class="material-icons-round">edit</i></button>
+                        ${s.email ? `<a href="mailto:${s.email}" class="text-green-400 hover:text-white transition"><i class="material-icons-round">email</i></a>` : ''}
+                        <button onclick="openDeleteModal(${s.id}, '${s.name.replace(/'/g, "\\'")}')" class="text-red-400 hover:text-white transition"><i class="material-icons-round">delete</i></button>
                     </div>
                 </div>
             `).join('');
@@ -489,7 +501,7 @@
             table.classList.remove('hidden');
             document.getElementById('students-table-body').innerHTML = pageData.map(s => `
                 <tr class="hover:bg-white/5 transition group">
-                    <td class="px-6 py-4"><input type="checkbox" class="student-checkbox rounded bg-black/20 border-white/20 text-gold focus:ring-0" value="${s.id}" ${selectedStudents.has(s.id) ? 'checked' : ''} onchange="toggleSelection(${s.id}, this.checked)"></td>
+                    <td class="px-6 py-4"><input type="checkbox" class="student-checkbox rounded bg-black/20 border-white/20 text-gold focus:ring-0 cursor-pointer" value="${s.id}" ${selectedStudents.has(s.id) ? 'checked' : ''} onchange="toggleSelection(${s.id}, this.checked)"></td>
                     <td class="px-6 py-4 font-medium text-theme-main">
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 rounded-full bg-blue-900 flex items-center justify-center text-xs text-white font-bold">${s.name.charAt(0)}</div>
@@ -499,10 +511,9 @@
                     <td class="px-6 py-4 text-theme-muted">${s.program || '-'}</td>
                     <td class="px-6 py-4"><span class="px-2 py-1 rounded bg-blue-500/10 text-blue-300 text-xs border border-blue-500/20">${s.current_form}</span></td>
                     <td class="px-6 py-4 text-theme-muted">${s.hall || '-'}</td>
-                    <td class="px-6 py-4 text-theme-muted">${s.phone || '-'}</td>
-                    <td class="px-6 py-4 flex gap-2 opacity-50 group-hover:opacity-100">
-                        <button onclick="editStudent(${s.id})" class="text-gold"><i class="material-icons-round text-sm">edit</i></button>
-                        <button onclick="openDeleteModal(${s.id}, '${s.name}')" class="text-red-400"><i class="material-icons-round text-sm">delete</i></button>
+                    <td class="px-6 py-4 flex gap-2 opacity-50 group-hover:opacity-100 transition">
+                        <button onclick="editStudent(${s.id})" class="text-gold hover:scale-110 transition"><i class="material-icons-round text-sm">edit</i></button>
+                        <button onclick="openDeleteModal(${s.id}, '${s.name}')" class="text-red-400 hover:scale-110 transition"><i class="material-icons-round text-sm">delete</i></button>
                     </td>
                 </tr>
             `).join('');
@@ -510,7 +521,7 @@
         else if (currentViewMode === 'list') {
             list.classList.remove('hidden');
             list.innerHTML = pageData.map(s => `
-                <div class="glass-card p-4 flex items-center justify-between hover:border-gold-500/30 transition">
+                <div class="glass-card p-4 flex items-center justify-between hover:border-gold-500/30 transition group">
                     <div class="flex items-center gap-4">
                         <div class="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center text-white font-bold border border-white/10">${s.name.charAt(0)}</div>
                         <div>
@@ -518,15 +529,16 @@
                             <p class="text-xs text-theme-muted">${s.program} • ${s.current_form}</p>
                         </div>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <span class="text-xs text-theme-muted hidden md:block">${s.email || ''}</span>
+                    <div class="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition">
                         <button onclick="quickView(${s.id})" class="p-2 bg-white/5 rounded-lg hover:bg-white/10 text-blue-400"><i class="material-icons-round">visibility</i></button>
+                        <button onclick="editStudent(${s.id})" class="p-2 bg-white/5 rounded-lg hover:bg-white/10 text-yellow-400"><i class="material-icons-round">edit</i></button>
                     </div>
                 </div>
             `).join('');
         }
     }
 
+    // --- INTERACTIONS ---
     function setViewMode(mode) {
         currentViewMode = mode;
         ['grid', 'table', 'list'].forEach(m => {
@@ -541,8 +553,11 @@
     function toggleSelection(id, checked) {
         if(checked) selectedStudents.add(id);
         else selectedStudents.delete(id);
+        
         document.getElementById('selected-count').textContent = selectedStudents.size;
-        document.getElementById('bulk-actions-panel').classList.toggle('hidden', selectedStudents.size === 0);
+        const panel = document.getElementById('bulk-actions-panel');
+        if(selectedStudents.size > 0) panel.classList.remove('hidden');
+        else panel.classList.add('hidden');
     }
 
     document.getElementById('select-all-table')?.addEventListener('change', (e) => {
@@ -552,12 +567,21 @@
         renderStudents();
     });
 
+    function clearSelections() {
+        selectedStudents.clear();
+        const checkboxes = document.querySelectorAll('.student-checkbox');
+        checkboxes.forEach(cb => cb.checked = false);
+        if(document.getElementById('select-all-table')) document.getElementById('select-all-table').checked = false;
+        document.getElementById('bulk-actions-panel').classList.add('hidden');
+    }
+
     function toggleQuickAdd() {
         const form = document.getElementById('quick-add-form');
         form.classList.toggle('hidden');
         document.getElementById('quick-add-arrow').textContent = form.classList.contains('hidden') ? 'keyboard_arrow_down' : 'keyboard_arrow_up';
     }
 
+    // --- FILTERS & STATS ---
     function updateStats() {
         document.getElementById('total-count').innerText = allStudents.length;
         const ages = allStudents.filter(s => s.age).map(s => s.age);
@@ -615,6 +639,7 @@
         renderStudents();
     }
 
+    // --- MODAL ACTIONS ---
     function openAddModal() {
         document.getElementById('add-student-form').reset();
         document.getElementById('edit-student-id').value = ''; 
@@ -629,8 +654,12 @@
     }
 
     function editStudent(id) {
-        const s = allStudents.find(x => x.id === id);
-        if(!s) return;
+        // Loose equality (==) allows string ID from HTML to match number ID from JSON
+        const s = allStudents.find(x => x.id == id);
+        if(!s) {
+            console.error('Student not found:', id);
+            return;
+        }
         
         document.getElementById('edit-student-id').value = s.id;
         document.getElementById('modal-name').value = s.name;
@@ -641,6 +670,8 @@
         document.getElementById('modal-phone').value = s.phone || '';
         document.getElementById('modal-gender').value = s.gender || '';
         document.getElementById('modal-dob').value = s.date_of_birth || '';
+        document.getElementById('modal-gname').value = s.guardian_name || '';
+        document.getElementById('modal-gphone').value = s.guardian_phone || '';
         
         document.getElementById('modal-title').innerText = 'Edit Student';
         document.getElementById('add-modal').classList.remove('hidden');
@@ -648,7 +679,7 @@
     }
 
     async function quickView(id) {
-        const s = allStudents.find(x => x.id === id);
+        const s = allStudents.find(x => x.id == id);
         if(!s) return;
         
         const content = `
@@ -677,13 +708,38 @@
         document.getElementById('quick-view-modal').classList.remove('flex');
     }
 
-    // --- FORM HANDLING (FIXED) ---
+    // --- BULK ACTION MODAL HANDLERS ---
+    function openMoveHallModal() {
+        document.getElementById('move-hall-modal').classList.remove('hidden');
+        document.getElementById('move-hall-modal').classList.add('flex');
+    }
+    function closeMoveHallModal() {
+        document.getElementById('move-hall-modal').classList.add('hidden');
+        document.getElementById('move-hall-modal').classList.remove('flex');
+    }
+    function openUpdateProgramModal() {
+        document.getElementById('update-program-modal').classList.remove('hidden');
+        document.getElementById('update-program-modal').classList.add('flex');
+    }
+    function closeUpdateProgramModal() {
+        document.getElementById('update-program-modal').classList.add('hidden');
+        document.getElementById('update-program-modal').classList.remove('flex');
+    }
+    function openBulkEmailModal() {
+        document.getElementById('bulk-email-modal').classList.remove('hidden');
+        document.getElementById('bulk-email-modal').classList.add('flex');
+    }
+    function closeBulkEmailModal() {
+        document.getElementById('bulk-email-modal').classList.add('hidden');
+        document.getElementById('bulk-email-modal').classList.remove('flex');
+    }
+
+    // --- FORM SUBMISSION ---
     document.getElementById('add-student-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = document.getElementById('edit-student-id').value;
         const data = Object.fromEntries(new FormData(e.target));
         
-        // FIX: Ensure method is correct based on ID presence
         const url = id ? `/api/students/${id}` : '/api/students';
         const method = id ? 'PUT' : 'POST';
 
@@ -691,8 +747,7 @@
             await apiRequest(url, { method, body: JSON.stringify(data) });
             showToast(id ? 'Updated successfully' : 'Created successfully');
             closeAddModal();
-            // Reload list immediately to reflect changes
-            await loadStudents();
+            loadStudents(); // Reloads data with new timestamp to bust cache
         } catch(e) {
             console.error(e);
         }
@@ -705,7 +760,7 @@
             await apiRequest('/api/students', { method: 'POST', body: JSON.stringify(data) });
             showToast('Added successfully');
             document.getElementById('quick-add').reset();
-            await loadStudents();
+            loadStudents();
         } catch(e) {}
     });
 
@@ -726,8 +781,22 @@
             await apiRequest(`/api/students/${deleteStudentId}`, { method: 'DELETE' });
             showToast('Deleted successfully');
             closeDeleteModal();
-            await loadStudents();
+            loadStudents();
         } catch(e) {}
+    }
+
+    async function executeBulkAction() {
+        const action = document.getElementById('bulk-action').value;
+        if (selectedStudents.size === 0) return showToast('Select at least one student', 'warning');
+        
+        if (action === 'move-hall') openMoveHallModal();
+        else if (action === 'update-program') openUpdateProgramModal();
+        else if (action === 'email') openBulkEmailModal();
+        else if (action === 'archive') showToast('Archive feature pending implementation', 'info');
+        else if (action === 'export') showToast('Export started...', 'info'); // Implement logic as needed
+        
+        // Reset dropdown
+        document.getElementById('bulk-action').value = "";
     }
 
     function setupEventListeners() {
