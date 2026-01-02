@@ -403,13 +403,16 @@
         setupEventListeners();
     });
 
-    // --- DATA LOADING ---
+    // --- DATA LOADING (FIXED CACHING) ---
     async function loadStudents() {
         document.getElementById('loading-state').classList.remove('hidden');
         document.getElementById('empty-state').classList.add('hidden');
         
         try {
-            const data = await apiRequest('/api/students?per_page=1000'); // Get all for client-side filtering efficiency in this demo
+            // FIX: Add timestamp to URL to prevent browser caching
+            const timestamp = new Date().getTime();
+            const data = await apiRequest(`/api/students?per_page=1000&_t=${timestamp}`);
+            
             allStudents = data.students || [];
             filteredStudents = [...allStudents];
             
@@ -418,6 +421,7 @@
             renderStudents();
         } catch (error) {
             console.error(error);
+            showToast('Failed to load data', 'error');
         } finally {
             document.getElementById('loading-state').classList.add('hidden');
         }
@@ -430,7 +434,6 @@
         const list = document.getElementById('students-list-view');
         const pagination = document.getElementById('pagination');
 
-        // Hide all views first
         grid.classList.add('hidden');
         table.classList.add('hidden');
         list.classList.add('hidden');
@@ -442,12 +445,10 @@
         }
         document.getElementById('empty-state').classList.add('hidden');
 
-        // Pagination Logic
         const start = (currentPage - 1) * itemsPerPage;
         const end = itemsPerPage === 10000 ? filteredStudents.length : Math.min(start + itemsPerPage, filteredStudents.length);
         const pageData = filteredStudents.slice(start, end);
 
-        // Update Pager
         document.getElementById('pagination-start').textContent = start + 1;
         document.getElementById('pagination-end').textContent = end;
         document.getElementById('pagination-total').textContent = filteredStudents.length;
@@ -455,7 +456,6 @@
         document.getElementById('next-page').disabled = end >= filteredStudents.length;
         pagination.classList.remove('hidden');
 
-        // Render Active View
         if (currentViewMode === 'grid') {
             grid.classList.remove('hidden');
             grid.innerHTML = pageData.map(s => `
@@ -527,10 +527,8 @@
         }
     }
 
-    // --- INTERACTIONS ---
     function setViewMode(mode) {
         currentViewMode = mode;
-        // Reset button styles
         ['grid', 'table', 'list'].forEach(m => {
             const btn = document.getElementById(`view-${m}`);
             btn.className = m === mode ? 
@@ -543,18 +541,15 @@
     function toggleSelection(id, checked) {
         if(checked) selectedStudents.add(id);
         else selectedStudents.delete(id);
-        
         document.getElementById('selected-count').textContent = selectedStudents.size;
-        const panel = document.getElementById('bulk-actions-panel');
-        if(selectedStudents.size > 0) panel.classList.remove('hidden');
-        else panel.classList.add('hidden');
+        document.getElementById('bulk-actions-panel').classList.toggle('hidden', selectedStudents.size === 0);
     }
 
     document.getElementById('select-all-table')?.addEventListener('change', (e) => {
         const checked = e.target.checked;
         const visibleIds = filteredStudents.slice((currentPage-1)*itemsPerPage, currentPage*itemsPerPage).map(s => s.id);
         visibleIds.forEach(id => toggleSelection(id, checked));
-        renderStudents(); // Re-render to update checkboxes
+        renderStudents();
     });
 
     function toggleQuickAdd() {
@@ -563,22 +558,15 @@
         document.getElementById('quick-add-arrow').textContent = form.classList.contains('hidden') ? 'keyboard_arrow_down' : 'keyboard_arrow_up';
     }
 
-    // --- FILTERS & STATS ---
     function updateStats() {
         document.getElementById('total-count').innerText = allStudents.length;
-        
-        // Avg Age
         const ages = allStudents.filter(s => s.age).map(s => s.age);
         const avg = ages.length ? Math.round(ages.reduce((a,b)=>a+b,0)/ages.length) : 0;
         document.getElementById('avg-age').innerText = avg;
-
-        // Top Program
         const counts = {};
         allStudents.forEach(s => s.program && (counts[s.program] = (counts[s.program] || 0) + 1));
         const top = Object.entries(counts).sort((a,b) => b[1]-a[1])[0];
         document.getElementById('top-program').innerText = top ? top[0] : '-';
-
-        // New This Month
         const now = new Date();
         const count = allStudents.filter(s => {
             const d = new Date(s.created_at);
@@ -590,10 +578,8 @@
     function updateQuickFilters() {
         const programs = [...new Set(allStudents.map(s => s.program).filter(Boolean))];
         const halls = [...new Set(allStudents.map(s => s.hall).filter(Boolean))];
-        
         const pSelect = document.getElementById('quick-program-filter');
         pSelect.innerHTML = '<option value="">All Programs</option>' + programs.map(p => `<option value="${p}">${p}</option>`).join('');
-        
         const hSelect = document.getElementById('quick-hall-filter');
         hSelect.innerHTML = '<option value="">All Halls</option>' + halls.map(h => `<option value="${h}">${h}</option>`).join('');
     }
@@ -602,21 +588,17 @@
         const term = document.getElementById('name-search').value.toLowerCase();
         const prog = document.getElementById('quick-program-filter').value;
         const hall = document.getElementById('quick-hall-filter').value;
-        // Add more logic for date range/email if needed from sidebar
-
         filteredStudents = allStudents.filter(s => {
             if(term && !s.name.toLowerCase().includes(term) && !String(s.id).includes(term)) return false;
             if(prog && s.program !== prog) return false;
             if(hall && s.hall !== hall) return false;
             return true;
         });
-
         document.getElementById('filtered-count').innerText = filteredStudents.length;
         currentPage = 1;
         renderStudents();
     }
 
-    // Debounced search
     document.getElementById('name-search').addEventListener('input', debounce(applyAdvancedFilters, 300));
 
     function filterByGender(g) {
@@ -633,10 +615,10 @@
         renderStudents();
     }
 
-    // --- MODAL ACTIONS ---
     function openAddModal() {
         document.getElementById('add-student-form').reset();
-        document.getElementById('edit-student-id').value = ''; // Ensure ID is empty for add
+        document.getElementById('edit-student-id').value = ''; 
+        document.getElementById('modal-title').innerText = 'Add Student';
         document.getElementById('add-modal').classList.remove('hidden');
         document.getElementById('add-modal').classList.add('flex');
     }
@@ -644,6 +626,25 @@
     function closeAddModal() {
         document.getElementById('add-modal').classList.add('hidden');
         document.getElementById('add-modal').classList.remove('flex');
+    }
+
+    function editStudent(id) {
+        const s = allStudents.find(x => x.id === id);
+        if(!s) return;
+        
+        document.getElementById('edit-student-id').value = s.id;
+        document.getElementById('modal-name').value = s.name;
+        document.getElementById('modal-program').value = s.program || '';
+        document.getElementById('modal-hall').value = s.hall || '';
+        document.getElementById('modal-class').value = s.class_room || '';
+        document.getElementById('modal-email').value = s.email || '';
+        document.getElementById('modal-phone').value = s.phone || '';
+        document.getElementById('modal-gender').value = s.gender || '';
+        document.getElementById('modal-dob').value = s.date_of_birth || '';
+        
+        document.getElementById('modal-title').innerText = 'Edit Student';
+        document.getElementById('add-modal').classList.remove('hidden');
+        document.getElementById('add-modal').classList.add('flex');
     }
 
     async function quickView(id) {
@@ -676,11 +677,13 @@
         document.getElementById('quick-view-modal').classList.remove('flex');
     }
 
-    // --- CRUD OPERATIONS ---
+    // --- FORM HANDLING (FIXED) ---
     document.getElementById('add-student-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = document.getElementById('edit-student-id').value;
         const data = Object.fromEntries(new FormData(e.target));
+        
+        // FIX: Ensure method is correct based on ID presence
         const url = id ? `/api/students/${id}` : '/api/students';
         const method = id ? 'PUT' : 'POST';
 
@@ -688,8 +691,11 @@
             await apiRequest(url, { method, body: JSON.stringify(data) });
             showToast(id ? 'Updated successfully' : 'Created successfully');
             closeAddModal();
-            loadStudents();
-        } catch(e) {}
+            // Reload list immediately to reflect changes
+            await loadStudents();
+        } catch(e) {
+            console.error(e);
+        }
     });
 
     document.getElementById('quick-add').addEventListener('submit', async (e) => {
@@ -699,27 +705,9 @@
             await apiRequest('/api/students', { method: 'POST', body: JSON.stringify(data) });
             showToast('Added successfully');
             document.getElementById('quick-add').reset();
-            loadStudents();
+            await loadStudents();
         } catch(e) {}
     });
-
-    function editStudent(id) {
-        const s = allStudents.find(x => x.id === id);
-        if(!s) return;
-        
-        document.getElementById('edit-student-id').value = s.id;
-        document.getElementById('modal-name').value = s.name;
-        document.getElementById('modal-program').value = s.program || '';
-        document.getElementById('modal-hall').value = s.hall || '';
-        document.getElementById('modal-class').value = s.class_room || '';
-        document.getElementById('modal-email').value = s.email || '';
-        document.getElementById('modal-phone').value = s.phone || '';
-        document.getElementById('modal-gender').value = s.gender || '';
-        document.getElementById('modal-dob').value = s.date_of_birth || '';
-        
-        document.getElementById('add-modal').classList.remove('hidden');
-        document.getElementById('add-modal').classList.add('flex');
-    }
 
     function openDeleteModal(id, name) {
         deleteStudentId = id;
@@ -738,18 +726,16 @@
             await apiRequest(`/api/students/${deleteStudentId}`, { method: 'DELETE' });
             showToast('Deleted successfully');
             closeDeleteModal();
-            loadStudents();
+            await loadStudents();
         } catch(e) {}
     }
 
-    // --- HELPER ---
     function setupEventListeners() {
         document.getElementById('items-per-page').addEventListener('change', (e) => {
             itemsPerPage = e.target.value === 'all' ? 10000 : parseInt(e.target.value);
             currentPage = 1;
             renderStudents();
         });
-        
         document.getElementById('next-page').addEventListener('click', () => { currentPage++; renderStudents(); });
         document.getElementById('prev-page').addEventListener('click', () => { currentPage--; renderStudents(); });
     }
