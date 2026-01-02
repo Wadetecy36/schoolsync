@@ -64,7 +64,13 @@
         </h2>
         <form action="/settings/2fa" method="POST">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div class="space-y-3">
+            <!-- If generating a new secret, pass it along -->
+            {% if new_secret %}
+            <input type="hidden" name="totp_secret" value="{{ new_secret }}">
+            {% endif %}
+
+            <div class="space-y-4">
+                <!-- Option 1: Email -->
                 <label class="flex items-center p-3 rounded-lg border border-white/10 cursor-pointer hover:bg-white/5 {{ 'border-gold-500 bg-gold-500/10' if current_user.two_factor_method == 'email' }}">
                     <input type="radio" name="2fa_method" value="email" {{ 'checked' if current_user.two_factor_method == 'email' }} class="mr-3 accent-yellow-500">
                     <div>
@@ -73,14 +79,26 @@
                     </div>
                 </label>
                 
-                <label class="flex items-center p-3 rounded-lg border border-white/10 cursor-pointer hover:bg-white/5 {{ 'border-gold-500 bg-gold-500/10' if current_user.two_factor_method == 'sms' }}">
-                    <input type="radio" name="2fa_method" value="sms" {{ 'checked' if current_user.two_factor_method == 'sms' }} class="mr-3 accent-yellow-500">
-                    <div>
-                        <span class="text-theme-main block font-bold">SMS OTP</span>
-                        <span class="text-xs text-theme-muted">Twilio required</span>
+                <!-- Option 2: Authenticator App (REPLACES SMS) -->
+                <label class="block p-3 rounded-lg border border-white/10 cursor-pointer hover:bg-white/5 {{ 'border-gold-500 bg-gold-500/10' if current_user.two_factor_method == 'app' }}">
+                    <div class="flex items-center mb-2">
+                        <input type="radio" name="2fa_method" value="app" {{ 'checked' if current_user.two_factor_method == 'app' }} class="mr-3 accent-yellow-500">
+                        <div>
+                            <span class="text-theme-main block font-bold">Authenticator App</span>
+                            <span class="text-xs text-theme-muted">Google Auth / Authy</span>
+                        </div>
                     </div>
+                    
+                    <!-- Only show QR Code if App is NOT yet active or user wants to switch -->
+                    {% if qr_code and current_user.two_factor_method != 'app' %}
+                    <div class="ml-7 mt-3 p-3 bg-white rounded-xl inline-block">
+                        <img src="{{ qr_code }}" class="w-32 h-32">
+                    </div>
+                    <p class="ml-7 text-xs text-theme-muted mt-1">Scan this code with your phone app</p>
+                    {% endif %}
                 </label>
                 
+                <!-- Option 3: Disable -->
                 <label class="flex items-center p-3 rounded-lg border border-white/10 cursor-pointer hover:bg-white/5 {{ 'border-red-500/50' if not current_user.two_factor_method }}">
                     <input type="radio" name="2fa_method" value="off" {{ 'checked' if not current_user.two_factor_method }} class="mr-3">
                     <span class="text-theme-main font-bold">Disabled</span>
@@ -89,7 +107,6 @@
             <button class="w-full btn-glass mt-6 py-2 rounded-lg hover:bg-white/10 text-theme-main border border-white/20">Save Security Settings</button>
         </form>
     </div>
-</div>
 <script>
 document.getElementById('password-form').addEventListener('submit', async (e) => {
     e.preventDefault();

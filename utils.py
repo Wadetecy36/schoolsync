@@ -6,6 +6,10 @@ from twilio.rest import Client
 import sys
 from threading import Thread
 from itsdangerous import URLSafeTimedSerializer
+import pyotp
+import qrcode
+import io
+import base64
 
 def generate_otp():
     """Generate a 6-digit numeric code"""
@@ -36,6 +40,36 @@ def send_email_otp(email, otp):
     except Exception as e:
         print(f"❌ Error starting email task: {e}", file=sys.stderr)
         return True
+
+
+# --- GOOGLE AUTHENTICATOR HELPERS ---
+
+def get_totp_uri(user):
+    """Generate the URL for the QR Code"""
+    # 1. Generate a random secret if user doesn't have one
+    if not user.totp_secret:
+        return None, None
+        
+    totp = pyotp.TOTP(user.totp_secret)
+    # This creates the link that the QR code stores
+    uri = totp.provisioning_uri(name=user.username, issuer_name="SchoolSync Pro")
+    return uri, user.totp_secret
+
+def generate_qr_code(uri):
+    """Convert the URI into a PNG image string"""
+    qr = qrcode.make(uri)
+    buf = io.BytesIO()
+    qr.save(buf, format='PNG')
+    # Encode as Base64 to show in HTML
+    img_str = base64.b64encode(buf.getvalue()).decode('utf-8')
+    return f"data:image/png;base64,{img_str}"
+
+def verify_totp(user, code):
+    """Check if the code from the App is correct"""
+    if not user.totp_secret:
+        return False
+    totp = pyotp.TOTP(user.totp_secret)
+    return totp.verify(code)
 
 # --- NEW: Password Reset Email ---
 def send_password_reset_email(email):

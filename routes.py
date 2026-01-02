@@ -9,6 +9,8 @@ import io
 import os
 import filetype
 from werkzeug.utils import secure_filename
+import pyotp # Add this import at the top
+from utils import generate_qr_code, get_totp_uri # Add these
 
 main = Blueprint('main', __name__)
 
@@ -75,10 +77,27 @@ def student_detail(id):
 def import_page():
     return render_template('import.html')
 
-@main.route('/settings')
+
+@main.route('/settings', methods=['GET'])
 @login_required
 def settings():
-    return render_template('settings.html')
+    # Logic for Authenticator App Setup
+    qr_code = None
+    secret = None
+    
+    # If they are enabling App 2FA, generate a temporary secret to show QR
+    if not current_user.totp_secret:
+        # Generate a temporary secret just for display
+        # We save this to DB only when they confirm
+        temp_secret = pyotp.random_base32()
+        # Hack: temporarily attach to user to generate URI (not saved to DB yet)
+        current_user.totp_secret = temp_secret
+        uri, _ = get_totp_uri(current_user)
+        qr_code = generate_qr_code(uri)
+        secret = temp_secret
+        # Don't save yet! Wait for them to select it.
+    
+    return render_template('settings.html', qr_code=qr_code, new_secret=secret)
 
 # --- API Endpoints ---
 
@@ -290,6 +309,34 @@ def update_2fa():
     flash('Security settings updated', 'success')
     return redirect(url_for('main.settings'))
 
+
+@main.route('/settings/2fa', methods=['POST'])
+@login_required
+def update_2fa():
+    method = request.form.get('2fa_method')
+    
+    if method == 'app':
+        # If they selected App, we must save the secret provided in the hidden form field
+        secret = request.form.get('totp_secret')
+        if secret:
+            current_user.totp_secret = secret
+            current_user.two_factor_method = 'app'
+            current_user.phone = None # Clear phone if switching away from SMS
+        else:
+            # Already set up? Just enable
+            if current_user.totp_secret:
+                current_user.two_factor_method = 'app'
+    
+    elif method == 'email':
+        current_user.two_factor_method = 'email'
+        
+    elif method == 'off':
+        current_user.two_factor_method = None
+        current_user.totp_secret = None # Reset secret
+        
+    db.session.commit()
+    flash(f'Two-Factor Authentication updated to: {current_user.two_factor_method}', 'success')
+    return redirect(url_for('main.settings'))
 @main.route('/api/download-template/<fmt>')
 def download_template(fmt):
     # (Simplified for brevity - your previous code here works)
