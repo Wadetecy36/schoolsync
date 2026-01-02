@@ -3,104 +3,93 @@
 {% block title %}Settings - SchoolSync Pro{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto space-y-6">
-    <h1 class="text-3xl font-bold text-gray-900">Account Settings</h1>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+    
+    <!-- Profile Card -->
+    <div class="md:col-span-2 glass-card p-8">
+        <h2 class="text-xl font-bold text-theme-main mb-6 flex items-center">
+            <i class="material-icons-round text-gold mr-3">badge</i> Profile
+        </h2>
         
-        <!-- Profile Settings -->
-        <div class="md:col-span-2 space-y-6">
-            <div class="bg-white rounded-2xl shadow-lg p-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                    <i class="material-icons-round text-blue-600 mr-2">badge</i>
-                    Profile Information
-                </h2>
-                <form method="POST" action="/settings/profile">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                            <input type="text" name="full_name" value="{{ current_user.full_name }}" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                            <input type="email" name="email" value="{{ current_user.email }}" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Phone (for SMS)</label>
-                            <input type="tel" name="phone" value="{{ current_user.phone or '' }}" placeholder="+1234567890" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-                    </div>
-                    <button class="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-bold">
-                        Save Profile
-                    </button>
-                </form>
-            </div>
+        <!-- Flash Messages Area -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="mb-4 p-3 rounded-lg {{ 'bg-red-500/20 text-red-200 border border-red-500/30' if category == 'error' else 'bg-green-500/20 text-green-200 border border-green-500/30' }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
 
-            <!-- Password Change -->
-            <div class="bg-white rounded-2xl shadow-lg p-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                    <i class="material-icons-round text-yellow-600 mr-2">lock</i>
-                    Change Password
-                </h2>
-                <form id="password-form">
-                    <div class="space-y-3">
-                        <input type="password" id="current_password" placeholder="Current Password" class="w-full px-4 py-2 border rounded-lg">
-                        <input type="password" id="new_password" placeholder="New Password" class="w-full px-4 py-2 border rounded-lg">
-                        <input type="password" id="confirm_password" placeholder="Confirm New Password" class="w-full px-4 py-2 border rounded-lg">
-                    </div>
-                    <button type="submit" class="mt-4 bg-yellow-600 text-white px-6 py-2 rounded-lg hover:bg-yellow-700 transition font-bold">
-                        Update Password
-                    </button>
-                </form>
-            </div>
-        </div>
+        <form action="/settings/profile" method="POST" class="space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Username Field -->
+                <div>
+                    <label class="text-sm text-theme-muted block mb-1">Username</label>
+                    <input type="text" name="username" value="{{ current_user.username }}" required class="w-full p-3 rounded-lg">
+                </div>
 
-        <!-- 2FA Settings -->
-        <div class="md:col-span-1">
-            <div class="bg-white rounded-2xl shadow-lg p-6 h-full">
-                <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                    <i class="material-icons-round text-purple-600 mr-2">security</i>
-                    Two-Factor Auth
-                </h2>
-                <p class="text-sm text-gray-500 mb-6">Secure your account by requiring a code when logging in.</p>
+                <!-- Full Name Field -->
+                <div>
+                    <label class="text-sm text-theme-muted block mb-1">Full Name</label>
+                    <input type="text" name="full_name" value="{{ current_user.full_name }}" required class="w-full p-3 rounded-lg">
+                </div>
+
+                <!-- Email Field -->
+                <div class="md:col-span-2">
+                    <label class="text-sm text-theme-muted block mb-1">Email Address</label>
+                    <input type="email" name="email" value="{{ current_user.email }}" required class="w-full p-3 rounded-lg">
+                </div>
+
+                <!-- Phone Field -->
+                <div class="md:col-span-2">
+                    <label class="text-sm text-theme-muted block mb-1">Phone (for SMS OTP)</label>
+                    <input type="tel" name="phone" value="{{ current_user.phone or '' }}" placeholder="+1234567890" class="w-full p-3 rounded-lg">
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-gold px-6 py-3 rounded-lg mt-4 w-full md:w-auto text-black font-bold shadow-lg">
+                Update Credentials
+            </button>
+        </form>
+    </div>
+
+    <!-- Security Card (2FA) -->
+    <div class="glass-card p-8">
+        <h2 class="text-xl font-bold text-theme-main mb-6 flex items-center">
+            <i class="material-icons-round text-blue-400 mr-3">security</i> Security
+        </h2>
+        <form action="/settings/2fa" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="space-y-3">
+                <label class="flex items-center p-3 rounded-lg border border-white/10 cursor-pointer hover:bg-white/5 {{ 'border-gold-500 bg-gold-500/10' if current_user.two_factor_method == 'email' }}">
+                    <input type="radio" name="2fa_method" value="email" {{ 'checked' if current_user.two_factor_method == 'email' }} class="mr-3 accent-yellow-500">
+                    <div>
+                        <span class="text-theme-main block font-bold">Email OTP</span>
+                        <span class="text-xs text-theme-muted">Send to {{ current_user.email }}</span>
+                    </div>
+                </label>
                 
-                <form method="POST" action="/settings/2fa">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <div class="space-y-4">
-                        <label class="flex items-center p-3 border rounded-xl cursor-pointer hover:bg-gray-50 transition {{ 'border-blue-500 bg-blue-50' if current_user.two_factor_method == 'email' }}">
-                            <input type="radio" name="2fa_method" value="email" {{ 'checked' if current_user.two_factor_method == 'email' }} class="mr-3">
-                            <div>
-                                <span class="font-bold block">Email</span>
-                                <span class="text-xs text-gray-500">Send code to {{ current_user.email }}</span>
-                            </div>
-                        </label>
-
-                        <label class="flex items-center p-3 border rounded-xl cursor-pointer hover:bg-gray-50 transition {{ 'border-green-500 bg-green-50' if current_user.two_factor_method == 'sms' }}">
-                            <input type="radio" name="2fa_method" value="sms" {{ 'checked' if current_user.two_factor_method == 'sms' }} class="mr-3">
-                            <div>
-                                <span class="font-bold block">SMS Text</span>
-                                <span class="text-xs text-gray-500">Send code to phone</span>
-                            </div>
-                        </label>
-
-                        <label class="flex items-center p-3 border rounded-xl cursor-pointer hover:bg-gray-50 transition {{ 'border-red-500 bg-red-50' if not current_user.two_factor_method }}">
-                            <input type="radio" name="2fa_method" value="off" {{ 'checked' if not current_user.two_factor_method }} class="mr-3">
-                            <div>
-                                <span class="font-bold block">Disabled</span>
-                                <span class="text-xs text-gray-500">Only password required</span>
-                            </div>
-                        </label>
+                <label class="flex items-center p-3 rounded-lg border border-white/10 cursor-pointer hover:bg-white/5 {{ 'border-gold-500 bg-gold-500/10' if current_user.two_factor_method == 'sms' }}">
+                    <input type="radio" name="2fa_method" value="sms" {{ 'checked' if current_user.two_factor_method == 'sms' }} class="mr-3 accent-yellow-500">
+                    <div>
+                        <span class="text-theme-main block font-bold">SMS OTP</span>
+                        <span class="text-xs text-theme-muted">Twilio required</span>
                     </div>
-                    <button class="mt-6 w-full bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition font-bold">
-                        Update Security
-                    </button>
-                </form>
+                </label>
+                
+                <label class="flex items-center p-3 rounded-lg border border-white/10 cursor-pointer hover:bg-white/5 {{ 'border-red-500/50' if not current_user.two_factor_method }}">
+                    <input type="radio" name="2fa_method" value="off" {{ 'checked' if not current_user.two_factor_method }} class="mr-3">
+                    <span class="text-theme-main font-bold">Disabled</span>
+                </label>
             </div>
-        </div>
+            <button class="w-full btn-glass mt-6 py-2 rounded-lg hover:bg-white/10 text-theme-main border border-white/20">Save Security Settings</button>
+        </form>
     </div>
 </div>
-
 <script>
 document.getElementById('password-form').addEventListener('submit', async (e) => {
     e.preventDefault();

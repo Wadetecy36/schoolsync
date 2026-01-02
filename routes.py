@@ -614,20 +614,44 @@ def download_template(file_type):
 def settings():
     return render_template('settings.html')
 
+
 @main.route('/settings/profile', methods=['POST'])
 @login_required
 def update_profile():
     try:
-        current_user.full_name = request.form.get('full_name')
-        current_user.email = request.form.get('email')
-        current_user.phone = request.form.get('phone')
+        new_username = request.form.get('username').strip()
+        new_email = request.form.get('email').strip()
+        new_fullname = request.form.get('full_name').strip()
+        new_phone = request.form.get('phone').strip()
+
+        # 1. Check if Username is taken (by someone else)
+        if new_username != current_user.username:
+            existing_user = User.query.filter_by(username=new_username).first()
+            if existing_user:
+                flash('Username already taken. Please choose another.', 'error')
+                return redirect(url_for('main.settings'))
+
+        # 2. Check if Email is taken (by someone else)
+        if new_email != current_user.email:
+            existing_email = User.query.filter_by(email=new_email).first()
+            if existing_email:
+                flash('Email already registered by another account.', 'error')
+                return redirect(url_for('main.settings'))
+
+        # 3. Update Fields
+        current_user.username = new_username
+        current_user.full_name = new_fullname
+        current_user.email = new_email
+        current_user.phone = new_phone
+        
         db.session.commit()
-        flash('Profile updated successfully', 'success')
+        flash('Profile credentials updated successfully!', 'success')
+        
     except Exception as e:
         db.session.rollback()
-        flash(f'Error updating profile: {str(e)}', 'error')
+        flash(f'System Error: {str(e)}', 'error')
+        
     return redirect(url_for('main.settings'))
-
 @main.route('/settings/2fa', methods=['POST'])
 @login_required
 def update_2fa():
