@@ -6,7 +6,7 @@ import re
 
 db = SQLAlchemy()
 
-# --- VALIDATION LISTS ---
+# --- VALIDATION CONSTANTS ---
 VALID_HALLS = [
     "Alema Hall", "Ellen Hall", "Halm Addo Hall", "Nana Wereko Ampem II Hall",
     "Wilson Q .Tei Hall", "Awuletey Hall", "Peter Ala Adjetey Hall",
@@ -31,7 +31,7 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login = db.Column(db.DateTime)
     
-    # 2FA
+    # 2FA Columns
     phone = db.Column(db.String(20))
     two_factor_method = db.Column(db.String(10), default=None) 
     otp_code = db.Column(db.String(6))
@@ -42,7 +42,7 @@ class User(UserMixin, db.Model):
     
     def set_password(self, password):
         if not self.validate_password(password):
-            raise ValueError("Password weak: 8+ chars, upper, lower, number, special char required")
+            raise ValueError("Password must be 8+ chars with upper, lower, number & special char.")
         self.password_hash = generate_password_hash(password)
     
     def check_password(self, password):
@@ -59,20 +59,21 @@ class User(UserMixin, db.Model):
     
     @property
     def is_super_admin(self): return self.role == 'super_admin'
+
     def __repr__(self): return f'<User {self.username}>'
 
 class Student(db.Model):
     __tablename__ = 'students'
     
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
+    name = db.Column(db.String(100), nullable=False, index=True)
     gender = db.Column(db.String(20))
     date_of_birth = db.Column(db.Date)
-    program = db.Column(db.String(100))
+    program = db.Column(db.String(100), index=True)
     hall = db.Column(db.String(100))
     class_room = db.Column(db.String(20))
-    enrollment_year = db.Column(db.Integer, nullable=False)
-    photo_file = db.Column(db.String(255)) # Storing Filename
+    enrollment_year = db.Column(db.Integer, nullable=False, index=True)
+    photo_file = db.Column(db.String(255)) # Holds Filename (Local) or URL (Cloudinary)
     email = db.Column(db.String(120))
     phone = db.Column(db.String(20))
     guardian_name = db.Column(db.String(100))
@@ -81,19 +82,17 @@ class Student(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     
+    # Relationships
     academic_history = db.relationship('AcademicRecord', backref='student', lazy='dynamic', cascade='all, delete-orphan')
     
     __table_args__ = (
-        db.Index('ix_students_name', 'name'),
-        db.Index('ix_students_program', 'program'),
-        db.Index('ix_students_enrollment_year', 'enrollment_year'),
         db.Index('ix_students_created_by', 'created_by'),
     )
     
     @property
     def current_form(self):
+        """Calculate Form based on enrollment year vs current year"""
         current_year = datetime.now().year
-        # Assuming academic year starts in September/Jan, simple year math:
         diff = current_year - self.enrollment_year
         if diff >= 3: return "Completed"
         elif diff == 2: return "Third Form"
@@ -102,32 +101,45 @@ class Student(db.Model):
     
     @property
     def age(self):
+        """Calculate dynamic age"""
         if self.date_of_birth:
             today = datetime.now().date()
             return today.year - self.date_of_birth.year - ((today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day))
         return None
     
     def to_dict(self):
+        """Serialize for API response"""
+        # Photo Logic: Determine if it's a raw URL (Cloudinary) or local file path
+        photo_url = None
+        if self.photo_file:
+            if self.photo_file.startswith('http'):
+                photo_url = self.photo_file
+            else:
+                photo_url = f"/static/uploads/{self.photo_file}"
+
         return {
             'id': self.id,
             'name': self.name,
             'gender': self.gender,
             'date_of_birth': self.date_of_birth.isoformat() if self.date_of_birth else None,
-            'age': self.age,
+            'age': self.age, # New field
             'program': self.program,
             'hall': self.hall,
             'class_room': self.class_room,
             'enrollment_year': self.enrollment_year,
             'current_form': self.current_form,
-            'photo_url': f"/static/uploads/{self.photo_file}" if self.photo_file else None,
+            'photo_url': photo_url, # New field
             'email': self.email,
             'phone': self.phone,
             'guardian_name': self.guardian_name,
-            'guardian_phone': self.guardian_phone
+            'guardian_phone': self.guardian_phone,
+            'created_by': self.created_by
         }
     
     def has_permission(self, user):
         return user.is_super_admin or self.created_by == user.id
+
+    def __repr__(self): return f'<Student {self.name}>'
 
 class AcademicRecord(db.Model):
     __tablename__ = 'academic_records'
@@ -144,5 +156,3 @@ class AcademicRecord(db.Model):
         db.Index('ix_academic_records_student_id', 'student_id'),
         db.Index('ix_academic_records_year', 'year'),
     )
-    def __repr__(self):
-        return f'<AcademicRecord {self.form} - {self.year}>'
