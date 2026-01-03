@@ -317,6 +317,26 @@ def import_file():
         return jsonify({'success': True, 'message': f'Imported {success}', 'errors': errors[:5]})
     except Exception as e: return jsonify({'error': str(e)}), 500
 
+# --- MISSING ROUTE FIX ---
+@main.route('/api/students/<int:id>', methods=['GET'])
+@login_required
+def get_single_student(id):
+    """Fetch single student data for View/Edit modals"""
+    try:
+        student = Student.query.get_or_404(id)
+        
+        # Check permissions
+        if not student.has_permission(current_user):
+            return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+
+        return jsonify({
+            'success': True, 
+            'student': student.to_dict()
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+# -------------------------
+
 @main.route('/api/stats', methods=['GET'])
 @login_required
 def get_stats():

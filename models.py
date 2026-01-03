@@ -108,13 +108,21 @@ class Student(db.Model):
         return None
     
     def to_dict(self):
-        """Serialize for API response"""
-        # Photo Logic: Determine if it's a raw URL (Cloudinary) or local file path
+        # Calculate Age
+        current_age = None
+        if self.date_of_birth:
+            today = datetime.now().date()
+            current_age = today.year - self.date_of_birth.year - ((today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day))
+
+        # Photo Logic
         photo_url = None
         if self.photo_file:
             if self.photo_file.startswith('http'):
+                # It is a Cloudinary URL -> Use as is
                 photo_url = self.photo_file
             else:
+                # It is a Local File -> Use static path
+                # (Note: On Render, this file might not exist anymore)
                 photo_url = f"/static/uploads/{self.photo_file}"
 
         return {
@@ -122,20 +130,20 @@ class Student(db.Model):
             'name': self.name,
             'gender': self.gender,
             'date_of_birth': self.date_of_birth.isoformat() if self.date_of_birth else None,
-            'age': self.age, # New field
+            'age': current_age,
             'program': self.program,
             'hall': self.hall,
             'class_room': self.class_room,
             'enrollment_year': self.enrollment_year,
             'current_form': self.current_form,
-            'photo_url': photo_url, # New field
+            'photo_url': photo_url, # Returns corrected URL
             'email': self.email,
             'phone': self.phone,
             'guardian_name': self.guardian_name,
             'guardian_phone': self.guardian_phone,
             'created_by': self.created_by
         }
-    
+
     def has_permission(self, user):
         return user.is_super_admin or self.created_by == user.id
 
