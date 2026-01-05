@@ -408,647 +408,297 @@
     </div>
 </div>
 
-{% endblock %}
 
+<!-- ADD/EDIT STUDENT MODAL -->
+<div id="add-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
+    <div class="glass-card w-full max-w-3xl max-h-[90vh] overflow-y-auto p-8 animate-fade-in shadow-2xl border border-white/10">
+        
+        <div class="flex justify-between items-center mb-8 border-b border-white/10 pb-4">
+            <h3 class="text-2xl font-bold text-theme-main" id="modal-title">Student Details</h3>
+            <button onclick="closeAddModal()" class="text-theme-muted hover:text-white transition"><i class="material-icons-round text-2xl">close</i></button>
+        </div>
+        
+        <form id="form-main-student" class="space-y-6" enctype="multipart/form-data">
+            <input type="hidden" id="edit-student-id">
+            
+            <div class="flex flex-col lg:flex-row gap-8">
+                
+                <!-- PROFILE PICTURE SECTION -->
+                <div class="lg:w-1/3 flex flex-col items-center">
+                    <div class="relative group cursor-pointer w-48 h-48">
+                        
+                        <!-- 1. The Actual Image (Hidden by default, shown if exists) -->
+                        <img id="photo-display" src="" class="w-full h-full rounded-full object-cover border-4 border-white/10 shadow-2xl bg-black/50 hidden">
+                        
+                        <!-- 2. The Placeholder (Shown if no image) -->
+                        <div id="photo-placeholder" class="w-full h-full rounded-full flex items-center justify-center bg-gradient-to-br from-gray-700 to-black border-4 border-white/10 shadow-2xl">
+                             <i class="material-icons-round text-6xl text-white/50">person</i>
+                        </div>
+                        
+                        <!-- Edit Overlay -->
+                        <div class="absolute inset-0 rounded-full bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300">
+                            <i class="material-icons-round text-white text-3xl mb-1">cloud_upload</i>
+                            <span class="text-xs text-white font-medium">Click to Upload</span>
+                        </div>
+                        
+                        <!-- File Input -->
+                        <input type="file" name="photo" id="photo-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" onchange="previewSelectedImage(this)">
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div id="upload-progress-container" class="w-full mt-4 bg-gray-700 h-2 rounded-full overflow-hidden hidden">
+                        <div id="upload-progress-bar" class="h-full bg-gradient-to-r from-gold-500 to-yellow-300 w-0 transition-all duration-200"></div>
+                    </div>
+                </div>
+
+                <!-- FORM FIELDS (Right Side) -->
+                <div class="lg:w-2/3 grid grid-cols-1 gap-5">
+                    <!-- Standard fields (same as before) -->
+                    <input type="text" name="name" id="modal-name" placeholder="Full Name" required class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+                    <div class="grid grid-cols-2 gap-4">
+                        <select name="gender" id="modal-gender" class="p-3 bg-black/30 border border-white/10 rounded-xl text-theme-main"><option value="Male">Male</option><option value="Female">Female</option></select>
+                        <select name="program" id="modal-program" class="p-3 bg-black/30 border border-white/10 rounded-xl text-theme-main" onchange="updateClassOptions('modal')"></select>
+                    </div>
+                    <!-- (Add other fields: Class, Hall, Email, etc...) -->
+                    <select name="class_room" id="modal-class" class="p-3 bg-black/30 border border-white/10 rounded-xl text-theme-main"></select>
+                </div>
+            </div>
+
+            <!-- BUTTONS -->
+            <div class="flex gap-4 pt-4 border-t border-white/10">
+                <button type="submit" id="save-btn" class="flex-1 btn-gold py-3 rounded-xl font-bold text-black shadow-lg hover:scale-[1.01] transition">Save & Upload</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
 {% block extra_js %}
 <script>
-    // --- SCHOOL CONFIGURATION FROM CSV ---
-    const CONFIG = {
-        halls: [
-            "Alema Hall", "Ellen Hall", "Halm Addo Hall", "Nana Wereko Ampem II Hall",
-            "Wilson Q .Tei Hall", "Awuletey Hall", "Peter Ala Adjetey Hall",
-            "Nana Akuako Sarpong Hall", "Nana Awuah Darko Ampem Hall"
-        ],
-        programs: [
-            "General Science", "Business", "General Arts", "Visual Arts", "Agriculture", "Home Economics"
-        ],
-        // Logic to generate classes: "1-Science-1" to "3-Science-13" based on your CSV structure
-        classConfig: {
-            "General Science": { code: "Science", count: 13 },
-            "Business": { code: "Business", count: 9 },
-            "General Arts": { code: "GeneralArts", count: 9 },
-            "Visual Arts": { code: "VisualArts", count: 3 },
-            "Agriculture": { code: "Agriculture", count: 2 },
-            "Home Economics": { code: "HomeEcons", count: 2 }
+/* ================================
+   SCHOOL CONFIGURATION
+================================ */
+const CONFIG = {
+    halls: [
+        "Alema Hall", "Ellen Hall", "Halm Addo Hall", "Nana Wereko Ampem II Hall",
+        "Wilson Q .Tei Hall", "Awuletey Hall", "Peter Ala Adjetey Hall",
+        "Nana Akuako Sarpong Hall", "Nana Awuah Darko Ampem Hall"
+    ],
+    programs: [
+        "General Science", "Business", "General Arts",
+        "Visual Arts", "Agriculture", "Home Economics"
+    ],
+    classConfig: {
+        "General Science": { code: "Science", count: 13 },
+        "Business": { code: "Business", count: 9 },
+        "General Arts": { code: "GeneralArts", count: 9 },
+        "Visual Arts": { code: "VisualArts", count: 3 },
+        "Agriculture": { code: "Agriculture", count: 2 },
+        "Home Economics": { code: "HomeEcons", count: 2 }
+    }
+};
+
+/* ================================
+   UTILITIES & STATE
+================================ */
+const debounce = (fn, wait) => {
+    let t;
+    return (...args) => {
+        clearTimeout(t);
+        t = setTimeout(() => fn(...args), wait);
+    };
+};
+
+let allStudents = [];
+let filteredStudents = [];
+let selectedStudents = new Set();
+let currentPage = 1;
+let itemsPerPage = 12;
+let currentViewMode = 'grid';
+let deleteStudentId = null;
+
+/* ================================
+   IMAGE LIVE PREVIEW (FIX)
+================================ */
+function previewSelectedImage(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = e => {
+        const img = document.getElementById('photo-display');
+        const placeholder = document.getElementById('photo-placeholder');
+
+        img.src = e.target.result;
+        img.classList.remove('hidden');
+        placeholder.classList.add('hidden');
+    };
+    reader.readAsDataURL(file);
+}
+
+/* ================================
+   DROPDOWNS
+================================ */
+function populateDropdowns() {
+    const fill = (id, options) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const first = el.firstElementChild;
+        el.innerHTML = '';
+        el.appendChild(first);
+        options.forEach(v => {
+            const o = document.createElement('option');
+            o.value = v;
+            o.textContent = v;
+            el.appendChild(o);
+        });
+    };
+
+    fill('modal-program', CONFIG.programs);
+    fill('modal-hall', CONFIG.halls);
+    fill('filter-program', CONFIG.programs);
+    fill('filter-hall', CONFIG.halls);
+    fill('target-form-select', ['Form 1', 'Form 2', 'Form 3', 'Completed']);
+}
+
+function updateClassOptions(ctx) {
+    const p = document.getElementById(`${ctx}-program`);
+    const c = document.getElementById(`${ctx}-class`);
+    if (!p || !c) return;
+
+    const conf = CONFIG.classConfig[p.value];
+    c.innerHTML = '<option value="">Select Class...</option>';
+
+    if (!conf) return;
+
+    for (let y = 1; y <= 3; y++) {
+        for (let i = 1; i <= conf.count; i++) {
+            const name = `${y}-${conf.code}-${i}`;
+            c.append(new Option(name, name));
+        }
+    }
+}
+
+/* ================================
+   DATA LOADING
+================================ */
+async function loadStudents() {
+    try {
+        const data = await apiRequest('/api/students?per_page=2000');
+        allStudents = data.students || [];
+        filteredStudents = [...allStudents];
+        renderStudents();
+    } catch {
+        showToast('Failed to load students', 'error');
+    }
+}
+
+/* ================================
+   EDIT STUDENT (IMAGE FIX MERGED)
+================================ */
+function editStudent(id) {
+    const s = allStudents.find(x => x.id == id);
+    if (!s) return;
+
+    document.getElementById('edit-student-id').value = s.id;
+    document.getElementById('modal-name').value = s.name;
+    document.getElementById('modal-email').value = s.email || '';
+    document.getElementById('modal-phone').value = s.phone || '';
+    document.getElementById('modal-gender').value = s.gender || '';
+    document.getElementById('modal-dob').value = s.date_of_birth || '';
+
+    // Reset file input
+    document.getElementById('photo-input').value = '';
+
+    const img = document.getElementById('photo-display');
+    const placeholder = document.getElementById('photo-placeholder');
+
+    if (s.photo_url) {
+        img.src = s.photo_url;
+        img.classList.remove('hidden');
+        placeholder.classList.add('hidden');
+    } else {
+        img.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+        placeholder.innerHTML = `
+            <div class="w-full h-full flex items-center justify-center 
+                        bg-blue-900 rounded-full text-white text-5xl font-bold">
+                ${s.name.charAt(0)}
+            </div>`;
+    }
+
+    document.getElementById('modal-hall').value = s.hall || '';
+    document.getElementById('modal-program').value = s.program || '';
+    updateClassOptions('modal');
+
+    setTimeout(() => {
+        document.getElementById('modal-class').value = s.class_room || '';
+    }, 50);
+
+    document.getElementById('modal-title').innerText = 'Edit Student';
+    toggleModal('add-modal', true);
+}
+
+/* ================================
+   FORM SUBMISSION (XHR + PROGRESS)
+================================ */
+document.getElementById('form-main-student').onsubmit = e => {
+    e.preventDefault();
+
+    const form = e.target;
+    const formData = new FormData(form);
+    const editId = document.getElementById('edit-student-id').value;
+    const url = editId ? `/api/students/${editId}` : '/api/students';
+    const method = editId ? 'PUT' : 'POST';
+    const csrf = document.querySelector('meta[name="csrf-token"]').content;
+
+    const bar = document.getElementById('upload-progress-bar');
+    const box = document.getElementById('upload-progress-container');
+    const btn = document.getElementById('save-btn');
+
+    box.classList.remove('hidden');
+    bar.style.width = '0%';
+    btn.disabled = true;
+    btn.innerText = 'Uploading…';
+
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, url);
+    xhr.setRequestHeader('X-CSRFToken', csrf);
+
+    xhr.upload.onprogress = e => {
+        if (e.lengthComputable) {
+            bar.style.width = `${(e.loaded / e.total) * 100}%`;
         }
     };
 
-    // --- UTILS ---
-    function debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => { clearTimeout(timeout); func(...args); };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
-    }
+    xhr.onload = () => {
+        btn.disabled = false;
+        btn.innerText = 'Save & Upload';
+        box.classList.add('hidden');
 
-    // --- STATE MANAGEMENT ---
-    let allStudents = [];
-    let filteredStudents = [];
-    let selectedStudents = new Set();
-    let currentPage = 1;
-    let itemsPerPage = 12;
-    let currentViewMode = 'grid';
-    let deleteStudentId = null;
-    let currentFilters = { search: '', program: '', hall: '', gender: '' };
-
-    document.addEventListener('DOMContentLoaded', () => {
-        populateDropdowns();
-        loadStudents();
-        setupEventListeners();
-    });
-
-    // --- DYNAMIC DROPDOWNS ---
-    function populateDropdowns() {
-        const fill = (id, options) => {
-            const el = document.getElementById(id);
-            if (!el) return;
-            const first = el.firstElementChild; // Save "Select..."
-            el.innerHTML = '';
-            el.appendChild(first);
-            options.forEach(opt => {
-                const option = document.createElement('option');
-                option.value = opt;
-                option.textContent = opt;
-                el.appendChild(option);
-            });
-        };
-
-        fill('quick-program', CONFIG.programs);
-        fill('modal-program', CONFIG.programs);
-        fill('filter-program', CONFIG.programs);
-        fill('bulk-new-program', CONFIG.programs);
-        fill('modal-hall', CONFIG.halls);
-        fill('filter-hall', CONFIG.halls);
-        fill('bulk-new-hall', CONFIG.halls);
-        fill('target-form-select', ['Form 1', 'Form 2', 'Form 3', 'Completed']);
-    }
-
-    function updateClassOptions(context) {
-        const progSelect = document.getElementById(`${context}-program`);
-        const classSelect = document.getElementById(`${context}-class`);
-        
-        if (!progSelect || !classSelect) return;
-
-        const selectedProg = progSelect.value;
-        const conf = CONFIG.classConfig[selectedProg];
-
-        classSelect.innerHTML = '<option value="">Select Class...</option>';
-        
-        if (conf) {
-            for (let year = 1; year <= 3; year++) {
-                for (let num = 1; num <= conf.count; num++) {
-                    const className = `${year}-${conf.code}-${num}`;
-                    const opt = document.createElement('option');
-                    opt.value = className;
-                    opt.textContent = className;
-                    classSelect.appendChild(opt);
-                }
-            }
-        }
-    }
-
-    // --- DATA LOADING ---
-    async function loadStudents() {
-        document.getElementById('loading-state').classList.remove('hidden');
-        document.getElementById('empty-state').classList.add('hidden');
-        
-        try {
-            const timestamp = new Date().getTime();
-            const data = await apiRequest(`/api/students?per_page=2000&_t=${timestamp}`);
-            allStudents = data.students || [];
-            filteredStudents = [...allStudents];
-            
-            updateStats();
-            applyFilters();
-        } catch (error) {
-            console.error('Data Load Error:', error);
-            showToast('Failed to load data', 'error');
-        } finally {
-            document.getElementById('loading-state').classList.add('hidden');
-        }
-    }
-
-    // --- RENDERING WITH PHOTO SUPPORT ---
-    function renderStudents() {
-        const grid = document.getElementById('students-grid-view');
-        const table = document.getElementById('students-table-view');
-        const pagination = document.getElementById('pagination');
-
-        grid.classList.add('hidden'); 
-        table.classList.add('hidden');
-
-        if(filteredStudents.length === 0) {
-            document.getElementById('empty-state').classList.remove('hidden');
-            pagination.classList.add('hidden');
-            return;
-        }
-        document.getElementById('empty-state').classList.add('hidden');
-
-        const start = (currentPage - 1) * itemsPerPage;
-        const end = Math.min(start + itemsPerPage, filteredStudents.length);
-        const pageData = filteredStudents.slice(start, end);
-
-        document.getElementById('pagination-start').textContent = start + 1;
-        document.getElementById('pagination-end').textContent = end;
-        document.getElementById('pagination-total').textContent = filteredStudents.length;
-        document.getElementById('prev-page').disabled = currentPage === 1;
-        document.getElementById('next-page').disabled = end >= filteredStudents.length;
-        pagination.classList.remove('hidden');
-
-        const safe = (val) => (val === null || val === undefined) ? '' : val;
-        const getInitial = (name) => (name ? name.charAt(0) : '?');
-
-        // Calculate age from date_of_birth
-        const calculateAge = (dob) => {
-            if (!dob) return null;
-            const birthDate = new Date(dob);
-            const today = new Date();
-            let age = today.getFullYear() - birthDate.getFullYear();
-            const monthDiff = today.getMonth() - birthDate.getMonth();
-            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-                age--;
-            }
-            return age;
-        };
-
-        // Grid View with Photo Support
-        if (currentViewMode === 'grid') {
-            grid.classList.remove('hidden');
-            grid.innerHTML = pageData.map(s => {
-                const age = calculateAge(s.date_of_birth);
-                return `
-                <div class="glass-card p-6 group hover:border-gold-500/50 transition relative overflow-hidden">
-                    <div class="flex justify-between items-start mb-3">
-                        <!-- Profile Pic Logic -->
-                        <div class="relative">
-                            ${s.photo_url 
-                                ? `<img src="${s.photo_url}" class="w-16 h-16 rounded-xl object-cover shadow-lg border border-white/10">` 
-                                : `<div class="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-700 to-indigo-900 flex items-center justify-center text-xl font-bold shadow-lg border border-white/10">${getInitial(s.name)}</div>`
-                            }
-                            <!-- Age Badge -->
-                            ${age ? `<span class="absolute -bottom-1 -right-1 bg-black/60 backdrop-blur-md text-[10px] px-1.5 py-0.5 rounded border border-white/10">${age}y</span>` : ''}
-                        </div>
-                        <input type="checkbox" class="student-checkbox w-5 h-5 rounded bg-black/20 border-white/30 text-gold cursor-pointer focus:ring-0" 
-                                onchange="toggleSelection(${s.id}, this.checked)" ${selectedStudents.has(s.id)?'checked':''}>
-                    </div>
-
-                    <h3 class="font-bold text-lg text-theme-main truncate" title="${safe(s.name)}">${safe(s.name)}</h3>
-                    
-                    <!-- BADGES -->
-                    <div class="flex flex-wrap gap-2 mt-2 mb-3">
-                        <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-gold-500/10 text-gold border border-gold-500/20">${s.current_form || 'Form 1'}</span>
-                        <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/20">${s.class_room || 'N/A'}</span>
-                    </div>
-
-                    <div class="pt-3 border-t border-white/5 flex justify-between items-center text-theme-muted">
-                        <span class="text-xs truncate max-w-[50%]" title="${s.program || 'No Program'}">${s.program || 'No Program'}</span>
-                        <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition">
-                            <button onclick="quickView(${s.id})" class="text-blue-400 hover:text-white transition"><i class="material-icons-round text-sm">visibility</i></button>
-                            <button onclick="editStudent(${s.id})" class="text-gold hover:text-white transition"><i class="material-icons-round text-sm">edit</i></button>
-                            <button onclick="openDeleteModal(${s.id}, '${safe(s.name).replace(/'/g, "\\'")}')" class="text-red-400 hover:text-white transition"><i class="material-icons-round text-sm">delete</i></button>
-                        </div>
-                    </div>
-                </div>`;
-            }).join('');
-        } 
-        // Table View
-        else if (currentViewMode === 'table') {
-            table.classList.remove('hidden');
-            document.getElementById('students-table-body').innerHTML = pageData.map(s => {
-                const age = calculateAge(s.date_of_birth);
-                return `
-                <tr class="hover:bg-white/5 transition group">
-                    <td class="px-6 py-4"><input type="checkbox" class="student-checkbox rounded bg-black/20 border-white/20 text-gold focus:ring-0 cursor-pointer" value="${s.id}" ${selectedStudents.has(s.id) ? 'checked' : ''} onchange="toggleSelection(${s.id}, this.checked)"></td>
-                    <td class="px-6 py-4">
-                        <div class="flex items-center gap-3">
-                            ${s.photo_url 
-                                ? `<img src="${s.photo_url}" class="w-10 h-10 rounded-lg object-cover border border-white/10">` 
-                                : `<div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-900 flex items-center justify-center text-white font-bold border border-white/10">${getInitial(s.name)}</div>`
-                            }
-                            <div>
-                                <div class="font-medium text-theme-main">${safe(s.name)}</div>
-                                ${age ? `<div class="text-xs text-theme-muted">${age} years</div>` : ''}
-                            </div>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 text-theme-muted">${safe(s.program) || '-'}</td>
-                    <td class="px-6 py-4"><span class="px-2 py-1 rounded bg-blue-500/10 text-blue-300 text-xs border border-blue-500/20">${safe(s.class_room) || '-'}</span></td>
-                    <td class="px-6 py-4 text-theme-muted">${safe(s.hall) || '-'}</td>
-                    <td class="px-6 py-4 flex gap-2 opacity-50 group-hover:opacity-100 transition">
-                        <button onclick="editStudent(${s.id})" class="text-gold hover:scale-110 transition"><i class="material-icons-round text-sm">edit</i></button>
-                        <button onclick="openDeleteModal(${s.id}, '${safe(s.name)}')" class="text-red-400 hover:scale-110 transition"><i class="material-icons-round text-sm">delete</i></button>
-                    </td>
-                </tr>`;
-            }).join('');
-        }
-    }
-
-    // --- INTERACTIONS ---
-    function setViewMode(mode) {
-        currentViewMode = mode;
-        renderStudents();
-    }
-
-    function toggleSelection(id, checked) {
-        if(checked) selectedStudents.add(id);
-        else selectedStudents.delete(id);
-        document.getElementById('selected-count').textContent = selectedStudents.size;
-        document.getElementById('bulk-actions-panel').classList.toggle('hidden', selectedStudents.size === 0);
-    }
-
-    document.getElementById('select-all-table')?.addEventListener('change', (e) => {
-        const checked = e.target.checked;
-        const visibleIds = filteredStudents.slice((currentPage-1)*itemsPerPage, currentPage*itemsPerPage).map(s => s.id);
-        visibleIds.forEach(id => toggleSelection(id, checked));
-        renderStudents();
-    });
-
-    function clearSelections() {
-        selectedStudents.clear();
-        document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = false);
-        document.getElementById('bulk-actions-panel').classList.add('hidden');
-    }
-
-    function toggleQuickAdd() {
-        const form = document.getElementById('quick-add-form');
-        form.classList.toggle('hidden');
-        document.getElementById('quick-add-arrow').textContent = form.classList.contains('hidden') ? 'keyboard_arrow_down' : 'keyboard_arrow_up';
-    }
-
-    // --- STATS ---
-    function updateStats() {
-        if (!allStudents.length) return;
-        
-        // Total Count
-        document.getElementById('total-count').innerText = allStudents.length;
-        
-        // Average Age
-        const ages = allStudents
-            .map(s => {
-                if (!s.date_of_birth) return null;
-                const birthDate = new Date(s.date_of_birth);
-                const today = new Date();
-                let age = today.getFullYear() - birthDate.getFullYear();
-                const monthDiff = today.getMonth() - birthDate.getMonth();
-                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) age--;
-                return age;
-            })
-            .filter(age => age !== null);
-        
-        const avgAge = ages.length ? Math.round(ages.reduce((a, b) => a + b, 0) / ages.length) : 0;
-        document.getElementById('avg-age').innerText = avgAge;
-        
-        // Top Program
-        const programCounts = {};
-        allStudents.forEach(s => {
-            if (s.program) programCounts[s.program] = (programCounts[s.program] || 0) + 1;
-        });
-        const topProgram = Object.entries(programCounts).sort((a, b) => b[1] - a[1])[0];
-        document.getElementById('top-program').innerText = topProgram ? topProgram[0] : '-';
-        
-        // New This Month
-        const now = new Date();
-        const thisMonth = now.getMonth();
-        const thisYear = now.getFullYear();
-        const newThisMonth = allStudents.filter(s => {
-            if (!s.created_at) return false;
-            const created = new Date(s.created_at);
-            return created.getMonth() === thisMonth && created.getFullYear() === thisYear;
-        }).length;
-        document.getElementById('new-this-month').innerText = newThisMonth;
-    }
-
-    // --- FILTERING ---
-    function applyFilters() {
-        const term = document.getElementById('name-search').value.toLowerCase();
-        const hall = document.getElementById('filter-hall').value;
-        const prog = document.getElementById('filter-program').value;
-        
-        filteredStudents = allStudents.filter(s => {
-            if(term && !s.name.toLowerCase().includes(term) && !String(s.id).includes(term)) return false;
-            if(hall && s.hall !== hall) return false;
-            if(prog && s.program !== prog) return false;
-            return true;
-        });
-        document.getElementById('filtered-count').innerText = filteredStudents.length;
-        currentPage = 1;
-        renderStudents();
-    }
-
-    document.getElementById('name-search').addEventListener('input', debounce(applyFilters, 300));
-
-    function resetAllFilters() {
-        filteredStudents = [...allStudents];
-        document.getElementById('name-search').value = '';
-        document.getElementById('filter-hall').value = '';
-        document.getElementById('filter-program').value = '';
-        document.getElementById('filtered-count').innerText = allStudents.length;
-        currentPage = 1;
-        renderStudents();
-    }
-
-    // --- MODAL ACTIONS ---
-    function openAddModal() {
-        document.getElementById('form-main-student').reset();
-        document.getElementById('edit-student-id').value = ''; 
-        document.getElementById('modal-title').innerText = 'Add Student';
-        toggleModal('add-modal', true);
-    }
-
-    function closeAddModal() { toggleModal('add-modal', false); }
-    
-    function toggleModal(id, show) {
-        const el = document.getElementById(id);
-        if(show) { el.classList.remove('hidden'); el.classList.add('flex'); }
-        else { el.classList.add('hidden'); el.classList.remove('flex'); }
-    }
-
-    // --- FORM SUBMISSION WITH FILE UPLOAD ---
-    async function handleFormSubmit(formId, isQuick=false) {
-        const form = document.getElementById(formId);
-        const formData = new FormData(form);
-        const csrf = document.querySelector('meta[name="csrf-token"]').content;
-        
-        let url = '/api/students';
-        let method = 'POST';
-
-        if (!isQuick) {
-            const id = document.getElementById('edit-student-id').value;
-            if (id) {
-                url = `/api/students/${id}`;
-                method = 'PUT';
-            }
-        }
-
-        try {
-            // Use fetch directly for file uploads
-            const res = await fetch(url, {
-                method: method,
-                body: formData,
-                headers: { 'X-CSRFToken': csrf }
-            });
-            
-            if(res.ok) {
-                showToast(method === 'POST' ? 'Student added!' : 'Student updated!');
-                if(!isQuick) closeAddModal();
-                else form.reset();
-                loadStudents();
-            } else {
-                showToast('Operation failed', 'error');
-            }
-        } catch (e) { 
-            console.error(e);
-            showToast('Error occurred', 'error');
-        }
-    }
-
-    // Edit Student with Photo Support
-    function editStudent(id) {
-        const s = allStudents.find(x => x.id == id);
-        if(!s) return;
-        
-        document.getElementById('edit-student-id').value = s.id;
-        document.getElementById('modal-name').value = s.name;
-        document.getElementById('modal-email').value = s.email || '';
-        document.getElementById('modal-phone').value = s.phone || '';
-        document.getElementById('modal-gender').value = s.gender || '';
-        document.getElementById('modal-dob').value = s.date_of_birth || '';
-        document.getElementById('modal-gname').value = s.guardian_name || '';
-        document.getElementById('modal-gphone').value = s.guardian_phone || '';
-        
-        // Handle Hall
-        const hallSelect = document.getElementById('modal-hall');
-        hallSelect.value = s.hall || '';
-        
-        // Handle Program & Class (Cascading Fix)
-        const progSelect = document.getElementById('modal-program');
-        progSelect.value = s.program || '';
-        
-        // Force populate classes immediately
-        updateClassOptions('modal');
-        
-        // Set class value after options exist
-        setTimeout(() => {
-            const classSelect = document.getElementById('modal-class');
-            classSelect.value = s.class_room || '';
-        }, 100);
-        
-        document.getElementById('modal-title').innerText = 'Edit Student';
-        toggleModal('add-modal', true);
-    }
-
-    // --- BULK ACTION MODAL HANDLERS ---
-    function openMoveHallModal() { toggleModal('move-hall-modal', true); }
-    function closeMoveHallModal() { toggleModal('move-hall-modal', false); }
-    function openUpdateProgramModal() { toggleModal('update-program-modal', true); }
-    function closeUpdateProgramModal() { toggleModal('update-program-modal', false); }
-    function openBulkEmailModal() { toggleModal('bulk-email-modal', true); }
-    function closeBulkEmailModal() { toggleModal('bulk-email-modal', false); }
-    function closeQuickViewModal() { toggleModal('quick-view-modal', false); }
-    
-    function openDeleteAllModal() { toggleModal('delete-all-modal', true); }
-    function closeDeleteAllModal() { toggleModal('delete-all-modal', false); }
-
-    function openDeleteModal(id, name) {
-        deleteStudentId = id;
-        document.getElementById('delete-student-name').innerText = name;
-        toggleModal('delete-modal', true);
-    }
-    function closeDeleteModal() { toggleModal('delete-modal', false); }
-
-    // --- BULK ACTIONS ---
-    async function executeBulkAction() {
-        const action = document.getElementById('bulk-action').value;
-        if (selectedStudents.size === 0) return showToast('Select at least one student', 'warning');
-        
-        if (action === 'move-form') toggleModal('move-form-modal', true);
-        else if (action === 'move-hall') openMoveHallModal();
-        else if (action === 'update-program') openUpdateProgramModal();
-        else if (action === 'email') openBulkEmailModal();
-        else if (action === 'delete') {
-            if(confirm(`Delete ${selectedStudents.size} student(s)?`)) {
-                try {
-                    const ids = Array.from(selectedStudents);
-                    await apiRequest('/api/students/bulk-delete', {
-                        method: 'POST',
-                        body: JSON.stringify({ ids })
-                    });
-                    showToast(`Deleted ${ids.length} student(s)`);
-                    clearSelections();
-                    loadStudents();
-                } catch(e) {
-                    showToast('Deletion failed', 'error');
-                }
-            }
-        }
-        
-        document.getElementById('bulk-action').value = "";
-    }
-
-    // --- MOVE FORM LOGIC ---
-    async function confirmMoveForm() {
-        const target = document.getElementById('target-form-select').value;
-        const ids = Array.from(selectedStudents);
-        try {
-            await apiRequest('/api/students/move-form', {
-                method: 'POST', 
-                body: JSON.stringify({ ids, target_form: target })
-            });
-            showToast('Form Levels Updated');
-            toggleModal('move-form-modal', false);
-            clearSelections();
+        if (xhr.status >= 200 && xhr.status < 300) {
+            showToast('Uploaded Successfully!', 'success');
+            toggleModal('add-modal', false);
             loadStudents();
-        } catch(e) {
-            showToast('Update failed', 'error');
+        } else {
+            showToast('Upload Failed', 'error');
         }
-    }
+    };
 
-    async function confirmDelete() {
-        try {
-            await apiRequest(`/api/students/${deleteStudentId}`, { method: 'DELETE' });
-            showToast('Deleted successfully');
-            closeDeleteModal();
-            loadStudents();
-        } catch(e) {
-            showToast('Deletion failed', 'error');
-        }
-    }
-    
-    async function confirmDeleteAll() {
-        const password = document.getElementById('admin-password').value;
-        try {
-            const res = await apiRequest('/api/students/delete-all', { method: 'POST', body: JSON.stringify({password}) });
-            showToast(res.message);
-            closeDeleteAllModal();
-            loadStudents();
-        } catch(e) {
-            showToast('Operation failed', 'error');
-        }
-    }
+    xhr.onerror = () => {
+        btn.disabled = false;
+        showToast('Network Error', 'error');
+    };
 
-    function setupEventListeners() {
-        // Form submissions
-        document.getElementById('form-main-student').addEventListener('submit', (e) => { 
-            e.preventDefault(); 
-            handleFormSubmit('form-main-student'); 
-        });
-        
-        document.getElementById('form-quick-add').addEventListener('submit', (e) => { 
-            e.preventDefault(); 
-            handleFormSubmit('form-quick-add', true); 
-        });
+    xhr.send(formData);
+};
 
-        // Bulk email form
-        document.getElementById('bulk-email-form')?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const subject = document.getElementById('email-subject').value;
-            const message = document.getElementById('email-message').value;
-            const ids = Array.from(selectedStudents);
-            
-            try {
-                await apiRequest('/api/students/send-bulk-email', {
-                    method: 'POST',
-                    body: JSON.stringify({ ids, subject, message })
-                });
-                showToast('Email sent to selected students');
-                closeBulkEmailModal();
-            } catch(e) {
-                showToast('Email sending failed', 'error');
-            }
-        });
-
-        // Pagination
-        document.getElementById('items-per-page')?.addEventListener('change', (e) => {
-            itemsPerPage = e.target.value === 'all' ? 10000 : parseInt(e.target.value);
-            currentPage = 1;
-            renderStudents();
-        });
-        document.getElementById('next-page').addEventListener('click', () => { 
-            currentPage++; 
-            renderStudents(); 
-        });
-        document.getElementById('prev-page').addEventListener('click', () => { 
-            currentPage--; 
-            renderStudents(); 
-        });
-    }
-
-    // Quick View Function
-    async function quickView(id) {
-        try {
-            const data = await apiRequest(`/api/students/${id}`);
-            const s = data.student;
-            const content = document.getElementById('quick-view-content');
-            
-            const age = s.date_of_birth ? calculateAge(s.date_of_birth) : null;
-            
-            content.innerHTML = `
-                <div class="text-center mb-6">
-                    ${s.photo_url 
-                        ? `<img src="${s.photo_url}" class="w-32 h-32 rounded-full object-cover border-4 border-gold-500/30 mx-auto mb-4 shadow-xl">` 
-                        : `<div class="w-32 h-32 rounded-full bg-gradient-to-br from-blue-600 to-indigo-900 flex items-center justify-center text-4xl font-bold text-white border-4 border-gold-500/30 mx-auto mb-4 shadow-xl">${s.name.charAt(0)}</div>`
-                    }
-                    <h3 class="text-2xl font-bold text-theme-main">${s.name}</h3>
-                    <p class="text-theme-muted">${s.program || 'No Program'} • ${age ? `${age} years` : ''}</p>
-                </div>
-                <div class="grid grid-cols-2 gap-4 text-sm">
-                    <div class="bg-white/5 p-3 rounded-lg">
-                        <div class="text-theme-muted text-xs uppercase mb-1">Class</div>
-                        <div class="font-bold">${s.class_room || '-'}</div>
-                    </div>
-                    <div class="bg-white/5 p-3 rounded-lg">
-                        <div class="text-theme-muted text-xs uppercase mb-1">Hall</div>
-                        <div class="font-bold">${s.hall || '-'}</div>
-                    </div>
-                    <div class="bg-white/5 p-3 rounded-lg">
-                        <div class="text-theme-muted text-xs uppercase mb-1">Email</div>
-                        <div class="font-bold truncate">${s.email || '-'}</div>
-                    </div>
-                    <div class="bg-white/5 p-3 rounded-lg">
-                        <div class="text-theme-muted text-xs uppercase mb-1">Phone</div>
-                        <div class="font-bold">${s.phone || '-'}</div>
-                    </div>
-                </div>
-                ${s.guardian_name || s.guardian_phone ? `
-                <div class="mt-6 pt-6 border-t border-white/10">
-                    <h4 class="text-gold font-bold mb-3">Guardian Info</h4>
-                    <div class="text-sm">
-                        ${s.guardian_name ? `<div><span class="text-theme-muted">Name:</span> ${s.guardian_name}</div>` : ''}
-                        ${s.guardian_phone ? `<div class="mt-1"><span class="text-theme-muted">Phone:</span> ${s.guardian_phone}</div>` : ''}
-                    </div>
-                </div>` : ''}
-            `;
-            
-            toggleModal('quick-view-modal', true);
-        } catch(e) {
-            showToast('Failed to load student details', 'error');
-        }
-    }
-
-    // Helper function for age calculation
-    function calculateAge(dob) {
-        if (!dob) return null;
-        const birthDate = new Date(dob);
-        const today = new Date();
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const monthDiff = today.getMonth() - birthDate.getMonth();
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-            age--;
-        }
-        return age;
-    }
-
-    // Export functions
-    function exportToCSV() {
-        showToast('CSV export started', 'info');
-        // Implement CSV export logic here
-    }
-
-    function exportToExcel() {
-        showToast('Excel export started', 'info');
-        // Implement Excel export logic here
-    }
+/* ================================
+   INIT
+================================ */
+document.addEventListener('DOMContentLoaded', () => {
+    populateDropdowns();
+    loadStudents();
+});
 </script>
 {% endblock %}
