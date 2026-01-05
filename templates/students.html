@@ -475,230 +475,425 @@
 {% endblock %}
 {% block extra_js %}
 <script>
-/* ================================
-   SCHOOL CONFIGURATION
-================================ */
-const CONFIG = {
-    halls: [
-        "Alema Hall", "Ellen Hall", "Halm Addo Hall", "Nana Wereko Ampem II Hall",
-        "Wilson Q .Tei Hall", "Awuletey Hall", "Peter Ala Adjetey Hall",
-        "Nana Akuako Sarpong Hall", "Nana Awuah Darko Ampem Hall"
-    ],
-    programs: [
-        "General Science", "Business", "General Arts",
-        "Visual Arts", "Agriculture", "Home Economics"
-    ],
-    classConfig: {
-        "General Science": { code: "Science", count: 13 },
-        "Business": { code: "Business", count: 9 },
-        "General Arts": { code: "GeneralArts", count: 9 },
-        "Visual Arts": { code: "VisualArts", count: 3 },
-        "Agriculture": { code: "Agriculture", count: 2 },
-        "Home Economics": { code: "HomeEcons", count: 2 }
+    // --- 1. CONFIGURATION ---
+    const CONFIG = {
+        halls: ["Alema Hall", "Ellen Hall", "Halm Addo Hall", "Nana Wereko Ampem II Hall", "Wilson Q .Tei Hall", "Awuletey Hall", "Peter Ala Adjetey Hall", "Nana Akuako Sarpong Hall", "Nana Awuah Darko Ampem Hall"],
+        programs: ["General Science", "Business", "General Arts", "Visual Arts", "Agriculture", "Home Economics"],
+        classConfig: {
+            "General Science": { code: "Science", count: 13 },
+            "Business": { code: "Business", count: 9 },
+            "General Arts": { code: "GeneralArts", count: 9 },
+            "Visual Arts": { code: "VisualArts", count: 3 },
+            "Agriculture": { code: "Agriculture", count: 2 },
+            "Home Economics": { code: "HomeEcons", count: 2 }
+        }
+    };
+
+    // --- 2. GLOBAL STATE ---
+    window.allStudents = [];
+    window.filteredStudents = [];
+    window.selectedStudents = new Set();
+    window.currentPage = 1;
+    window.itemsPerPage = 12;
+    window.currentViewMode = 'grid';
+    window.deleteStudentId = null;
+
+    // --- 3. INITIALIZATION ---
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log("App Initializing...");
+        safeInitDropdowns();
+        loadStudents();
+        setupEventListeners();
+    });
+
+    // --- 4. DROPDOWN LOGIC (Crash Proof) ---
+    function safeInitDropdowns() {
+        const fill = (id, opts) => {
+            const el = document.getElementById(id);
+            if (!el) return; // Skip if missing
+            const f = el.firstElementChild;
+            el.innerHTML = ''; 
+            if(f) el.appendChild(f); // Keep "Select..." option
+            opts.forEach(o => el.insertAdjacentHTML('beforeend', `<option value="${o}">${o}</option>`));
+        };
+
+        fill('modal-hall', CONFIG.halls);
+        fill('bulk-new-hall', CONFIG.halls);
+        fill('modal-program', CONFIG.programs); 
+        fill('quick-program', CONFIG.programs);
+        fill('bulk-new-program', CONFIG.programs); 
+        fill('filter-program', CONFIG.programs);
+        fill('filter-hall', CONFIG.halls);
     }
-};
 
-/* ================================
-   UTILITIES & STATE
-================================ */
-const debounce = (fn, wait) => {
-    let t;
-    return (...args) => {
-        clearTimeout(t);
-        t = setTimeout(() => fn(...args), wait);
-    };
-};
+    // Explicitly attach to window
+    window.updateClassOptions = function(context) {
+        const progId = context === 'modal' ? 'modal-program' : 'quick-program';
+        const classId = context === 'modal' ? 'modal-class' : 'quick-class';
 
-let allStudents = [];
-let filteredStudents = [];
-let selectedStudents = new Set();
-let currentPage = 1;
-let itemsPerPage = 12;
-let currentViewMode = 'grid';
-let deleteStudentId = null;
+        const progEl = document.getElementById(progId);
+        const classEl = document.getElementById(classId);
+        
+        if (!progEl || !classEl) return;
 
-/* ================================
-   IMAGE LIVE PREVIEW (FIX)
-================================ */
-function previewSelectedImage(input) {
-    const file = input.files[0];
-    if (!file) return;
+        const val = progEl.value;
+        const conf = CONFIG.classConfig[val];
+        
+        classEl.innerHTML = '<option value="">Select Class...</option>';
+        if (conf) {
+            for(let y=1; y<=3; y++) {
+                for(let i=1; i<=conf.count; i++) {
+                    const cVal = `${y}-${conf.code}-${i}`;
+                    classEl.insertAdjacentHTML('beforeend', `<option value="${cVal}">${cVal}</option>`);
+                }
+            }
+        }
+    }
 
-    const reader = new FileReader();
-    reader.onload = e => {
-        const img = document.getElementById('photo-display');
-        const placeholder = document.getElementById('photo-placeholder');
+    // --- 5. DATA LOADING ---
+    async function loadStudents() {
+        const loader = document.getElementById('loading-state');
+        if(loader) loader.classList.remove('hidden');
+        
+        try {
+            // Timestamp prevents caching
+            const res = await apiRequest(`/api/students?per_page=2000&_t=${Date.now()}`);
+            window.allStudents = res.students || [];
+            updateStats();
+            applyFilters();
+        } catch(e) { 
+            console.error(e);
+        } finally { 
+            if(loader) loader.classList.add('hidden');
+        }
+    }
 
-        img.src = e.target.result;
-        img.classList.remove('hidden');
-        placeholder.classList.add('hidden');
-    };
-    reader.readAsDataURL(file);
-}
-
-/* ================================
-   DROPDOWNS
-================================ */
-function populateDropdowns() {
-    const fill = (id, options) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        const first = el.firstElementChild;
-        el.innerHTML = '';
-        el.appendChild(first);
-        options.forEach(v => {
-            const o = document.createElement('option');
-            o.value = v;
-            o.textContent = v;
-            el.appendChild(o);
+    // --- 6. FILTERING & RENDERING ---
+    window.applyFilters = function() {
+        const term = document.getElementById('name-search').value.toLowerCase();
+        const hall = document.getElementById('filter-hall').value;
+        const prog = document.getElementById('filter-program').value;
+        
+        window.filteredStudents = window.allStudents.filter(s => {
+            if(term && !s.name.toLowerCase().includes(term) && !String(s.id).includes(term)) return false;
+            if(hall && s.hall !== hall) return false;
+            if(prog && s.program !== prog) return false;
+            return true;
         });
-    };
 
-    fill('modal-program', CONFIG.programs);
-    fill('modal-hall', CONFIG.halls);
-    fill('filter-program', CONFIG.programs);
-    fill('filter-hall', CONFIG.halls);
-    fill('target-form-select', ['Form 1', 'Form 2', 'Form 3', 'Completed']);
-}
-
-function updateClassOptions(ctx) {
-    const p = document.getElementById(`${ctx}-program`);
-    const c = document.getElementById(`${ctx}-class`);
-    if (!p || !c) return;
-
-    const conf = CONFIG.classConfig[p.value];
-    c.innerHTML = '<option value="">Select Class...</option>';
-
-    if (!conf) return;
-
-    for (let y = 1; y <= 3; y++) {
-        for (let i = 1; i <= conf.count; i++) {
-            const name = `${y}-${conf.code}-${i}`;
-            c.append(new Option(name, name));
-        }
-    }
-}
-
-/* ================================
-   DATA LOADING
-================================ */
-async function loadStudents() {
-    try {
-        const data = await apiRequest('/api/students?per_page=2000');
-        allStudents = data.students || [];
-        filteredStudents = [...allStudents];
+        const countEl = document.getElementById('filtered-count');
+        if(countEl) countEl.innerText = window.filteredStudents.length;
+        
+        window.currentPage = 1;
         renderStudents();
-    } catch {
-        showToast('Failed to load students', 'error');
-    }
-}
-
-/* ================================
-   EDIT STUDENT (IMAGE FIX MERGED)
-================================ */
-function editStudent(id) {
-    const s = allStudents.find(x => x.id == id);
-    if (!s) return;
-
-    document.getElementById('edit-student-id').value = s.id;
-    document.getElementById('modal-name').value = s.name;
-    document.getElementById('modal-email').value = s.email || '';
-    document.getElementById('modal-phone').value = s.phone || '';
-    document.getElementById('modal-gender').value = s.gender || '';
-    document.getElementById('modal-dob').value = s.date_of_birth || '';
-
-    // Reset file input
-    document.getElementById('photo-input').value = '';
-
-    const img = document.getElementById('photo-display');
-    const placeholder = document.getElementById('photo-placeholder');
-
-    if (s.photo_url) {
-        img.src = s.photo_url;
-        img.classList.remove('hidden');
-        placeholder.classList.add('hidden');
-    } else {
-        img.classList.add('hidden');
-        placeholder.classList.remove('hidden');
-        placeholder.innerHTML = `
-            <div class="w-full h-full flex items-center justify-center 
-                        bg-blue-900 rounded-full text-white text-5xl font-bold">
-                ${s.name.charAt(0)}
-            </div>`;
     }
 
-    document.getElementById('modal-hall').value = s.hall || '';
-    document.getElementById('modal-program').value = s.program || '';
-    updateClassOptions('modal');
+    function renderStudents() {
+        const grid = document.getElementById('students-grid-view');
+        const table = document.getElementById('students-table-view');
+        const list = document.getElementById('students-list-view');
+        const pagination = document.getElementById('pagination');
+        const empty = document.getElementById('empty-state');
 
-    setTimeout(() => {
-        document.getElementById('modal-class').value = s.class_room || '';
-    }, 50);
+        // Reset visibility
+        [grid, table, list, empty, pagination].forEach(el => el && el.classList.add('hidden'));
 
-    document.getElementById('modal-title').innerText = 'Edit Student';
-    toggleModal('add-modal', true);
-}
-
-/* ================================
-   FORM SUBMISSION (XHR + PROGRESS)
-================================ */
-document.getElementById('form-main-student').onsubmit = e => {
-    e.preventDefault();
-
-    const form = e.target;
-    const formData = new FormData(form);
-    const editId = document.getElementById('edit-student-id').value;
-    const url = editId ? `/api/students/${editId}` : '/api/students';
-    const method = editId ? 'PUT' : 'POST';
-    const csrf = document.querySelector('meta[name="csrf-token"]').content;
-
-    const bar = document.getElementById('upload-progress-bar');
-    const box = document.getElementById('upload-progress-container');
-    const btn = document.getElementById('save-btn');
-
-    box.classList.remove('hidden');
-    bar.style.width = '0%';
-    btn.disabled = true;
-    btn.innerText = 'Uploading…';
-
-    const xhr = new XMLHttpRequest();
-    xhr.open(method, url);
-    xhr.setRequestHeader('X-CSRFToken', csrf);
-
-    xhr.upload.onprogress = e => {
-        if (e.lengthComputable) {
-            bar.style.width = `${(e.loaded / e.total) * 100}%`;
+        if(window.filteredStudents.length === 0) {
+            if(empty) empty.classList.remove('hidden');
+            return;
         }
-    };
 
-    xhr.onload = () => {
-        btn.disabled = false;
-        btn.innerText = 'Save & Upload';
-        box.classList.add('hidden');
+        if(pagination) pagination.classList.remove('hidden');
 
-        if (xhr.status >= 200 && xhr.status < 300) {
-            showToast('Uploaded Successfully!', 'success');
-            toggleModal('add-modal', false);
-            loadStudents();
+        // Paginate
+        const start = (window.currentPage - 1) * window.itemsPerPage;
+        const end = Math.min(start + window.itemsPerPage, window.filteredStudents.length);
+        const data = window.filteredStudents.slice(start, end);
+
+        // Update Text
+        const safeStart = document.getElementById('pagination-start');
+        if(safeStart) {
+            safeStart.textContent = start + 1;
+            document.getElementById('pagination-end').textContent = end;
+            document.getElementById('pagination-total').textContent = window.filteredStudents.length;
+        }
+
+        // Render Helpers
+        const safe = (v) => v || '';
+        const initial = (n) => (n || '?').charAt(0);
+        const getAvatar = (s) => s.photo_url 
+            ? `<img src="${s.photo_url}" class="w-12 h-12 rounded-xl object-cover shadow border border-white/20">`
+            : `<div class="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-lg">${initial(s.name)}</div>`;
+
+        // GRID RENDERER
+        if (window.currentViewMode === 'grid') {
+            grid.classList.remove('hidden');
+            grid.innerHTML = data.map(s => `
+                <div class="glass-card p-6 relative group hover:border-gold-500/50 transition duration-300">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-16 h-16 rounded-xl overflow-hidden shadow-lg border border-white/10 bg-black/40">
+                             ${s.photo_url 
+                                ? `<img src="${s.photo_url}" class="w-full h-full object-cover">`
+                                : `<div class="w-full h-full bg-gradient-to-br from-blue-600 to-indigo-900 flex items-center justify-center text-white font-bold text-2xl">${initial(s.name)}</div>`
+                             }
+                        </div>
+                        <input type="checkbox" class="student-checkbox w-5 h-5 rounded border-white/20 bg-black/20 text-gold focus:ring-0 cursor-pointer" 
+                               onchange="toggleSelect(${s.id}, this.checked)" ${window.selectedStudents.has(s.id)?'checked':''}>
+                    </div>
+                    <h3 class="text-lg font-bold text-theme-main truncate">${safe(s.name)}</h3>
+                    
+                     <div class="flex flex-wrap gap-2 mt-2 mb-4">
+                        <span class="px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider bg-gold-500/20 text-gold border border-gold-500/30">
+                            ${safe(s.current_form)}
+                        </span>
+                        <span class="px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                            ${safe(s.class_room)}
+                        </span>
+                    </div>
+                    
+                    <div class="border-t border-white/10 pt-3 flex justify-end gap-2 opacity-80 hover:opacity-100 transition">
+                         <button onclick="editStudent(${s.id})" class="text-yellow-400 hover:scale-110 transition"><i class="material-icons-round">edit</i></button>
+                         <button onclick="openDeleteModal(${s.id}, '${safe(s.name)}')" class="text-red-400 hover:scale-110 transition"><i class="material-icons-round">delete</i></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // TABLE RENDERER
+        else if (window.currentViewMode === 'table') {
+            table.classList.remove('hidden');
+            const tbody = document.getElementById('students-table-body');
+            tbody.innerHTML = data.map(s => `
+                <tr class="hover:bg-white/5 border-b border-white/5 transition">
+                    <td class="px-6 py-4"><input type="checkbox" onchange="toggleSelect(${s.id}, this.checked)" ${window.selectedStudents.has(s.id)?'checked':''}></td>
+                    <td class="px-6 py-4 flex items-center gap-3">
+                         ${getAvatar(s)} 
+                         <div>
+                            <p class="font-bold text-theme-main">${safe(s.name)}</p>
+                            <p class="text-xs text-theme-muted">${safe(s.email)}</p>
+                         </div>
+                    </td>
+                    <td class="px-6 py-4 text-theme-muted">${safe(s.program)}</td>
+                    <td class="px-6 py-4 text-white font-mono text-xs">${safe(s.class_room)}</td>
+                    <td class="px-6 py-4">
+                        <button onclick="editStudent(${s.id})" class="text-gold mr-3"><i class="material-icons-round">edit</i></button>
+                        <button onclick="openDeleteModal(${s.id}, '${safe(s.name)}')" class="text-red-400"><i class="material-icons-round">delete</i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+    }
+
+    // --- 7. MODAL ACTIONS (The Missing Logic) ---
+    
+    // Explicit toggle function for window
+    window.toggleModal = function(id, show) {
+        const el = document.getElementById(id);
+        if(el) {
+            el.classList.toggle('hidden', !show);
+            el.classList.toggle('flex', show);
         } else {
-            showToast('Upload Failed', 'error');
+            console.error(`Modal with ID '${id}' not found!`);
         }
-    };
+    }
 
-    xhr.onerror = () => {
-        btn.disabled = false;
-        showToast('Network Error', 'error');
-    };
+    // Open/Close Add
+    window.openAddModal = function() {
+        document.getElementById('form-main-student').reset();
+        document.getElementById('edit-student-id').value = ''; 
+        document.getElementById('photo-display').classList.add('hidden'); // Reset image
+        document.getElementById('photo-placeholder').classList.remove('hidden');
+        document.getElementById('modal-title').textContent = "New Admission";
+        window.toggleModal('add-modal', true);
+    }
+    
+    window.closeAddModal = function() { window.toggleModal('add-modal', false); }
 
-    xhr.send(formData);
-};
+    // Open/Close Delete All
+    window.openDeleteAllModal = function() {
+        document.getElementById('admin-password').value = '';
+        window.toggleModal('delete-all-modal', true);
+    }
+    
+    window.closeDeleteAllModal = function() { window.toggleModal('delete-all-modal', false); }
 
-/* ================================
-   INIT
-================================ */
-document.addEventListener('DOMContentLoaded', () => {
-    populateDropdowns();
-    loadStudents();
-});
+    // Logic for Delete All Submit
+    window.confirmDeleteAll = async function() {
+        const password = document.getElementById('admin-password').value;
+        if(!password) return showToast('Password required', 'error');
+
+        try {
+            const res = await apiRequest('/api/students/delete-all', {
+                method: 'POST',
+                body: JSON.stringify({ password })
+            });
+            
+            showToast(res.message, 'success');
+            window.closeDeleteAllModal();
+            loadStudents(); // Reload grid (it should be empty)
+        } catch(e) {
+            console.error(e);
+            // apiRequest handles showing toast for error
+        }
+    }
+
+    // --- 8. SINGLE STUDENT ACTIONS ---
+    
+    window.editStudent = function(id) {
+        // ID match handling (loose for string vs int)
+        const s = window.allStudents.find(x => x.id == id);
+        if(!s) return console.error('Student ID not found');
+        
+        document.getElementById('edit-student-id').value = s.id;
+        document.getElementById('modal-name').value = s.name;
+        document.getElementById('modal-email').value = s.email||'';
+        document.getElementById('modal-phone').value = s.phone||'';
+        
+        // Populate Selects and trigger cascading
+        const pEl = document.getElementById('modal-program');
+        if(pEl) {
+             pEl.value = s.program || '';
+             // Must update classes based on this program immediately
+             window.updateClassOptions('modal');
+             // Small delay to allow options to populate before setting value
+             setTimeout(() => {
+                 document.getElementById('modal-class').value = s.class_room || '';
+             }, 0);
+        }
+
+        document.getElementById('modal-hall').value = s.hall||'';
+        document.getElementById('modal-dob').value = s.date_of_birth||'';
+        
+        // Image Logic
+        const pDisp = document.getElementById('photo-display');
+        const pPlace = document.getElementById('photo-placeholder');
+        
+        if (s.photo_url) {
+            pDisp.src = s.photo_url;
+            pDisp.classList.remove('hidden');
+            pPlace.classList.add('hidden');
+        } else {
+            pDisp.classList.add('hidden');
+            pPlace.classList.remove('hidden');
+        }
+
+        document.getElementById('modal-title').textContent = "Edit Student";
+        window.toggleModal('add-modal', true);
+    }
+    
+    window.previewPhoto = function(input) {
+        if(input.files && input.files[0]) {
+             const reader = new FileReader();
+             reader.onload = (e) => {
+                 const img = document.getElementById('photo-display');
+                 img.src = e.target.result;
+                 img.classList.remove('hidden');
+                 document.getElementById('photo-placeholder').classList.add('hidden');
+             };
+             reader.readAsDataURL(input.files[0]);
+        }
+    }
+    
+    // Form Submit (Override default to use FormData)
+    const form = document.getElementById('form-main-student');
+    if(form) {
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            // ... (Copy existing FormData logic or standard)
+            const id = document.getElementById('edit-student-id').value;
+            const url = id ? `/api/students/${id}` : '/api/students';
+            const method = id ? 'PUT' : 'POST';
+            
+            // Note: When using FormData for file uploads, we use standard Fetch, 
+            // NOT JSON. apiRequest is for JSON.
+            // Manually getting token here
+            const token = document.querySelector('meta[name="csrf-token"]').content;
+            
+            const btn = document.getElementById('save-btn');
+            const originalText = btn.innerText;
+            btn.innerText = "Saving...";
+            btn.disabled = true;
+
+            try {
+                const fd = new FormData(form);
+                const res = await fetch(url, {
+                    method: method,
+                    headers: {'X-CSRFToken': token},
+                    body: fd
+                });
+                
+                const data = await res.json();
+                
+                if(!res.ok) throw new Error(data.error || 'Request failed');
+                
+                showToast(id ? 'Updated!' : 'Created!', 'success');
+                window.closeAddModal();
+                loadStudents();
+                
+            } catch(e) {
+                showToast(e.message, 'error');
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        };
+    }
+
+    // --- 9. HELPERS (Search/Toggle/Etc) ---
+    document.getElementById('name-search').addEventListener('input', (e) => {
+        clearTimeout(window.searchDebounce);
+        window.searchDebounce = setTimeout(() => {
+            window.applyFilters();
+        }, 300);
+    });
+
+    window.toggleQuickAdd = function() {
+        const form = document.getElementById('quick-add-form');
+        form.classList.toggle('hidden');
+        document.getElementById('quick-add-arrow').textContent = form.classList.contains('hidden') ? 'keyboard_arrow_down' : 'keyboard_arrow_up';
+    }
+    
+    window.setViewMode = (m) => { window.currentViewMode = m; renderStudents(); }
+
+    window.resetAllFilters = () => {
+         document.getElementById('name-search').value = '';
+         document.getElementById('filter-hall').value = '';
+         window.loadStudents();
+    }
+    
+    // Stats (Short version)
+    function updateStats() {
+        if(document.getElementById('total-count')) document.getElementById('total-count').innerText = window.allStudents.length;
+        // ... (other stats code if needed)
+    }
+
+    function setupEventListeners() {
+        document.getElementById('items-per-page').addEventListener('change', (e) => {
+            window.itemsPerPage = e.target.value === 'all' ? 10000 : parseInt(e.target.value);
+            window.currentPage = 1;
+            renderStudents();
+        });
+        document.getElementById('next-page').addEventListener('click', () => { window.currentPage++; renderStudents(); });
+        document.getElementById('prev-page').addEventListener('click', () => { window.currentPage--; renderStudents(); });
+    }
+    
+    // Single Delete
+    window.openDeleteModal = function(id, name) {
+        window.deleteStudentId = id;
+        document.getElementById('delete-student-name').innerText = name;
+        window.toggleModal('delete-modal', true);
+    }
+    
+    window.closeDeleteModal = function() { window.toggleModal('delete-modal', false); }
+    
+    window.confirmDelete = async function() {
+        try {
+            await apiRequest(`/api/students/${window.deleteStudentId}`, { method: 'DELETE' });
+            showToast('Student deleted');
+            window.closeDeleteModal();
+            loadStudents();
+        } catch(e) {}
+    }
+    
 </script>
 {% endblock %}

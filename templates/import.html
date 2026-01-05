@@ -260,20 +260,19 @@
             }
         }, 200);
 
-        try {
-            // Using standard fetch for file upload
+       try {
             const response = await fetch('/api/import', {
                 method: 'POST',
                 body: formData
             });
-
-            clearInterval(interval);
-            document.getElementById('progress-bar').style.width = '100%';
-            document.getElementById('progress-percent').innerText = '100%';
-
+            
+            // Check HTML error first
             const contentType = response.headers.get("content-type");
             if (!contentType || !contentType.includes("application/json")) {
-                throw new Error("Server returned invalid response (HTML).");
+                const text = await response.text();
+                // Logs helpful for debugging 404s
+                console.error("Server HTML Response:", text);
+                throw new Error("Server Error: Endpoint not found or crashed. Check console.");
             }
 
             const data = await response.json();
