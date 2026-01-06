@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,16 +10,16 @@
 
     <!-- Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- Theme Initialization Script (Prevents Flash) -->
     <script>
-        (function() {
+        (function () {
             const savedTheme = localStorage.getItem('theme') || 'dark';
             document.documentElement.setAttribute('data-theme', savedTheme);
         })();
@@ -53,7 +54,8 @@
             --card-hover: rgba(255, 255, 255, 0.8);
             --nav-bg: rgba(240, 244, 248, 0.85);
             --input-bg: rgba(255, 255, 255, 0.5);
-            --gold-accent: #d97706; /* Darker gold for light bg contrast */
+            --gold-accent: #d97706;
+            /* Darker gold for light bg contrast */
             --glow-primary: rgba(59, 130, 246, 0.1);
             --glow-secondary: rgba(234, 179, 8, 0.1);
         }
@@ -70,9 +72,13 @@
         /* --- AMBIENT GLOW --- */
         .ambient-glow {
             position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
             background: radial-gradient(circle at 15% 50%, var(--glow-primary), transparent 25%),
-                        radial-gradient(circle at 85% 30%, var(--glow-secondary), transparent 25%);
+                radial-gradient(circle at 85% 30%, var(--glow-secondary), transparent 25%);
             pointer-events: none;
             transition: background 0.5s ease;
         }
@@ -102,9 +108,14 @@
         }
 
         /* --- TEXT & ACCENTS --- */
-        .text-theme-main { color: var(--text-main); }
-        .text-theme-muted { color: var(--text-muted); }
-        
+        .text-theme-main {
+            color: var(--text-main);
+        }
+
+        .text-theme-muted {
+            color: var(--text-muted);
+        }
+
         .text-gold {
             color: var(--gold-accent);
             font-weight: 700;
@@ -119,33 +130,63 @@
             box-shadow: 0 4px 15px rgba(184, 134, 11, 0.3);
             transition: all 0.3s ease;
         }
+
         .btn-gold:hover {
             transform: scale(1.02);
             filter: brightness(1.1);
         }
 
         /* --- FORM ELEMENTS --- */
-        input, select, textarea {
+        input,
+        select,
+        textarea {
             background: var(--input-bg) !important;
             border: 1px solid var(--glass-border) !important;
             color: var(--text-main) !important;
             transition: all 0.3s ease;
         }
-        input::placeholder { color: var(--text-muted); }
-        
-        input:focus, select:focus {
+
+        input::placeholder {
+            color: var(--text-muted);
+        }
+
+        input:focus,
+        select:focus {
             border-color: var(--gold-accent) !important;
             outline: none;
             box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
         }
 
+        /* Fix for Dropdown Options (Force Dark Mode Background) */
+        select option {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+        }
+
         /* --- ICONS --- */
-        .material-icons-round { vertical-align: middle; }
-        .animate-fade-in { animation: fadeIn 0.5s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .material-icons-round {
+            vertical-align: middle;
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
+
 <body class="antialiased">
     <div class="ambient-glow"></div>
 
@@ -155,40 +196,49 @@
             <div class="flex justify-between items-center h-20">
                 <!-- Logo -->
                 <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center shadow-lg shadow-yellow-500/20">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center shadow-lg shadow-yellow-500/20">
                         <i class="material-icons-round text-black text-2xl">school</i>
                     </div>
                     <div>
-                        <span class="text-xl font-bold tracking-tight text-theme-main">SchoolSync <span class="text-gold">Pro</span></span>
+                        <span class="text-xl font-bold tracking-tight text-theme-main">SchoolSync <span
+                                class="text-gold">Pro</span></span>
                     </div>
                 </div>
-                
+
                 <!-- Desktop Navigation -->
                 <div class="hidden md:flex items-center space-x-2">
-                    <a href="/" class="px-4 py-2 rounded-lg text-theme-muted hover:text-theme-main hover:bg-white/10 transition flex items-center">
+                    <a href="/"
+                        class="px-4 py-2 rounded-lg text-theme-muted hover:text-theme-main hover:bg-white/10 transition flex items-center">
                         <i class="material-icons-round mr-2 text-gold">dashboard</i> Dashboard
                     </a>
-                    <a href="/students" class="px-4 py-2 rounded-lg text-theme-muted hover:text-theme-main hover:bg-white/10 transition flex items-center">
+                    <a href="/students"
+                        class="px-4 py-2 rounded-lg text-theme-muted hover:text-theme-main hover:bg-white/10 transition flex items-center">
                         <i class="material-icons-round mr-2 text-gold">people</i> Students
                     </a>
-                    <a href="/import" class="px-4 py-2 rounded-lg text-theme-muted hover:text-theme-main hover:bg-white/10 transition flex items-center">
+                    <a href="/import"
+                        class="px-4 py-2 rounded-lg text-theme-muted hover:text-theme-main hover:bg-white/10 transition flex items-center">
                         <i class="material-icons-round mr-2 text-gold">cloud_upload</i> Import
                     </a>
                 </div>
-                
+
                 <!-- Right Side Actions -->
                 <div class="hidden md:flex items-center space-x-4 pl-4 border-l border-white/10">
                     <!-- Theme Toggle -->
-                    <button onclick="toggleTheme()" class="p-2 rounded-full hover:bg-white/10 text-theme-muted hover:text-gold transition focus:outline-none" title="Toggle Theme">
+                    <button onclick="toggleTheme()"
+                        class="p-2 rounded-full hover:bg-white/10 text-theme-muted hover:text-gold transition focus:outline-none"
+                        title="Toggle Theme">
                         <i class="material-icons-round" id="theme-icon">light_mode</i>
                     </button>
 
                     {% if current_user.is_authenticated %}
                     <span class="text-sm font-medium text-theme-main">{{ current_user.full_name }}</span>
-                    <a href="/settings" class="p-2 rounded-full hover:bg-white/10 text-theme-muted hover:text-gold transition">
+                    <a href="/settings"
+                        class="p-2 rounded-full hover:bg-white/10 text-theme-muted hover:text-gold transition">
                         <i class="material-icons-round">settings</i>
                     </a>
-                    <a href="/logout" class="p-2 rounded-full hover:bg-red-500/20 text-theme-muted hover:text-red-400 transition">
+                    <a href="/logout"
+                        class="p-2 rounded-full hover:bg-red-500/20 text-theme-muted hover:text-red-400 transition">
                         <i class="material-icons-round">logout</i>
                     </a>
                     {% endif %}
@@ -209,7 +259,8 @@
                 <a href="/import" class="block px-4 py-3 rounded-lg hover:bg-white/10 text-theme-main">Import</a>
                 <a href="/settings" class="block px-4 py-3 rounded-lg hover:bg-white/10 text-theme-main">Settings</a>
                 <!-- Mobile Theme Toggle -->
-                <button onclick="toggleTheme()" class="w-full text-left px-4 py-3 rounded-lg hover:bg-white/10 text-theme-main flex items-center">
+                <button onclick="toggleTheme()"
+                    class="w-full text-left px-4 py-3 rounded-lg hover:bg-white/10 text-theme-main flex items-center">
                     <i class="material-icons-round mr-2 text-gold">brightness_6</i> Toggle Theme
                 </button>
                 <a href="/logout" class="block px-4 py-3 rounded-lg hover:bg-red-500/20 text-red-400">Logout</a>
@@ -226,7 +277,8 @@
     <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-3"></div>
 
     <!-- Loading Overlay -->
-    <div id="loading-overlay" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center backdrop-blur-sm">
+    <div id="loading-overlay"
+        class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center backdrop-blur-sm">
         <div class="glass p-8 rounded-2xl flex flex-col items-center">
             <div class="w-12 h-12 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin mb-4"></div>
             <p class="text-gold font-semibold">Processing...</p>
@@ -239,7 +291,7 @@
             const html = document.documentElement;
             const currentTheme = html.getAttribute('data-theme');
             const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            
+
             html.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
             updateThemeIcon();
@@ -248,7 +300,7 @@
         function updateThemeIcon() {
             const currentTheme = document.documentElement.getAttribute('data-theme');
             const icon = document.getElementById('theme-icon');
-            if(icon) {
+            if (icon) {
                 icon.textContent = currentTheme === 'light' ? 'dark_mode' : 'light_mode';
             }
         }
@@ -264,13 +316,13 @@
         }
 
         // --- TOAST & API ---
-        window.showToast = function(message, type = 'success') {
+        window.showToast = function (message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             // Simplified Toast Colors
             const bgClass = type === 'error' ? 'bg-red-600' : 'bg-green-600';
             const icon = type === 'error' ? 'error' : 'check_circle';
-            
+
             toast.className = `${bgClass} text-white p-4 rounded-xl shadow-lg flex items-center justify-between animate-fade-in backdrop-blur-md bg-opacity-90`;
             toast.innerHTML = `
                 <div class="flex items-center">
@@ -286,8 +338,8 @@
             show: (msg) => document.getElementById('loading-overlay').classList.remove('hidden', 'flex'),
             hide: () => document.getElementById('loading-overlay').classList.add('hidden')
         };
-        
-        window.apiRequest = async function(url, options = {}) {
+
+        window.apiRequest = async function (url, options = {}) {
             loading.show();
             const csrfMeta = document.querySelector('meta[name="csrf-token"]');
             const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
@@ -308,4 +360,5 @@
     </script>
     {% block extra_js %}{% endblock %}
 </body>
+
 </html>
