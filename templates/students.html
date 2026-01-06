@@ -188,6 +188,15 @@
                             <option value="">All Programs</option>
                         </select>
                     </div>
+                    <div>
+                        <label class="text-xs text-theme-muted uppercase tracking-wider mb-1 block">Admission
+                            Year</label>
+                        <select id="filter-year"
+                            class="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-theme-main text-sm transition"
+                            onchange="applyFilters()">
+                            <option value="">All Years</option>
+                        </select>
+                    </div>
                     <button onclick="resetAllFilters()"
                         class="w-full py-2 border border-white/10 rounded-lg text-theme-muted hover:text-white hover:bg-white/5 transition text-sm flex items-center justify-center">
                         <i class="material-icons-round text-sm mr-2">refresh</i> Reset Filters
@@ -252,112 +261,7 @@
 
 <!-- ================= MODALS ================= -->
 
-<!-- ADD/EDIT STUDENT (With Photo Upload) -->
-<div id="add-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
-    <div class="glass-card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-8 animate-fade-in border border-white/10">
-        <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
-            <h3 class="text-2xl font-bold text-theme-main" id="modal-title">Student Details</h3>
-            <button onclick="closeAddModal()" class="text-theme-muted hover:text-white transition"><i
-                    class="material-icons-round text-2xl">close</i></button>
-        </div>
 
-        <form id="form-main-student" class="space-y-6">
-            <input type="hidden" id="edit-student-id">
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="space-y-1">
-                    <label class="text-xs text-theme-muted uppercase font-bold">Full Name</label>
-                    <input type="text" name="name" id="modal-name" required
-                        class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
-                </div>
-
-                <div class="space-y-1">
-                    <label class="text-xs text-theme-muted uppercase font-bold">Gender</label>
-                    <select name="gender" id="modal-gender"
-                        class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
-                        <option value="">Select...</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                    </select>
-                </div>
-
-                <!-- Program -->
-                <div class="space-y-1">
-                    <label class="text-xs text-theme-muted uppercase font-bold">Program</label>
-                    <select name="program" id="modal-program"
-                        class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500"
-                        onchange="updateClassOptions('modal')">
-                        <option value="">Select Program...</option>
-                    </select>
-                </div>
-
-                <!-- Hall -->
-                <div class="space-y-1">
-                    <label class="text-xs text-theme-muted uppercase font-bold">Hall of Residence</label>
-                    <select name="hall" id="modal-hall"
-                        class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
-                        <option value="">Select Hall...</option>
-                    </select>
-                </div>
-
-                <!-- Class -->
-                <div class="space-y-1">
-                    <label class="text-xs text-theme-muted uppercase font-bold">Class</label>
-                    <select name="class_room" id="modal-class"
-                        class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
-                        <option value="">Select Class...</option>
-                    </select>
-                </div>
-
-                <div class="space-y-1">
-                    <label class="text-xs text-theme-muted uppercase font-bold">Date of Birth</label>
-                    <input type="date" name="date_of_birth" id="modal-dob"
-                        class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
-                </div>
-
-                <div class="space-y-1">
-                    <label class="text-xs text-theme-muted uppercase font-bold">Email</label>
-                    <input type="email" name="email" id="modal-email"
-                        class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
-                </div>
-
-                <div class="space-y-1">
-                    <label class="text-xs text-theme-muted uppercase font-bold">Phone</label>
-                    <input type="tel" name="phone" id="modal-phone"
-                        class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
-                </div>
-            </div>
-
-            <!-- Photo Upload Field -->
-            <div
-                class="mt-4 p-4 border border-dashed border-white/20 rounded-xl text-center hover:bg-white/5 transition cursor-pointer">
-                <label class="cursor-pointer block">
-                    <i class="material-icons-round text-gold text-2xl block mb-2">add_a_photo</i>
-                    <span class="text-sm text-theme-muted">Upload Profile Picture</span>
-                    <input type="file" name="photo" accept="image/*" class="hidden">
-                </label>
-            </div>
-
-            <div class="border-t border-white/10 pt-4">
-                <p class="text-gold text-sm font-bold mb-3 uppercase tracking-wider">Guardian Information</p>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input type="text" name="guardian_name" id="modal-gname" placeholder="Guardian Name"
-                        class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
-                    <input type="tel" name="guardian_phone" id="modal-gphone" placeholder="Guardian Phone"
-                        class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
-                </div>
-            </div>
-
-            <div class="flex gap-4 pt-2">
-                <button type="submit"
-                    class="flex-1 btn-gold py-3 rounded-xl text-black font-bold shadow-lg hover:scale-[1.02] transition">Save
-                    Student</button>
-                <button type="button" onclick="closeAddModal()"
-                    class="flex-1 py-3 border border-white/10 rounded-xl text-theme-muted hover:text-white hover:bg-white/10 transition">Cancel</button>
-            </div>
-        </form>
-    </div>
-</div>
 
 <!-- CHANGE FORM LEVEL MODAL -->
 <div id="move-form-modal"
@@ -367,7 +271,7 @@
         <h3 class="text-xl font-bold text-theme-main mb-2">Change Form Level</h3>
         <p class="text-sm text-theme-muted mb-4">Promote or move selected students to:</p>
         <select id="target-form-select"
-            class="w-full p-3 bg-black/30 border border-white/10 rounded-xl text-theme-main mb-6 focus:border-blue-500">
+            class="w-full p-3 bg-gray-900 border-white/20 rounded-xl text-theme-main mb-6 focus:border-blue-500">
             <option value="Form 1">Form 1 (Freshman)</option>
             <option value="Form 2">Form 2</option>
             <option value="Form 3">Form 3</option>
@@ -389,7 +293,7 @@
         <h3 class="text-xl font-bold text-theme-main mb-4">Move Students</h3>
         <div class="space-y-4">
             <select id="bulk-new-hall"
-                class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+                class="w-full px-4 py-3 bg-gray-900 border-white/20 rounded-xl text-theme-main focus:border-gold-500">
                 <option value="">Select New Hall...</option>
             </select>
             <div class="flex gap-3">
@@ -409,7 +313,7 @@
         <h3 class="text-xl font-bold text-theme-main mb-4">Update Program</h3>
         <div class="space-y-4">
             <select id="bulk-new-program"
-                class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+                class="w-full px-4 py-3 bg-gray-900 border-white/20 rounded-xl text-theme-main focus:border-gold-500">
                 <option value="">Select New Program...</option>
             </select>
             <div class="flex gap-3">
@@ -430,9 +334,9 @@
                 class="material-icons-round text-blue-400 mr-2">email</i> Send Email</h3>
         <form id="bulk-email-form" class="space-y-4">
             <input type="text" id="email-subject" placeholder="Subject"
-                class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-blue-500">
+                class="w-full px-4 py-3 bg-gray-900 border-white/20 rounded-xl text-theme-main focus:border-blue-500">
             <textarea id="email-message" rows="5" placeholder="Message..."
-                class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-blue-500"></textarea>
+                class="w-full px-4 py-3 bg-gray-900 border-white/20 rounded-xl text-theme-main focus:border-blue-500"></textarea>
             <div class="flex justify-end gap-3">
                 <button type="button" onclick="closeBulkEmailModal()"
                     class="px-4 py-2 text-theme-muted hover:text-white transition">Cancel</button>
@@ -553,20 +457,20 @@
                 <div class="lg:w-2/3 grid grid-cols-1 gap-5">
                     <!-- Standard fields (same as before) -->
                     <input type="text" name="name" id="modal-name" placeholder="Full Name" required
-                        class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+                        class="w-full px-4 py-3 bg-gray-900 border-white/20 rounded-xl text-theme-main focus:border-gold-500">
                     <div class="grid grid-cols-2 gap-4">
                         <select name="gender" id="modal-gender"
-                            class="p-3 bg-black/30 border border-white/10 rounded-xl text-theme-main">
+                            class="p-3 bg-gray-900 border-white/20 rounded-xl text-theme-main">
                             <option value="Male">Male</option>
                             <option value="Female">Female</option>
                         </select>
                         <select name="program" id="modal-program"
-                            class="p-3 bg-black/30 border border-white/10 rounded-xl text-theme-main"
+                            class="p-3 bg-gray-900 border-white/20 rounded-xl text-theme-main"
                             onchange="updateClassOptions('modal')"></select>
                     </div>
                     <!-- (Add other fields: Class, Hall, Email, etc...) -->
                     <select name="class_room" id="modal-class"
-                        class="p-3 bg-black/30 border border-white/10 rounded-xl text-theme-main"></select>
+                        class="p-3 bg-gray-900 border-white/20 rounded-xl text-theme-main"></select>
                 </div>
             </div>
 
@@ -604,7 +508,9 @@
     window.currentPage = 1;
     window.itemsPerPage = 12;
     window.currentViewMode = 'grid';
+    window.currentViewMode = 'grid';
     window.deleteStudentId = null;
+    window.moveFormStudentId = null; // Track single student for move
 
     // --- 3. INITIALIZATION ---
     document.addEventListener('DOMContentLoaded', () => {
@@ -632,6 +538,12 @@
         fill('bulk-new-program', CONFIG.programs);
         fill('filter-program', CONFIG.programs);
         fill('filter-hall', CONFIG.halls);
+
+        // Year Filter (2000 - Current)
+        const currentYear = new Date().getFullYear();
+        const years = [];
+        for (let y = currentYear; y >= 2000; y--) years.push(y);
+        fill('filter-year', years);
     }
 
     // Explicitly attach to window
@@ -690,6 +602,10 @@
             }
             if (hall && s.hall !== hall) return false;
             if (prog && s.program !== prog) return false;
+
+            const year = document.getElementById('filter-year').value;
+            if (year && s.enrollment_year != year) return false;
+
             return true;
         });
 
@@ -779,9 +695,10 @@
                         </span>
                     </div>
                     
-                    <div class="border-t border-white/10 pt-3 flex justify-between items-center opacity-80 hover:opacity-100 transition">
+                     <div class="border-t border-white/10 pt-3 flex justify-between items-center opacity-80 hover:opacity-100 transition">
                          <span class="text-xs text-theme-muted uppercase font-mono">${safe(s.hall)}</span>
                          <div class="flex gap-2">
+                             <button onclick="openMoveFormModal(${s.id})" class="p-1 rounded hover:bg-white/10 text-blue-400 transition" title="Move Form"><i class="material-icons-round text-lg">school</i></button>
                              <button onclick="editStudent(${s.id})" class="p-1 rounded hover:bg-white/10 text-yellow-400 transition" title="Edit"><i class="material-icons-round text-lg">edit</i></button>
                              <button onclick="openDeleteModal(${s.id}, '${safe(s.name)}')" class="p-1 rounded hover:bg-white/10 text-red-400 transition" title="Delete"><i class="material-icons-round text-lg">delete</i></button>
                          </div>
@@ -808,6 +725,7 @@
                     <td class="px-6 py-4 text-white font-mono text-xs">${safe(s.class_room)}</td>
                     <td class="px-6 py-4 text-theme-muted text-sm">${safe(s.hall)}</td>
                     <td class="px-6 py-4">
+                        <button onclick="openMoveFormModal(${s.id})" class="text-blue-400 mr-3 hover:scale-110 transition" title="Move Form"><i class="material-icons-round">school</i></button>
                         <button onclick="editStudent(${s.id})" class="text-gold mr-3 hover:scale-110 transition"><i class="material-icons-round">edit</i></button>
                         <button onclick="openDeleteModal(${s.id}, '${safe(s.name)}')" class="text-red-400 hover:scale-110 transition"><i class="material-icons-round">delete</i></button>
                     </td>
@@ -845,200 +763,225 @@
     window.openDeleteAllModal = function () {
         document.getElementById('admin-password').value = '';
         window.toggleModal('delete-all-modal', true);
-    }
+        window.closeDeleteAllModal = function () { window.toggleModal('delete-all-modal', false); }
 
-    window.closeDeleteAllModal = function () { window.toggleModal('delete-all-modal', false); }
-
-    // Logic for Delete All Submit
-    window.confirmDeleteAll = async function () {
-        const password = document.getElementById('admin-password').value;
-        if (!password) return showToast('Password required', 'error');
-
-        try {
-            const res = await apiRequest('/api/students/delete-all', {
-                method: 'POST',
-                body: JSON.stringify({ password })
-            });
-
-            showToast(res.message, 'success');
-            window.closeDeleteAllModal();
-            loadStudents(); // Reload grid (it should be empty)
-        } catch (e) {
-            console.error(e);
-            // apiRequest handles showing toast for error
-        }
-    }
-
-    // --- 8. SINGLE STUDENT ACTIONS ---
-
-    window.editStudent = function (id) {
-        // ID match handling (loose for string vs int)
-        const s = window.allStudents.find(x => x.id == id);
-        if (!s) return console.error('Student ID not found');
-
-        document.getElementById('edit-student-id').value = s.id;
-        document.getElementById('modal-name').value = s.name;
-        document.getElementById('modal-email').value = s.email || '';
-        document.getElementById('modal-phone').value = s.phone || '';
-
-        // Populate Selects and trigger cascading
-        const pEl = document.getElementById('modal-program');
-        if (pEl) {
-            pEl.value = s.program || '';
-            // Must update classes based on this program immediately
-            window.updateClassOptions('modal');
-            // Small delay to allow options to populate before setting value
-            setTimeout(() => {
-                document.getElementById('modal-class').value = s.class_room || '';
-            }, 0);
+        // Logic for Delete All Submit
+        // --- 7.5 MOVE FORM LOGIC ---
+        window.openMoveFormModal = function (id) {
+            window.moveFormStudentId = id; // Set ID
+            window.toggleModal('move-form-modal', true);
         }
 
-        document.getElementById('modal-hall').value = s.hall || '';
-        document.getElementById('modal-dob').value = s.date_of_birth || '';
+        window.confirmMoveForm = async function () {
+            const target = document.getElementById('target-form-select').value;
+            const ids = window.moveFormStudentId ? [window.moveFormStudentId] : Array.from(window.selectedStudents);
 
-        // Image Logic
-        const pDisp = document.getElementById('photo-display');
-        const pPlace = document.getElementById('photo-placeholder');
-
-        if (s.photo_url) {
-            pDisp.src = s.photo_url;
-            pDisp.classList.remove('hidden');
-            pPlace.classList.add('hidden');
-        } else {
-            pDisp.classList.add('hidden');
-            pPlace.classList.remove('hidden');
-        }
-
-        document.getElementById('modal-title').textContent = "Edit Student";
-        window.toggleModal('add-modal', true);
-    }
-
-    window.previewSelectedImage = function (input) {
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = document.getElementById('photo-display');
-                img.src = e.target.result;
-                img.classList.remove('hidden');
-                document.getElementById('photo-placeholder').classList.add('hidden');
-            };
-            reader.readAsDataURL(input.files[0]);
-        }
-    }
-
-    // Form Submit (Override default to use FormData)
-    const form = document.getElementById('form-main-student');
-    if (form) {
-        form.onsubmit = async (e) => {
-            e.preventDefault();
-            // ... (Copy existing FormData logic or standard)
-            const id = document.getElementById('edit-student-id').value;
-            const url = id ? `/api/students/${id}` : '/api/students';
-            const method = id ? 'PUT' : 'POST';
-            const token = document.querySelector('meta[name="csrf-token"]').content;
-
-            const btn = document.getElementById('save-btn');
-            const originalText = btn.innerText;
-            btn.innerText = "Processing...";
-            btn.disabled = true;
-
-            // Show Progress UI
-            const progressBar = document.getElementById('upload-progress-bar');
-            const progressContainer = document.getElementById('upload-progress-container');
-
-            if (document.getElementById('photo-input').files.length > 0) {
-                progressContainer.classList.remove('hidden');
-                progressBar.style.width = '0%';
-                // Fake progress animation
-                setTimeout(() => progressBar.style.width = '40%', 500);
-                setTimeout(() => progressBar.style.width = '80%', 1500);
-            }
+            if (ids.length === 0) return showToast('No students selected', 'warning');
 
             try {
-                const fd = new FormData(form);
-                const res = await fetch(url, {
-                    method: method,
-                    headers: { 'X-CSRFToken': token },
-                    body: fd
+                const res = await apiRequest('/api/students/move-form', {
+                    method: 'POST',
+                    body: JSON.stringify({ ids, target_form: target })
+                });
+                showToast(res.message, 'success');
+                window.toggleModal('move-form-modal', false);
+                window.moveFormStudentId = null; // Reset
+                loadStudents();
+            } catch (e) { console.error(e); }
+        }
+
+        // Existing Delete All Logic...
+        window.confirmDeleteAll = async function () {
+            const password = document.getElementById('admin-password').value;
+            if (!password) return showToast('Password required', 'error');
+
+            try {
+                const res = await apiRequest('/api/students/delete-all', {
+                    method: 'POST',
+                    body: JSON.stringify({ password })
                 });
 
-                // Complete progress
-                progressBar.style.width = '100%';
-
-                const data = await res.json();
-
-                if (!res.ok) throw new Error(data.error || 'Request failed');
-
-                showToast(id ? 'Updated Successfully!' : 'Student Created!', 'success');
-                window.closeAddModal();
-                loadStudents();
-
+                showToast(res.message, 'success');
+                window.closeDeleteAllModal();
+                loadStudents(); // Reload grid (it should be empty)
             } catch (e) {
-                showToast(e.message, 'error');
-                progressContainer.classList.add('hidden'); // Hide on error
-            } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
-                setTimeout(() => progressContainer.classList.add('hidden'), 1000);
+                console.error(e);
+                // apiRequest handles showing toast for error
             }
-        };
-    }
+        }
 
-    // --- 9. HELPERS (Search/Toggle/Etc) ---
-    document.getElementById('name-search').addEventListener('input', (e) => {
-        clearTimeout(window.searchDebounce);
-        window.searchDebounce = setTimeout(() => {
-            window.applyFilters();
-        }, 300);
-    });
+        // --- 8. SINGLE STUDENT ACTIONS ---
 
-    window.toggleQuickAdd = function () {
-        const form = document.getElementById('quick-add-form');
-        form.classList.toggle('hidden');
-        document.getElementById('quick-add-arrow').textContent = form.classList.contains('hidden') ? 'keyboard_arrow_down' : 'keyboard_arrow_up';
-    }
+        window.editStudent = function (id) {
+            // ID match handling (loose for string vs int)
+            const s = window.allStudents.find(x => x.id == id);
+            if (!s) return console.error('Student ID not found');
 
-    window.setViewMode = (m) => { window.currentViewMode = m; renderStudents(); }
+            document.getElementById('edit-student-id').value = s.id;
+            document.getElementById('modal-name').value = s.name;
+            document.getElementById('modal-email').value = s.email || '';
+            document.getElementById('modal-phone').value = s.phone || '';
 
-    window.resetAllFilters = () => {
-        document.getElementById('name-search').value = '';
-        document.getElementById('filter-hall').value = '';
-        window.loadStudents();
-    }
+            // Populate Selects and trigger cascading
+            const pEl = document.getElementById('modal-program');
+            if (pEl) {
+                pEl.value = s.program || '';
+                // Must update classes based on this program immediately
+                window.updateClassOptions('modal');
+                // Small delay to allow options to populate before setting value
+                setTimeout(() => {
+                    document.getElementById('modal-class').value = s.class_room || '';
+                }, 0);
+            }
 
-    // Stats (Short version)
-    function updateStats() {
-        if (document.getElementById('total-count')) document.getElementById('total-count').innerText = window.allStudents.length;
-        // ... (other stats code if needed)
-    }
+            document.getElementById('modal-hall').value = s.hall || '';
+            document.getElementById('modal-dob').value = s.date_of_birth || '';
 
-    function setupEventListeners() {
-        document.getElementById('items-per-page').addEventListener('change', (e) => {
-            window.itemsPerPage = e.target.value === 'all' ? 10000 : parseInt(e.target.value);
-            window.currentPage = 1;
-            renderStudents();
+            // Image Logic
+            const pDisp = document.getElementById('photo-display');
+            const pPlace = document.getElementById('photo-placeholder');
+
+            if (s.photo_url) {
+                pDisp.src = s.photo_url;
+                pDisp.classList.remove('hidden');
+                pPlace.classList.add('hidden');
+            } else {
+                pDisp.classList.add('hidden');
+                pPlace.classList.remove('hidden');
+            }
+
+            document.getElementById('modal-title').textContent = "Edit Student";
+            window.toggleModal('add-modal', true);
+        }
+
+        window.previewSelectedImage = function (input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.getElementById('photo-display');
+                    img.src = e.target.result;
+                    img.classList.remove('hidden');
+                    document.getElementById('photo-placeholder').classList.add('hidden');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Form Submit (Override default to use FormData)
+        const form = document.getElementById('form-main-student');
+        if (form) {
+            form.onsubmit = async (e) => {
+                e.preventDefault();
+                // ... (Copy existing FormData logic or standard)
+                const id = document.getElementById('edit-student-id').value;
+                const url = id ? `/api/students/${id}` : '/api/students';
+                const method = id ? 'PUT' : 'POST';
+                const token = document.querySelector('meta[name="csrf-token"]').content;
+
+                const btn = document.getElementById('save-btn');
+                const originalText = btn.innerText;
+                btn.innerText = "Processing...";
+                btn.disabled = true;
+
+                // Show Progress UI
+                const progressBar = document.getElementById('upload-progress-bar');
+                const progressContainer = document.getElementById('upload-progress-container');
+
+                if (document.getElementById('photo-input').files.length > 0) {
+                    progressContainer.classList.remove('hidden');
+                    progressBar.style.width = '0%';
+                    // Fake progress animation
+                    setTimeout(() => progressBar.style.width = '40%', 500);
+                    setTimeout(() => progressBar.style.width = '80%', 1500);
+                }
+
+                try {
+                    const fd = new FormData(form);
+                    const res = await fetch(url, {
+                        method: method,
+                        headers: { 'X-CSRFToken': token },
+                        body: fd
+                    });
+
+                    // Complete progress
+                    progressBar.style.width = '100%';
+
+                    const data = await res.json();
+
+                    if (!res.ok) throw new Error(data.error || 'Request failed');
+
+                    showToast(id ? 'Updated Successfully!' : 'Student Created!', 'success');
+                    window.closeAddModal();
+                    loadStudents();
+
+                } catch (e) {
+                    showToast(e.message, 'error');
+                    progressContainer.classList.add('hidden'); // Hide on error
+                } finally {
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                    setTimeout(() => progressContainer.classList.add('hidden'), 1000);
+                }
+            };
+        }
+
+        // --- 9. HELPERS (Search/Toggle/Etc) ---
+        document.getElementById('name-search').addEventListener('input', (e) => {
+            clearTimeout(window.searchDebounce);
+            window.searchDebounce = setTimeout(() => {
+                window.applyFilters();
+            }, 300);
         });
-        document.getElementById('next-page').addEventListener('click', () => { window.currentPage++; renderStudents(); });
-        document.getElementById('prev-page').addEventListener('click', () => { window.currentPage--; renderStudents(); });
-    }
 
-    // Single Delete
-    window.openDeleteModal = function (id, name) {
-        window.deleteStudentId = id;
-        document.getElementById('delete-student-name').innerText = name;
-        window.toggleModal('delete-modal', true);
-    }
+        window.toggleQuickAdd = function () {
+            const form = document.getElementById('quick-add-form');
+            form.classList.toggle('hidden');
+            document.getElementById('quick-add-arrow').textContent = form.classList.contains('hidden') ? 'keyboard_arrow_down' : 'keyboard_arrow_up';
+        }
 
-    window.closeDeleteModal = function () { window.toggleModal('delete-modal', false); }
+        window.setViewMode = (m) => { window.currentViewMode = m; renderStudents(); }
 
-    window.confirmDelete = async function () {
-        try {
-            await apiRequest(`/api/students/${window.deleteStudentId}`, { method: 'DELETE' });
-            showToast('Student deleted');
-            window.closeDeleteModal();
-            loadStudents();
-        } catch (e) { }
-    }
+        window.resetAllFilters = () => {
+            document.getElementById('name-search').value = '';
+            document.getElementById('filter-hall').value = '';
+            document.getElementById('filter-program').value = '';
+            document.getElementById('filter-year').value = '';
+            window.loadStudents();
+        }
+
+        // Stats (Short version)
+        function updateStats() {
+            if (document.getElementById('total-count')) document.getElementById('total-count').innerText = window.allStudents.length;
+            // ... (other stats code if needed)
+        }
+
+        function setupEventListeners() {
+            document.getElementById('items-per-page').addEventListener('change', (e) => {
+                window.itemsPerPage = e.target.value === 'all' ? 10000 : parseInt(e.target.value);
+                window.currentPage = 1;
+                renderStudents();
+            });
+            document.getElementById('next-page').addEventListener('click', () => { window.currentPage++; renderStudents(); });
+            document.getElementById('prev-page').addEventListener('click', () => { window.currentPage--; renderStudents(); });
+        }
+
+        // Single Delete
+        window.openDeleteModal = function (id, name) {
+            window.deleteStudentId = id;
+            document.getElementById('delete-student-name').innerText = name;
+            window.toggleModal('delete-modal', true);
+        }
+
+        window.closeDeleteModal = function () { window.toggleModal('delete-modal', false); }
+
+        window.confirmDelete = async function () {
+            try {
+                await apiRequest(`/api/students/${window.deleteStudentId}`, { method: 'DELETE' });
+                showToast('Student deleted');
+                window.closeDeleteModal();
+                loadStudents();
+            } catch (e) { }
+        }
 
 </script>
 {% endblock %}
