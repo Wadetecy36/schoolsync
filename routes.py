@@ -329,26 +329,7 @@ def import_file():
 
 # --- SETTINGS / STATS / TEMPLATE ---
 
-@main.route('/api/stats', methods=['GET'])
-@login_required
-def get_stats():
-    total = Student.query.count()
-    current_year = datetime.now().year
-    form_counts = { 'First Form': 0, 'Second Form': 0, 'Third Form': 0, 'Completed': 0 }
-    
-    # Simple form calculation
-    # Optimized SQL Aggregation
-    rows = db.session.query(Student.enrollment_year, func.count(Student.id))\
-        .group_by(Student.enrollment_year).all()
-        
-    for year, count in rows:
-        diff = current_year - year
-        if diff >= 3: form_counts['Completed'] += count
-        elif diff == 2: form_counts['Third Form'] += count
-        elif diff == 1: form_counts['Second Form'] += count
-        else: form_counts['First Form'] += count
-        
-    return jsonify({ 'success': True, 'stats': { 'total_students': total, 'new_this_month': 0, 'by_form': form_counts, 'by_program': {} } })
+
 
 @main.route('/settings/profile', methods=['POST'])
 @login_required
