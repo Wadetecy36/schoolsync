@@ -13,49 +13,55 @@ from werkzeug.utils import secure_filename
 import pyotp 
 from utils import generate_qr_code, get_totp_uri 
 
-# Cloudinary Logic
-import cloudinary
-import cloudinary.uploader
-import cloudinary.api
+# Cloudinary Removed - Switched to Base64
+from PIL import Image
+import base64
+from sqlalchemy import text
 
 main = Blueprint('main', __name__)
 
-# --- CONFIG (Run once) ---
-if os.environ.get('CLOUDINARY_CLOUD_NAME'):
-    cloudinary.config(
-        cloud_name = os.environ.get('CLOUDINARY_CLOUD_NAME', '').strip(),
-        api_key = os.environ.get('CLOUDINARY_API_KEY', '').strip(),
-        api_secret = os.environ.get('CLOUDINARY_API_SECRET', '').strip(),
-        secure = True
-    )
+@main.route('/migrate-db')
+def migrate_db():
+    try:
+        # Run raw SQL to alter column type for Postgres
+        with db.engine.connect() as conn:
+            conn.execute(text("ALTER TABLE students ALTER COLUMN photo_file TYPE TEXT;"))
+            conn.commit()
+        return "Database Schema Updated Successfully! You can now upload images."
+    except Exception as e:
+        return f"Migration Error (Ignorable if already done): {e}"
+
 
 # --- HELPER FUNCTIONS ---
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif'}
 
-def upload_image(file):
-    """Robust Upload: Try Cloudinary -> Fallback to Local"""
+def process_image(file):
+    """Resize image and convert to Base64 string"""
     try:
-        file.seek(0)
-        # 1. Cloudinary Upload (Production)
-        if os.environ.get('CLOUDINARY_CLOUD_NAME'):
-            upload_result = cloudinary.uploader.upload(
-                file, 
-                folder="school_profiles",
-                resource_type="image"
-            )
-            return upload_result['secure_url']
+        if not file: return None
+        
+        # Open image using Pillow
+        img = Image.open(file)
+        
+        # Convert to RGB (in case of PNG with transparency)
+        if img.mode in ("RGBA", "P"):
+            img = img.convert("RGB")
             
-        # 2. Local Fallback (Development)
-        filename = secure_filename(f"{datetime.now().timestamp()}_{file.filename}")
-        if not os.path.exists(current_app.config['UPLOAD_FOLDER']):
-            os.makedirs(current_app.config['UPLOAD_FOLDER'], exist_ok=True)
-            
-        file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
-        return filename
+        # Resize: maintain aspect ratio, max 400px width/height
+        img.thumbnail((400, 400))
+        
+        # Save to buffer as JPEG
+        buf = io.BytesIO()
+        img.save(buf, format='JPEG', quality=70) # Compress to reduce size
+        buf.seek(0)
+        
+        # Encode to Base64
+        b64_str = base64.b64encode(buf.getvalue()).decode('utf-8')
+        return f"data:image/jpeg;base64,{b64_str}"
+        
     except Exception as e:
-        # Re-raise exception to be caught by the route handler and sent to UI
-        raise Exception(f"Upload Service Error: {str(e)}")
+        raise Exception(f"Image Processing Error: {str(e)}")
 
 def validate_file(file):
     if not file: return False, "No file provided"
@@ -153,7 +159,7 @@ def create_student():
         if 'photo' in request.files:
             file = request.files['photo']
             if file and file.filename != '': 
-                photo_url = upload_image(file)
+                photo_url = process_image(file)
 
         dob = None
         if data.get('date_of_birth'):
@@ -191,8 +197,8 @@ def update_student(id):
         if 'photo' in request.files:
             file = request.files['photo']
             if file and file.filename != '':
-                url = upload_image(file)
-                student.photo_file = url # Save Cloud URL
+                url = process_image(file)
+                student.photo_file = url
 
         # Update fields
         for k in ['name', 'gender', 'program', 'hall', 'class_room', 'email', 'phone', 'guardian_name', 'guardian_phone']:

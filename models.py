@@ -73,7 +73,7 @@ class Student(db.Model):
     hall = db.Column(db.String(100))
     class_room = db.Column(db.String(20))
     enrollment_year = db.Column(db.Integer, nullable=False, index=True)
-    photo_file = db.Column(db.String(255)) # Holds Filename (Local) or URL (Cloudinary)
+    photo_file = db.Column(db.Text) # Base64 Image String
     email = db.Column(db.String(120))
     phone = db.Column(db.String(20))
     guardian_name = db.Column(db.String(100))

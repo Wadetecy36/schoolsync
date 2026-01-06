@@ -781,7 +781,7 @@
         window.toggleModal('add-modal', true);
     }
     
-    window.previewPhoto = function(input) {
+    window.previewSelectedImage = function(input) {
         if(input.files && input.files[0]) {
              const reader = new FileReader();
              reader.onload = (e) => {
@@ -803,16 +803,24 @@
             const id = document.getElementById('edit-student-id').value;
             const url = id ? `/api/students/${id}` : '/api/students';
             const method = id ? 'PUT' : 'POST';
-            
-            // Note: When using FormData for file uploads, we use standard Fetch, 
-            // NOT JSON. apiRequest is for JSON.
-            // Manually getting token here
             const token = document.querySelector('meta[name="csrf-token"]').content;
             
             const btn = document.getElementById('save-btn');
             const originalText = btn.innerText;
-            btn.innerText = "Saving...";
+            btn.innerText = "Processing...";
             btn.disabled = true;
+
+            // Show Progress UI
+            const progressBar = document.getElementById('upload-progress-bar');
+            const progressContainer = document.getElementById('upload-progress-container');
+            
+            if(document.getElementById('photo-input').files.length > 0) {
+                 progressContainer.classList.remove('hidden');
+                 progressBar.style.width = '0%';
+                 // Fake progress animation
+                 setTimeout(() => progressBar.style.width = '40%', 500);
+                 setTimeout(() => progressBar.style.width = '80%', 1500);
+            }
 
             try {
                 const fd = new FormData(form);
@@ -822,19 +830,24 @@
                     body: fd
                 });
                 
+                // Complete progress
+                progressBar.style.width = '100%';
+                
                 const data = await res.json();
                 
                 if(!res.ok) throw new Error(data.error || 'Request failed');
                 
-                showToast(id ? 'Updated!' : 'Created!', 'success');
+                showToast(id ? 'Updated Successfully!' : 'Student Created!', 'success');
                 window.closeAddModal();
                 loadStudents();
                 
             } catch(e) {
                 showToast(e.message, 'error');
+                progressContainer.classList.add('hidden'); // Hide on error
             } finally {
                 btn.innerText = originalText;
                 btn.disabled = false;
+                setTimeout(() => progressContainer.classList.add('hidden'), 1000);
             }
         };
     }
