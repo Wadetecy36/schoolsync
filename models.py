@@ -117,12 +117,11 @@ class Student(db.Model):
         # Photo Logic
         photo_url = None
         if self.photo_file:
-            if self.photo_file.startswith('http'):
-                # It is a Cloudinary URL -> Use as is
+            if self.photo_file.startswith('http') or self.photo_file.startswith('data:'):
+                # Cloudinary or Base64 -> Use as is
                 photo_url = self.photo_file
             else:
-                # It is a Local File -> Use static path
-                # (Note: On Render, this file might not exist anymore)
+                # Local File -> Use static path
                 photo_url = f"/static/uploads/{self.photo_file}"
 
         return {
