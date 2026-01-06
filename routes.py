@@ -2,25 +2,42 @@ from flask import Blueprint, render_template, request, jsonify, send_file, redir
 from extensions import db
 from models import Student, AcademicRecord, User, VALID_HALLS, VALID_PROGRAMS
 from datetime import datetime
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, func, text
 from flask_login import login_required, current_user
 from functools import wraps
 import pandas as pd
 import io
 import os
-import filetype
 from werkzeug.utils import secure_filename
 import pyotp 
 from utils import generate_qr_code, get_totp_uri 
-
 # Cloudinary Removed - Switched to Base64
 from PIL import Image
 import base64
-from sqlalchemy import text
 
 main = Blueprint('main', __name__)
 
-@main.route('/migrate-db')
+# ... (omitted code) ...
+
+@main.route('/api/stats', methods=['GET'])
+@login_required
+def get_stats():
+    total = Student.query.count()
+    current_year = datetime.now().year
+    form_counts = { 'First Form': 0, 'Second Form': 0, 'Third Form': 0, 'Completed': 0 }
+    
+    # Optimized SQL Aggregation
+    rows = db.session.query(Student.enrollment_year, func.count(Student.id))\
+        .group_by(Student.enrollment_year).all()
+        
+    for year, count in rows:
+        diff = current_year - year
+        if diff >= 3: form_counts['Completed'] += count
+        elif diff == 2: form_counts['Third Form'] += count
+        elif diff == 1: form_counts['Second Form'] += count
+        else: form_counts['First Form'] += count
+        
+    return jsonify({ 'success': True, 'stats': { 'total_students': total, 'new_this_month': 0, 'by_form': form_counts, 'by_program': {} } })
 def migrate_db():
     try:
         # Run raw SQL to alter column type for Postgres
@@ -320,12 +337,16 @@ def get_stats():
     form_counts = { 'First Form': 0, 'Second Form': 0, 'Third Form': 0, 'Completed': 0 }
     
     # Simple form calculation
-    for s in db.session.query(Student.enrollment_year).all():
-        diff = current_year - s[0]
-        if diff >= 3: form_counts['Completed'] += 1
-        elif diff == 2: form_counts['Third Form'] += 1
-        elif diff == 1: form_counts['Second Form'] += 1
-        else: form_counts['First Form'] += 1
+    # Optimized SQL Aggregation
+    rows = db.session.query(Student.enrollment_year, func.count(Student.id))\
+        .group_by(Student.enrollment_year).all()
+        
+    for year, count in rows:
+        diff = current_year - year
+        if diff >= 3: form_counts['Completed'] += count
+        elif diff == 2: form_counts['Third Form'] += count
+        elif diff == 1: form_counts['Second Form'] += count
+        else: form_counts['First Form'] += count
         
     return jsonify({ 'success': True, 'stats': { 'total_students': total, 'new_this_month': 0, 'by_form': form_counts, 'by_program': {} } })
 
