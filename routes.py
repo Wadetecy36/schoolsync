@@ -261,29 +261,54 @@ def import_file():
         else: df = pd.read_excel(file)
 
         success = 0; errors = []
+        current_year = datetime.now().year
+        
+        # Clean columns: strip spaces, lower case match
+        df.columns = [c.strip().lower().replace(' ', '_') for c in df.columns]
+
         for i, row in df.iterrows():
+            row_num = i + 2 # Header is row 1
             try:
-                name = str(row.get('name','')).strip()
-                if not name: continue
+                name = str(row.get('name', '')).strip()
+                if not name or name.lower() == 'nan': continue
                 
-                hall = str(row.get('hall','')).strip()
-                if hall not in VALID_HALLS: hall = None 
+                # Validation
+                hall = str(row.get('hall', '')).strip()
+                # Fuzzy match or leave as is? Let's leave as is but warn if not in list
                 
                 prog = str(row.get('program', '')).strip()
-                if prog not in VALID_PROGRAMS: prog = None
                 
-                db.session.add(Student(
-                    name=name, gender=str(row.get('gender','')), 
-                    program=prog, hall=hall, 
-                    class_room=str(row.get('class_room','')), email=str(row.get('email','')),
-                    enrollment_year=datetime.now().year, created_by=current_user.id
-                ))
+                # Year Handling
+                year_val = row.get('enrollment_year') or row.get('year')
+                try: enc_year = int(float(year_val)) if year_val else current_year
+                except: enc_year = current_year
+
+                student = Student(
+                    name=name, 
+                    gender=str(row.get('gender', '')), 
+                    program=prog, 
+                    hall=hall, 
+                    class_room=str(row.get('class_room', '')), 
+                    email=str(row.get('email', '')),
+                    phone=str(row.get('phone', '')),
+                    guardian_name=str(row.get('guardian_name', '')),
+                    guardian_phone=str(row.get('guardian_phone', '')),
+                    enrollment_year=enc_year, 
+                    created_by=current_user.id
+                )
+                db.session.add(student)
                 success += 1
-            except Exception as e: errors.append(str(e))
+            except Exception as e: 
+                errors.append(f"Row {row_num}: {str(e)}")
         
-        db.session.commit()
-        return jsonify({'success': True, 'message': f'Imported {success}', 'errors': errors[:5]})
-    except Exception as e: return jsonify({'error': str(e)}), 500
+        if success > 0: db.session.commit()
+        
+        return jsonify({
+            'success': True, 
+            'message': f'Successfully imported {success} students.', 
+            'errors': errors # Send all errors
+        })
+    except Exception as e: return jsonify({'error': f"File Parse Error: {str(e)}"}), 500
 
 # --- SETTINGS / STATS / TEMPLATE ---
 
@@ -339,7 +364,19 @@ def update_2fa():
 @login_required
 def download_template(file_type):
     # Dummy template for testing
-    df = pd.DataFrame({'name':['John Doe'], 'program':['General Science']})
+    # Comprehensive Template
+    df = pd.DataFrame({
+        'name': ['John Doe'], 
+        'gender': ['Male'],
+        'program': ['General Science'], 
+        'hall': ['Alema Hall'],
+        'class_room': ['1-Science-A'],
+        'enrollment_year': [datetime.now().year],
+        'email': ['john@example.com'],
+        'phone': ['024xxxxxxx'],
+        'guardian_name': ['Jane Doe'],
+        'guardian_phone': ['020xxxxxxx']
+    })
     output = io.BytesIO()
     if file_type == 'csv': df.to_csv(output, index=False); mt='text/csv'; nm='template.csv'
     else: 
