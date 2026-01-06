@@ -763,225 +763,227 @@
     window.openDeleteAllModal = function () {
         document.getElementById('admin-password').value = '';
         window.toggleModal('delete-all-modal', true);
-        window.closeDeleteAllModal = function () { window.toggleModal('delete-all-modal', false); }
+    }
 
-        // Logic for Delete All Submit
-        // --- 7.5 MOVE FORM LOGIC ---
-        window.openMoveFormModal = function (id) {
-            window.moveFormStudentId = id; // Set ID
-            window.toggleModal('move-form-modal', true);
-        }
+    window.closeDeleteAllModal = function () { window.toggleModal('delete-all-modal', false); }
 
-        window.confirmMoveForm = async function () {
-            const target = document.getElementById('target-form-select').value;
-            const ids = window.moveFormStudentId ? [window.moveFormStudentId] : Array.from(window.selectedStudents);
+    // Logic for Delete All Submit
+    // --- 7.5 MOVE FORM LOGIC ---
+    window.openMoveFormModal = function (id) {
+        window.moveFormStudentId = id; // Set ID
+        window.toggleModal('move-form-modal', true);
+    }
 
-            if (ids.length === 0) return showToast('No students selected', 'warning');
+    window.confirmMoveForm = async function () {
+        const target = document.getElementById('target-form-select').value;
+        const ids = window.moveFormStudentId ? [window.moveFormStudentId] : Array.from(window.selectedStudents);
 
-            try {
-                const res = await apiRequest('/api/students/move-form', {
-                    method: 'POST',
-                    body: JSON.stringify({ ids, target_form: target })
-                });
-                showToast(res.message, 'success');
-                window.toggleModal('move-form-modal', false);
-                window.moveFormStudentId = null; // Reset
-                loadStudents();
-            } catch (e) { console.error(e); }
-        }
+        if (ids.length === 0) return showToast('No students selected', 'warning');
 
-        // Existing Delete All Logic...
-        window.confirmDeleteAll = async function () {
-            const password = document.getElementById('admin-password').value;
-            if (!password) return showToast('Password required', 'error');
-
-            try {
-                const res = await apiRequest('/api/students/delete-all', {
-                    method: 'POST',
-                    body: JSON.stringify({ password })
-                });
-
-                showToast(res.message, 'success');
-                window.closeDeleteAllModal();
-                loadStudents(); // Reload grid (it should be empty)
-            } catch (e) {
-                console.error(e);
-                // apiRequest handles showing toast for error
-            }
-        }
-
-        // --- 8. SINGLE STUDENT ACTIONS ---
-
-        window.editStudent = function (id) {
-            // ID match handling (loose for string vs int)
-            const s = window.allStudents.find(x => x.id == id);
-            if (!s) return console.error('Student ID not found');
-
-            document.getElementById('edit-student-id').value = s.id;
-            document.getElementById('modal-name').value = s.name;
-            document.getElementById('modal-email').value = s.email || '';
-            document.getElementById('modal-phone').value = s.phone || '';
-
-            // Populate Selects and trigger cascading
-            const pEl = document.getElementById('modal-program');
-            if (pEl) {
-                pEl.value = s.program || '';
-                // Must update classes based on this program immediately
-                window.updateClassOptions('modal');
-                // Small delay to allow options to populate before setting value
-                setTimeout(() => {
-                    document.getElementById('modal-class').value = s.class_room || '';
-                }, 0);
-            }
-
-            document.getElementById('modal-hall').value = s.hall || '';
-            document.getElementById('modal-dob').value = s.date_of_birth || '';
-
-            // Image Logic
-            const pDisp = document.getElementById('photo-display');
-            const pPlace = document.getElementById('photo-placeholder');
-
-            if (s.photo_url) {
-                pDisp.src = s.photo_url;
-                pDisp.classList.remove('hidden');
-                pPlace.classList.add('hidden');
-            } else {
-                pDisp.classList.add('hidden');
-                pPlace.classList.remove('hidden');
-            }
-
-            document.getElementById('modal-title').textContent = "Edit Student";
-            window.toggleModal('add-modal', true);
-        }
-
-        window.previewSelectedImage = function (input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = document.getElementById('photo-display');
-                    img.src = e.target.result;
-                    img.classList.remove('hidden');
-                    document.getElementById('photo-placeholder').classList.add('hidden');
-                };
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        // Form Submit (Override default to use FormData)
-        const form = document.getElementById('form-main-student');
-        if (form) {
-            form.onsubmit = async (e) => {
-                e.preventDefault();
-                // ... (Copy existing FormData logic or standard)
-                const id = document.getElementById('edit-student-id').value;
-                const url = id ? `/api/students/${id}` : '/api/students';
-                const method = id ? 'PUT' : 'POST';
-                const token = document.querySelector('meta[name="csrf-token"]').content;
-
-                const btn = document.getElementById('save-btn');
-                const originalText = btn.innerText;
-                btn.innerText = "Processing...";
-                btn.disabled = true;
-
-                // Show Progress UI
-                const progressBar = document.getElementById('upload-progress-bar');
-                const progressContainer = document.getElementById('upload-progress-container');
-
-                if (document.getElementById('photo-input').files.length > 0) {
-                    progressContainer.classList.remove('hidden');
-                    progressBar.style.width = '0%';
-                    // Fake progress animation
-                    setTimeout(() => progressBar.style.width = '40%', 500);
-                    setTimeout(() => progressBar.style.width = '80%', 1500);
-                }
-
-                try {
-                    const fd = new FormData(form);
-                    const res = await fetch(url, {
-                        method: method,
-                        headers: { 'X-CSRFToken': token },
-                        body: fd
-                    });
-
-                    // Complete progress
-                    progressBar.style.width = '100%';
-
-                    const data = await res.json();
-
-                    if (!res.ok) throw new Error(data.error || 'Request failed');
-
-                    showToast(id ? 'Updated Successfully!' : 'Student Created!', 'success');
-                    window.closeAddModal();
-                    loadStudents();
-
-                } catch (e) {
-                    showToast(e.message, 'error');
-                    progressContainer.classList.add('hidden'); // Hide on error
-                } finally {
-                    btn.innerText = originalText;
-                    btn.disabled = false;
-                    setTimeout(() => progressContainer.classList.add('hidden'), 1000);
-                }
-            };
-        }
-
-        // --- 9. HELPERS (Search/Toggle/Etc) ---
-        document.getElementById('name-search').addEventListener('input', (e) => {
-            clearTimeout(window.searchDebounce);
-            window.searchDebounce = setTimeout(() => {
-                window.applyFilters();
-            }, 300);
-        });
-
-        window.toggleQuickAdd = function () {
-            const form = document.getElementById('quick-add-form');
-            form.classList.toggle('hidden');
-            document.getElementById('quick-add-arrow').textContent = form.classList.contains('hidden') ? 'keyboard_arrow_down' : 'keyboard_arrow_up';
-        }
-
-        window.setViewMode = (m) => { window.currentViewMode = m; renderStudents(); }
-
-        window.resetAllFilters = () => {
-            document.getElementById('name-search').value = '';
-            document.getElementById('filter-hall').value = '';
-            document.getElementById('filter-program').value = '';
-            document.getElementById('filter-year').value = '';
-            window.loadStudents();
-        }
-
-        // Stats (Short version)
-        function updateStats() {
-            if (document.getElementById('total-count')) document.getElementById('total-count').innerText = window.allStudents.length;
-            // ... (other stats code if needed)
-        }
-
-        function setupEventListeners() {
-            document.getElementById('items-per-page').addEventListener('change', (e) => {
-                window.itemsPerPage = e.target.value === 'all' ? 10000 : parseInt(e.target.value);
-                window.currentPage = 1;
-                renderStudents();
+        try {
+            const res = await apiRequest('/api/students/move-form', {
+                method: 'POST',
+                body: JSON.stringify({ ids, target_form: target })
             });
-            document.getElementById('next-page').addEventListener('click', () => { window.currentPage++; renderStudents(); });
-            document.getElementById('prev-page').addEventListener('click', () => { window.currentPage--; renderStudents(); });
+            showToast(res.message, 'success');
+            window.toggleModal('move-form-modal', false);
+            window.moveFormStudentId = null; // Reset
+            loadStudents();
+        } catch (e) { console.error(e); }
+    }
+
+    // Existing Delete All Logic...
+    window.confirmDeleteAll = async function () {
+        const password = document.getElementById('admin-password').value;
+        if (!password) return showToast('Password required', 'error');
+
+        try {
+            const res = await apiRequest('/api/students/delete-all', {
+                method: 'POST',
+                body: JSON.stringify({ password })
+            });
+
+            showToast(res.message, 'success');
+            window.closeDeleteAllModal();
+            loadStudents(); // Reload grid (it should be empty)
+        } catch (e) {
+            console.error(e);
+            // apiRequest handles showing toast for error
+        }
+    }
+
+    // --- 8. SINGLE STUDENT ACTIONS ---
+
+    window.editStudent = function (id) {
+        // ID match handling (loose for string vs int)
+        const s = window.allStudents.find(x => x.id == id);
+        if (!s) return console.error('Student ID not found');
+
+        document.getElementById('edit-student-id').value = s.id;
+        document.getElementById('modal-name').value = s.name;
+        document.getElementById('modal-email').value = s.email || '';
+        document.getElementById('modal-phone').value = s.phone || '';
+
+        // Populate Selects and trigger cascading
+        const pEl = document.getElementById('modal-program');
+        if (pEl) {
+            pEl.value = s.program || '';
+            // Must update classes based on this program immediately
+            window.updateClassOptions('modal');
+            // Small delay to allow options to populate before setting value
+            setTimeout(() => {
+                document.getElementById('modal-class').value = s.class_room || '';
+            }, 0);
         }
 
-        // Single Delete
-        window.openDeleteModal = function (id, name) {
-            window.deleteStudentId = id;
-            document.getElementById('delete-student-name').innerText = name;
-            window.toggleModal('delete-modal', true);
+        document.getElementById('modal-hall').value = s.hall || '';
+        document.getElementById('modal-dob').value = s.date_of_birth || '';
+
+        // Image Logic
+        const pDisp = document.getElementById('photo-display');
+        const pPlace = document.getElementById('photo-placeholder');
+
+        if (s.photo_url) {
+            pDisp.src = s.photo_url;
+            pDisp.classList.remove('hidden');
+            pPlace.classList.add('hidden');
+        } else {
+            pDisp.classList.add('hidden');
+            pPlace.classList.remove('hidden');
         }
 
-        window.closeDeleteModal = function () { window.toggleModal('delete-modal', false); }
+        document.getElementById('modal-title').textContent = "Edit Student";
+        window.toggleModal('add-modal', true);
+    }
 
-        window.confirmDelete = async function () {
+    window.previewSelectedImage = function (input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = document.getElementById('photo-display');
+                img.src = e.target.result;
+                img.classList.remove('hidden');
+                document.getElementById('photo-placeholder').classList.add('hidden');
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // Form Submit (Override default to use FormData)
+    const form = document.getElementById('form-main-student');
+    if (form) {
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            // ... (Copy existing FormData logic or standard)
+            const id = document.getElementById('edit-student-id').value;
+            const url = id ? `/api/students/${id}` : '/api/students';
+            const method = id ? 'PUT' : 'POST';
+            const token = document.querySelector('meta[name="csrf-token"]').content;
+
+            const btn = document.getElementById('save-btn');
+            const originalText = btn.innerText;
+            btn.innerText = "Processing...";
+            btn.disabled = true;
+
+            // Show Progress UI
+            const progressBar = document.getElementById('upload-progress-bar');
+            const progressContainer = document.getElementById('upload-progress-container');
+
+            if (document.getElementById('photo-input').files.length > 0) {
+                progressContainer.classList.remove('hidden');
+                progressBar.style.width = '0%';
+                // Fake progress animation
+                setTimeout(() => progressBar.style.width = '40%', 500);
+                setTimeout(() => progressBar.style.width = '80%', 1500);
+            }
+
             try {
-                await apiRequest(`/api/students/${window.deleteStudentId}`, { method: 'DELETE' });
-                showToast('Student deleted');
-                window.closeDeleteModal();
+                const fd = new FormData(form);
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'X-CSRFToken': token },
+                    body: fd
+                });
+
+                // Complete progress
+                progressBar.style.width = '100%';
+
+                const data = await res.json();
+
+                if (!res.ok) throw new Error(data.error || 'Request failed');
+
+                showToast(id ? 'Updated Successfully!' : 'Student Created!', 'success');
+                window.closeAddModal();
                 loadStudents();
-            } catch (e) { }
-        }
+
+            } catch (e) {
+                showToast(e.message, 'error');
+                progressContainer.classList.add('hidden'); // Hide on error
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+                setTimeout(() => progressContainer.classList.add('hidden'), 1000);
+            }
+        };
+    }
+
+    // --- 9. HELPERS (Search/Toggle/Etc) ---
+    document.getElementById('name-search').addEventListener('input', (e) => {
+        clearTimeout(window.searchDebounce);
+        window.searchDebounce = setTimeout(() => {
+            window.applyFilters();
+        }, 300);
+    });
+
+    window.toggleQuickAdd = function () {
+        const form = document.getElementById('quick-add-form');
+        form.classList.toggle('hidden');
+        document.getElementById('quick-add-arrow').textContent = form.classList.contains('hidden') ? 'keyboard_arrow_down' : 'keyboard_arrow_up';
+    }
+
+    window.setViewMode = (m) => { window.currentViewMode = m; renderStudents(); }
+
+    window.resetAllFilters = () => {
+        document.getElementById('name-search').value = '';
+        document.getElementById('filter-hall').value = '';
+        document.getElementById('filter-program').value = '';
+        document.getElementById('filter-year').value = '';
+        window.loadStudents();
+    }
+
+    // Stats (Short version)
+    function updateStats() {
+        if (document.getElementById('total-count')) document.getElementById('total-count').innerText = window.allStudents.length;
+        // ... (other stats code if needed)
+    }
+
+    function setupEventListeners() {
+        document.getElementById('items-per-page').addEventListener('change', (e) => {
+            window.itemsPerPage = e.target.value === 'all' ? 10000 : parseInt(e.target.value);
+            window.currentPage = 1;
+            renderStudents();
+        });
+        document.getElementById('next-page').addEventListener('click', () => { window.currentPage++; renderStudents(); });
+        document.getElementById('prev-page').addEventListener('click', () => { window.currentPage--; renderStudents(); });
+    }
+
+    // Single Delete
+    window.openDeleteModal = function (id, name) {
+        window.deleteStudentId = id;
+        document.getElementById('delete-student-name').innerText = name;
+        window.toggleModal('delete-modal', true);
+    }
+
+    window.closeDeleteModal = function () { window.toggleModal('delete-modal', false); }
+
+    window.confirmDelete = async function () {
+        try {
+            await apiRequest(`/api/students/${window.deleteStudentId}`, { method: 'DELETE' });
+            showToast('Student deleted');
+            window.closeDeleteModal();
+            loadStudents();
+        } catch (e) { }
+    }
 
 </script>
 {% endblock %}
