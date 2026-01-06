@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="space-y-8">
-    
+
     <!-- Header -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -13,16 +13,19 @@
         </div>
         <div class="flex flex-wrap gap-3">
             <!-- Delete All Button -->
-            <button onclick="openDeleteAllModal()" class="px-4 py-2 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition flex items-center group">
+            <button onclick="openDeleteAllModal()"
+                class="px-4 py-2 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition flex items-center group">
                 <i class="material-icons-round mr-2">delete_sweep</i>
                 <span>Delete All</span>
             </button>
 
-            <a href="/import" class="px-6 py-2 rounded-xl border border-white/10 hover:bg-white/10 text-theme-main transition flex items-center group">
+            <a href="/import"
+                class="px-6 py-2 rounded-xl border border-white/10 hover:bg-white/10 text-theme-main transition flex items-center group">
                 <i class="material-icons-round mr-2 text-gold group-hover:scale-110 transition">cloud_upload</i>
                 <span>Import</span>
             </a>
-            <button onclick="openAddModal()" class="btn-gold px-6 py-2 rounded-xl text-black flex items-center font-bold shadow-lg hover:shadow-yellow-500/20 transition">
+            <button onclick="openAddModal()"
+                class="btn-gold px-6 py-2 rounded-xl text-black flex items-center font-bold shadow-lg hover:shadow-yellow-500/20 transition">
                 <i class="material-icons-round mr-2">person_add</i>
                 <span>Add Student</span>
             </button>
@@ -32,28 +35,36 @@
     <!-- Stats Bar -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
         <div class="glass-card p-6 relative overflow-hidden group">
-            <div class="absolute right-0 top-0 w-24 h-24 bg-blue-500/10 rounded-bl-full -mr-4 -mt-4 transition group-hover:bg-blue-500/20"></div>
+            <div
+                class="absolute right-0 top-0 w-24 h-24 bg-blue-500/10 rounded-bl-full -mr-4 -mt-4 transition group-hover:bg-blue-500/20">
+            </div>
             <p class="text-theme-muted text-sm">Total Students</p>
             <p class="text-2xl font-bold text-theme-main mt-1" id="total-count">0</p>
             <i class="material-icons-round absolute bottom-4 right-4 text-3xl text-blue-500/20">groups</i>
         </div>
-        
+
         <div class="glass-card p-6 relative overflow-hidden group">
-            <div class="absolute right-0 top-0 w-24 h-24 bg-green-500/10 rounded-bl-full -mr-4 -mt-4 transition group-hover:bg-green-500/20"></div>
+            <div
+                class="absolute right-0 top-0 w-24 h-24 bg-green-500/10 rounded-bl-full -mr-4 -mt-4 transition group-hover:bg-green-500/20">
+            </div>
             <p class="text-theme-muted text-sm">Avg Age</p>
             <p class="text-2xl font-bold text-theme-main mt-1" id="avg-age">0</p>
             <i class="material-icons-round absolute bottom-4 right-4 text-3xl text-green-500/20">cake</i>
         </div>
-        
+
         <div class="glass-card p-6 relative overflow-hidden group">
-            <div class="absolute right-0 top-0 w-24 h-24 bg-purple-500/10 rounded-bl-full -mr-4 -mt-4 transition group-hover:bg-purple-500/20"></div>
+            <div
+                class="absolute right-0 top-0 w-24 h-24 bg-purple-500/10 rounded-bl-full -mr-4 -mt-4 transition group-hover:bg-purple-500/20">
+            </div>
             <p class="text-theme-muted text-sm">Top Program</p>
             <p class="text-xl font-bold text-theme-main mt-1 truncate" id="top-program">-</p>
             <i class="material-icons-round absolute bottom-4 right-4 text-3xl text-purple-500/20">school</i>
         </div>
-        
+
         <div class="glass-card p-6 relative overflow-hidden group">
-            <div class="absolute right-0 top-0 w-24 h-24 bg-yellow-500/10 rounded-bl-full -mr-4 -mt-4 transition group-hover:bg-yellow-500/20"></div>
+            <div
+                class="absolute right-0 top-0 w-24 h-24 bg-yellow-500/10 rounded-bl-full -mr-4 -mt-4 transition group-hover:bg-yellow-500/20">
+            </div>
             <p class="text-theme-muted text-sm">New This Month</p>
             <p class="text-2xl font-bold text-theme-main mt-1" id="new-this-month">0</p>
             <i class="material-icons-round absolute bottom-4 right-4 text-3xl text-yellow-500/20">person_add</i>
@@ -69,21 +80,26 @@
             </h3>
             <i id="quick-add-arrow" class="material-icons-round text-theme-muted">keyboard_arrow_down</i>
         </div>
-        
+
         <div id="quick-add-form" class="hidden mt-6 pt-6 border-t border-white/10">
             <form id="form-quick-add" class="space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <input type="text" name="name" placeholder="Full Name *" required class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
-                    
-                    <select name="program" id="quick-program" required class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-theme-main focus:border-gold-500" onchange="updateClassOptions('quick')">
+                    <input type="text" name="name" placeholder="Full Name *" required
+                        class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+
+                    <select name="program" id="quick-program" required
+                        class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-theme-main focus:border-gold-500"
+                        onchange="updateClassOptions('quick')">
                         <option value="">Select Program...</option>
                     </select>
 
-                    <select name="class_room" id="quick-class" required class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+                    <select name="class_room" id="quick-class" required
+                        class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
                         <option value="">Select Class...</option>
                     </select>
 
-                    <button type="submit" class="btn-gold px-6 py-3 rounded-xl text-black flex items-center justify-center font-bold">
+                    <button type="submit"
+                        class="btn-gold px-6 py-3 rounded-xl text-black flex items-center justify-center font-bold">
                         <i class="material-icons-round mr-2">add</i> Add
                     </button>
                 </div>
@@ -94,23 +110,27 @@
     <!-- Actions & Bulk -->
     <div class="glass-card p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
         <div class="flex bg-black/20 rounded-lg p-1">
-            <button onclick="setViewMode('grid')" id="view-grid" class="px-4 py-2 rounded-md text-gold bg-white/10 flex items-center">
+            <button onclick="setViewMode('grid')" id="view-grid"
+                class="px-4 py-2 rounded-md text-gold bg-white/10 flex items-center">
                 <i class="material-icons-round mr-2">grid_view</i> Grid
             </button>
-            <button onclick="setViewMode('table')" id="view-table" class="px-4 py-2 rounded-md text-theme-muted flex items-center">
+            <button onclick="setViewMode('table')" id="view-table"
+                class="px-4 py-2 rounded-md text-theme-muted flex items-center">
                 <i class="material-icons-round mr-2">table_rows</i> Table
             </button>
         </div>
-        
+
         <!-- Bulk Action Logic (Appears when items selected) -->
-        <div id="bulk-actions-panel" class="hidden flex gap-4 items-center bg-gold-500/10 px-4 py-2 rounded-xl border border-gold-500/20">
+        <div id="bulk-actions-panel"
+            class="hidden flex gap-4 items-center bg-gold-500/10 px-4 py-2 rounded-xl border border-gold-500/20">
             <div class="flex items-center bg-gold-500/20 px-3 py-1 rounded-lg text-gold border border-gold-500/30">
                 <i class="material-icons-round text-sm mr-2">check_box</i>
                 <span id="selected-count" class="font-bold">0</span> &nbsp;Selected
             </div>
-            
+
             <div class="flex items-center gap-2">
-                <select id="bulk-action" class="px-4 py-2 bg-black/20 border border-white/10 rounded-lg text-theme-main text-sm focus:border-gold-500">
+                <select id="bulk-action"
+                    class="px-4 py-2 bg-black/20 border border-white/10 rounded-lg text-theme-main text-sm focus:border-gold-500">
                     <option value="">Select Action...</option>
                     <option value="move-form">Change Form Level</option>
                     <option value="move-hall">Move Hall</option>
@@ -118,14 +138,17 @@
                     <option value="email">Send Email</option>
                     <option value="delete">Delete</option>
                 </select>
-                <button onclick="executeBulkAction()" class="btn-gold px-4 py-2 rounded-lg text-sm text-black font-bold">Apply</button>
+                <button onclick="executeBulkAction()"
+                    class="btn-gold px-4 py-2 rounded-lg text-sm text-black font-bold">Apply</button>
             </div>
-            <button onclick="clearSelections()" class="text-theme-muted hover:text-white text-sm flex items-center"><i class="material-icons-round text-sm mr-1">close</i> Clear</button>
+            <button onclick="clearSelections()" class="text-theme-muted hover:text-white text-sm flex items-center"><i
+                    class="material-icons-round text-sm mr-1">close</i> Clear</button>
         </div>
-        
+
         <!-- Export -->
         <div class="flex gap-2">
-            <button onclick="exportToCSV()" class="p-2 text-green-400 hover:bg-white/10 rounded-lg transition" title="Export CSV">
+            <button onclick="exportToCSV()" class="p-2 text-green-400 hover:bg-white/10 rounded-lg transition"
+                title="Export CSV">
                 <i class="material-icons-round">description</i>
             </button>
         </div>
@@ -136,35 +159,43 @@
         <!-- Sidebar Filters -->
         <div class="lg:col-span-1 space-y-6">
             <div class="glass-card p-6 sticky top-24">
-                <h3 class="font-bold text-theme-main mb-4 flex items-center"><i class="material-icons-round text-gold mr-2">filter_list</i> Filters</h3>
+                <h3 class="font-bold text-theme-main mb-4 flex items-center"><i
+                        class="material-icons-round text-gold mr-2">filter_list</i> Filters</h3>
                 <div class="mb-6 p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
-                    <p class="text-sm text-blue-300 font-medium text-center">Showing <span id="filtered-count" class="text-white font-bold">0</span> students</p>
+                    <p class="text-sm text-blue-300 font-medium text-center">Showing <span id="filtered-count"
+                            class="text-white font-bold">0</span> students</p>
                 </div>
-                
+
                 <div class="space-y-4">
                     <div>
                         <label class="text-xs text-theme-muted uppercase tracking-wider mb-1 block">Search</label>
-                        <input type="text" id="name-search" placeholder="Name, ID..." class="w-full pl-3 pr-3 py-2 bg-black/20 border border-white/10 rounded-lg text-theme-main text-sm focus:border-gold-500 transition">
+                        <input type="text" id="name-search" placeholder="Name, ID..."
+                            class="w-full pl-3 pr-3 py-2 bg-black/20 border border-white/10 rounded-lg text-theme-main text-sm focus:border-gold-500 transition">
                     </div>
                     <div>
                         <label class="text-xs text-theme-muted uppercase tracking-wider mb-1 block">Hall</label>
-                        <select id="filter-hall" class="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-theme-main text-sm transition" onchange="applyFilters()">
+                        <select id="filter-hall"
+                            class="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-theme-main text-sm transition"
+                            onchange="applyFilters()">
                             <option value="">All Halls</option>
                         </select>
                     </div>
-                     <div>
+                    <div>
                         <label class="text-xs text-theme-muted uppercase tracking-wider mb-1 block">Program</label>
-                        <select id="filter-program" class="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-theme-main text-sm transition" onchange="applyFilters()">
+                        <select id="filter-program"
+                            class="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-theme-main text-sm transition"
+                            onchange="applyFilters()">
                             <option value="">All Programs</option>
                         </select>
                     </div>
-                    <button onclick="resetAllFilters()" class="w-full py-2 border border-white/10 rounded-lg text-theme-muted hover:text-white hover:bg-white/5 transition text-sm flex items-center justify-center">
+                    <button onclick="resetAllFilters()"
+                        class="w-full py-2 border border-white/10 rounded-lg text-theme-muted hover:text-white hover:bg-white/5 transition text-sm flex items-center justify-center">
                         <i class="material-icons-round text-sm mr-2">refresh</i> Reset Filters
                     </button>
                 </div>
             </div>
         </div>
-        
+
         <!-- Results Area -->
         <div class="lg:col-span-3">
             <!-- Results Grid -->
@@ -174,7 +205,8 @@
                     <table class="min-w-full text-left">
                         <thead class="bg-black/20 text-theme-muted text-xs uppercase">
                             <tr>
-                                <th class="px-6 py-3"><input type="checkbox" id="select-all-table" class="rounded bg-black/20 border-white/20 text-gold focus:ring-0"></th>
+                                <th class="px-6 py-3"><input type="checkbox" id="select-all-table"
+                                        class="rounded bg-black/20 border-white/20 text-gold focus:ring-0"></th>
                                 <th class="px-6 py-3">Student</th>
                                 <th class="px-6 py-3">Program</th>
                                 <th class="px-6 py-3">Class</th>
@@ -188,7 +220,9 @@
             </div>
 
             <div id="loading-state" class="text-center py-20 hidden">
-                <div class="w-12 h-12 border-4 border-gold-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <div
+                    class="w-12 h-12 border-4 border-gold-500 border-t-transparent rounded-full animate-spin mx-auto mb-4">
+                </div>
                 <p class="text-theme-muted">Loading students...</p>
             </div>
             <div id="empty-state" class="hidden text-center py-20">
@@ -199,11 +233,17 @@
             <!-- Pagination -->
             <div id="pagination" class="hidden flex items-center justify-between pt-6 mt-6 border-t border-white/10">
                 <span class="text-sm text-theme-muted">
-                    Showing <span id="pagination-start" class="text-white font-bold">0</span> to <span id="pagination-end" class="text-white font-bold">0</span> of <span id="pagination-total" class="text-white font-bold">0</span>
+                    Showing <span id="pagination-start" class="text-white font-bold">0</span> to <span
+                        id="pagination-end" class="text-white font-bold">0</span> of <span id="pagination-total"
+                        class="text-white font-bold">0</span>
                 </span>
                 <div class="flex space-x-2">
-                    <button id="prev-page" class="p-2 rounded-lg border border-white/10 hover:bg-white/10 text-theme-muted disabled:opacity-30"><i class="material-icons-round">chevron_left</i></button>
-                    <button id="next-page" class="p-2 rounded-lg border border-white/10 hover:bg-white/10 text-theme-muted disabled:opacity-30"><i class="material-icons-round">chevron_right</i></button>
+                    <button id="prev-page"
+                        class="p-2 rounded-lg border border-white/10 hover:bg-white/10 text-theme-muted disabled:opacity-30"><i
+                            class="material-icons-round">chevron_left</i></button>
+                    <button id="next-page"
+                        class="p-2 rounded-lg border border-white/10 hover:bg-white/10 text-theme-muted disabled:opacity-30"><i
+                            class="material-icons-round">chevron_right</i></button>
                 </div>
             </div>
         </div>
@@ -217,21 +257,24 @@
     <div class="glass-card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-8 animate-fade-in border border-white/10">
         <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
             <h3 class="text-2xl font-bold text-theme-main" id="modal-title">Student Details</h3>
-            <button onclick="closeAddModal()" class="text-theme-muted hover:text-white transition"><i class="material-icons-round text-2xl">close</i></button>
+            <button onclick="closeAddModal()" class="text-theme-muted hover:text-white transition"><i
+                    class="material-icons-round text-2xl">close</i></button>
         </div>
-        
+
         <form id="form-main-student" class="space-y-6">
             <input type="hidden" id="edit-student-id">
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="space-y-1">
                     <label class="text-xs text-theme-muted uppercase font-bold">Full Name</label>
-                    <input type="text" name="name" id="modal-name" required class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+                    <input type="text" name="name" id="modal-name" required
+                        class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
                 </div>
-                
+
                 <div class="space-y-1">
                     <label class="text-xs text-theme-muted uppercase font-bold">Gender</label>
-                    <select name="gender" id="modal-gender" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+                    <select name="gender" id="modal-gender"
+                        class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
                         <option value="">Select...</option>
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
@@ -241,7 +284,9 @@
                 <!-- Program -->
                 <div class="space-y-1">
                     <label class="text-xs text-theme-muted uppercase font-bold">Program</label>
-                    <select name="program" id="modal-program" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500" onchange="updateClassOptions('modal')">
+                    <select name="program" id="modal-program"
+                        class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500"
+                        onchange="updateClassOptions('modal')">
                         <option value="">Select Program...</option>
                     </select>
                 </div>
@@ -249,7 +294,8 @@
                 <!-- Hall -->
                 <div class="space-y-1">
                     <label class="text-xs text-theme-muted uppercase font-bold">Hall of Residence</label>
-                    <select name="hall" id="modal-hall" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+                    <select name="hall" id="modal-hall"
+                        class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
                         <option value="">Select Hall...</option>
                     </select>
                 </div>
@@ -257,29 +303,34 @@
                 <!-- Class -->
                 <div class="space-y-1">
                     <label class="text-xs text-theme-muted uppercase font-bold">Class</label>
-                    <select name="class_room" id="modal-class" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+                    <select name="class_room" id="modal-class"
+                        class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
                         <option value="">Select Class...</option>
                     </select>
                 </div>
 
                 <div class="space-y-1">
                     <label class="text-xs text-theme-muted uppercase font-bold">Date of Birth</label>
-                    <input type="date" name="date_of_birth" id="modal-dob" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+                    <input type="date" name="date_of_birth" id="modal-dob"
+                        class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
                 </div>
 
                 <div class="space-y-1">
                     <label class="text-xs text-theme-muted uppercase font-bold">Email</label>
-                    <input type="email" name="email" id="modal-email" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+                    <input type="email" name="email" id="modal-email"
+                        class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
                 </div>
-                
+
                 <div class="space-y-1">
                     <label class="text-xs text-theme-muted uppercase font-bold">Phone</label>
-                    <input type="tel" name="phone" id="modal-phone" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+                    <input type="tel" name="phone" id="modal-phone"
+                        class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
                 </div>
             </div>
 
             <!-- Photo Upload Field -->
-            <div class="mt-4 p-4 border border-dashed border-white/20 rounded-xl text-center hover:bg-white/5 transition cursor-pointer">
+            <div
+                class="mt-4 p-4 border border-dashed border-white/20 rounded-xl text-center hover:bg-white/5 transition cursor-pointer">
                 <label class="cursor-pointer block">
                     <i class="material-icons-round text-gold text-2xl block mb-2">add_a_photo</i>
                     <span class="text-sm text-theme-muted">Upload Profile Picture</span>
@@ -290,79 +341,101 @@
             <div class="border-t border-white/10 pt-4">
                 <p class="text-gold text-sm font-bold mb-3 uppercase tracking-wider">Guardian Information</p>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input type="text" name="guardian_name" id="modal-gname" placeholder="Guardian Name" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
-                    <input type="tel" name="guardian_phone" id="modal-gphone" placeholder="Guardian Phone" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+                    <input type="text" name="guardian_name" id="modal-gname" placeholder="Guardian Name"
+                        class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+                    <input type="tel" name="guardian_phone" id="modal-gphone" placeholder="Guardian Phone"
+                        class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
                 </div>
             </div>
-            
+
             <div class="flex gap-4 pt-2">
-                <button type="submit" class="flex-1 btn-gold py-3 rounded-xl text-black font-bold shadow-lg hover:scale-[1.02] transition">Save Student</button>
-                <button type="button" onclick="closeAddModal()" class="flex-1 py-3 border border-white/10 rounded-xl text-theme-muted hover:text-white hover:bg-white/10 transition">Cancel</button>
+                <button type="submit"
+                    class="flex-1 btn-gold py-3 rounded-xl text-black font-bold shadow-lg hover:scale-[1.02] transition">Save
+                    Student</button>
+                <button type="button" onclick="closeAddModal()"
+                    class="flex-1 py-3 border border-white/10 rounded-xl text-theme-muted hover:text-white hover:bg-white/10 transition">Cancel</button>
             </div>
         </form>
     </div>
 </div>
 
 <!-- CHANGE FORM LEVEL MODAL -->
-<div id="move-form-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
+<div id="move-form-modal"
+    class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
     <div class="glass-card w-full max-w-sm p-8 text-center animate-fade-in border border-blue-500/30">
         <i class="material-icons-round text-4xl text-blue-400 mb-4">school</i>
         <h3 class="text-xl font-bold text-theme-main mb-2">Change Form Level</h3>
         <p class="text-sm text-theme-muted mb-4">Promote or move selected students to:</p>
-        <select id="target-form-select" class="w-full p-3 bg-black/30 border border-white/10 rounded-xl text-theme-main mb-6 focus:border-blue-500">
+        <select id="target-form-select"
+            class="w-full p-3 bg-black/30 border border-white/10 rounded-xl text-theme-main mb-6 focus:border-blue-500">
             <option value="Form 1">Form 1 (Freshman)</option>
             <option value="Form 2">Form 2</option>
             <option value="Form 3">Form 3</option>
             <option value="Completed">Graduated</option>
         </select>
         <div class="flex gap-3">
-            <button onclick="confirmMoveForm()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg font-bold">Update</button>
-            <button onclick="toggleModal('move-form-modal', false)" class="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg">Cancel</button>
+            <button onclick="confirmMoveForm()"
+                class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg font-bold">Update</button>
+            <button onclick="toggleModal('move-form-modal', false)"
+                class="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg">Cancel</button>
         </div>
     </div>
 </div>
 
 <!-- Move Hall Modal -->
-<div id="move-hall-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
+<div id="move-hall-modal"
+    class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
     <div class="glass-card w-full max-w-md p-8 animate-fade-in">
         <h3 class="text-xl font-bold text-theme-main mb-4">Move Students</h3>
         <div class="space-y-4">
-            <select id="bulk-new-hall" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+            <select id="bulk-new-hall"
+                class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
                 <option value="">Select New Hall...</option>
             </select>
             <div class="flex gap-3">
-                <button onclick="confirmMoveHall()" class="flex-1 btn-gold py-2 rounded-lg text-black font-bold">Move</button>
-                <button onclick="closeMoveHallModal()" class="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg">Cancel</button>
+                <button onclick="confirmMoveHall()"
+                    class="flex-1 btn-gold py-2 rounded-lg text-black font-bold">Move</button>
+                <button onclick="closeMoveHallModal()"
+                    class="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg">Cancel</button>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Update Program Modal -->
-<div id="update-program-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
+<div id="update-program-modal"
+    class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
     <div class="glass-card w-full max-w-md p-8 animate-fade-in">
         <h3 class="text-xl font-bold text-theme-main mb-4">Update Program</h3>
         <div class="space-y-4">
-            <select id="bulk-new-program" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+            <select id="bulk-new-program"
+                class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
                 <option value="">Select New Program...</option>
             </select>
             <div class="flex gap-3">
-                <button onclick="confirmUpdateProgram()" class="flex-1 btn-gold py-2 rounded-lg text-black font-bold">Update</button>
-                <button onclick="closeUpdateProgramModal()" class="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg">Cancel</button>
+                <button onclick="confirmUpdateProgram()"
+                    class="flex-1 btn-gold py-2 rounded-lg text-black font-bold">Update</button>
+                <button onclick="closeUpdateProgramModal()"
+                    class="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg">Cancel</button>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Bulk Email Modal -->
-<div id="bulk-email-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
+<div id="bulk-email-modal"
+    class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
     <div class="glass-card w-full max-w-lg p-8 animate-fade-in">
-        <h3 class="text-xl font-bold text-theme-main mb-4 flex items-center"><i class="material-icons-round text-blue-400 mr-2">email</i> Send Email</h3>
+        <h3 class="text-xl font-bold text-theme-main mb-4 flex items-center"><i
+                class="material-icons-round text-blue-400 mr-2">email</i> Send Email</h3>
         <form id="bulk-email-form" class="space-y-4">
-            <input type="text" id="email-subject" placeholder="Subject" class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-blue-500">
-            <textarea id="email-message" rows="5" placeholder="Message..." class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-blue-500"></textarea>
+            <input type="text" id="email-subject" placeholder="Subject"
+                class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-blue-500">
+            <textarea id="email-message" rows="5" placeholder="Message..."
+                class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-blue-500"></textarea>
             <div class="flex justify-end gap-3">
-                <button type="button" onclick="closeBulkEmailModal()" class="px-4 py-2 text-theme-muted hover:text-white transition">Cancel</button>
+                <button type="button" onclick="closeBulkEmailModal()"
+                    class="px-4 py-2 text-theme-muted hover:text-white transition">Cancel</button>
                 <button type="submit" class="btn-gold px-6 py-2 rounded-lg text-black font-bold">Send</button>
             </div>
         </form>
@@ -370,17 +443,25 @@
 </div>
 
 <!-- Delete All Modal -->
-<div id="delete-all-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
-    <div class="glass-card w-full max-w-sm p-8 text-center animate-fade-in border border-red-500/50 shadow-[0_0_50px_rgba(239,68,68,0.2)]">
-        <div class="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500 border border-red-500/30">
+<div id="delete-all-modal"
+    class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
+    <div
+        class="glass-card w-full max-w-sm p-8 text-center animate-fade-in border border-red-500/50 shadow-[0_0_50px_rgba(239,68,68,0.2)]">
+        <div
+            class="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500 border border-red-500/30">
             <i class="material-icons-round text-4xl">warning</i>
         </div>
         <h3 class="text-2xl font-bold text-red-500 mb-2">Delete Everything?</h3>
-        <p class="text-theme-muted mb-6">This will wipe all students and records database. This action is irreversible.</p>
-        <input type="password" id="admin-password" placeholder="Enter Admin Password" class="w-full px-4 py-3 bg-black/40 border border-red-500/30 rounded-xl text-white mb-6 focus:border-red-500 focus:ring-1 focus:ring-red-500">
+        <p class="text-theme-muted mb-6">This will wipe all students and records database. This action is irreversible.
+        </p>
+        <input type="password" id="admin-password" placeholder="Enter Admin Password"
+            class="w-full px-4 py-3 bg-black/40 border border-red-500/30 rounded-xl text-white mb-6 focus:border-red-500 focus:ring-1 focus:ring-red-500">
         <div class="flex gap-3">
-            <button onclick="confirmDeleteAll()" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-bold shadow-lg">Wipe Data</button>
-            <button onclick="closeDeleteAllModal()" class="flex-1 bg-white/10 hover:bg-white/20 text-white py-3 rounded-xl">Cancel</button>
+            <button onclick="confirmDeleteAll()"
+                class="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-bold shadow-lg">Wipe
+                Data</button>
+            <button onclick="closeDeleteAllModal()"
+                class="flex-1 bg-white/10 hover:bg-white/20 text-white py-3 rounded-xl">Cancel</button>
         </div>
     </div>
 </div>
@@ -388,22 +469,29 @@
 <!-- Single Delete Modal -->
 <div id="delete-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
     <div class="glass-card w-full max-w-sm p-8 text-center animate-fade-in border border-red-500/30">
-        <div class="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
+        <div
+            class="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
             <i class="material-icons-round text-3xl">delete_forever</i>
         </div>
         <h3 class="text-xl font-bold text-theme-main mb-2">Delete Student?</h3>
-        <p class="text-theme-muted mb-6">Are you sure you want to delete <span id="delete-student-name" class="text-white font-bold"></span>?</p>
+        <p class="text-theme-muted mb-6">Are you sure you want to delete <span id="delete-student-name"
+                class="text-white font-bold"></span>?</p>
         <div class="flex gap-3">
-            <button onclick="confirmDelete()" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-bold shadow-lg">Delete</button>
-            <button onclick="closeDeleteModal()" class="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg">Cancel</button>
+            <button onclick="confirmDelete()"
+                class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-bold shadow-lg">Delete</button>
+            <button onclick="closeDeleteModal()"
+                class="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg">Cancel</button>
         </div>
     </div>
 </div>
 
 <!-- Quick View Modal -->
-<div id="quick-view-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
+<div id="quick-view-modal"
+    class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
     <div class="glass-card w-full max-w-md p-8 animate-fade-in relative">
-        <button onclick="closeQuickViewModal()" class="absolute top-4 right-4 text-theme-muted hover:text-white transition"><i class="material-icons-round text-2xl">close</i></button>
+        <button onclick="closeQuickViewModal()"
+            class="absolute top-4 right-4 text-theme-muted hover:text-white transition"><i
+                class="material-icons-round text-2xl">close</i></button>
         <div id="quick-view-content"></div>
     </div>
 </div>
@@ -411,62 +499,82 @@
 
 <!-- ADD/EDIT STUDENT MODAL -->
 <div id="add-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
-    <div class="glass-card w-full max-w-3xl max-h-[90vh] overflow-y-auto p-8 animate-fade-in shadow-2xl border border-white/10">
-        
+    <div
+        class="glass-card w-full max-w-3xl max-h-[90vh] overflow-y-auto p-8 animate-fade-in shadow-2xl border border-white/10">
+
         <div class="flex justify-between items-center mb-8 border-b border-white/10 pb-4">
             <h3 class="text-2xl font-bold text-theme-main" id="modal-title">Student Details</h3>
-            <button onclick="closeAddModal()" class="text-theme-muted hover:text-white transition"><i class="material-icons-round text-2xl">close</i></button>
+            <button onclick="closeAddModal()" class="text-theme-muted hover:text-white transition"><i
+                    class="material-icons-round text-2xl">close</i></button>
         </div>
-        
+
         <form id="form-main-student" class="space-y-6" enctype="multipart/form-data">
             <input type="hidden" id="edit-student-id">
-            
+
             <div class="flex flex-col lg:flex-row gap-8">
-                
+
                 <!-- PROFILE PICTURE SECTION -->
                 <div class="lg:w-1/3 flex flex-col items-center">
                     <div class="relative group cursor-pointer w-48 h-48">
-                        
+
                         <!-- 1. The Actual Image (Hidden by default, shown if exists) -->
-                        <img id="photo-display" src="" class="w-full h-full rounded-full object-cover border-4 border-white/10 shadow-2xl bg-black/50 hidden">
-                        
+                        <img id="photo-display" src=""
+                            class="w-full h-full rounded-full object-cover border-4 border-white/10 shadow-2xl bg-black/50 hidden">
+
                         <!-- 2. The Placeholder (Shown if no image) -->
-                        <div id="photo-placeholder" class="w-full h-full rounded-full flex items-center justify-center bg-gradient-to-br from-gray-700 to-black border-4 border-white/10 shadow-2xl">
-                             <i class="material-icons-round text-6xl text-white/50">person</i>
+                        <div id="photo-placeholder"
+                            class="w-full h-full rounded-full flex items-center justify-center bg-gradient-to-br from-gray-700 to-black border-4 border-white/10 shadow-2xl">
+                            <i class="material-icons-round text-6xl text-white/50">person</i>
                         </div>
-                        
+
                         <!-- Edit Overlay -->
-                        <div class="absolute inset-0 rounded-full bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300">
+                        <div
+                            class="absolute inset-0 rounded-full bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300">
                             <i class="material-icons-round text-white text-3xl mb-1">cloud_upload</i>
                             <span class="text-xs text-white font-medium">Click to Upload</span>
                         </div>
-                        
+
                         <!-- File Input -->
-                        <input type="file" name="photo" id="photo-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" onchange="previewSelectedImage(this)">
+                        <input type="file" name="photo" id="photo-input"
+                            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*"
+                            onchange="previewSelectedImage(this)">
                     </div>
 
                     <!-- Progress Bar -->
-                    <div id="upload-progress-container" class="w-full mt-4 bg-gray-700 h-2 rounded-full overflow-hidden hidden">
-                        <div id="upload-progress-bar" class="h-full bg-gradient-to-r from-gold-500 to-yellow-300 w-0 transition-all duration-200"></div>
+                    <div id="upload-progress-container"
+                        class="w-full mt-4 bg-gray-700 h-2 rounded-full overflow-hidden hidden">
+                        <div id="upload-progress-bar"
+                            class="h-full bg-gradient-to-r from-gold-500 to-yellow-300 w-0 transition-all duration-200">
+                        </div>
                     </div>
                 </div>
 
                 <!-- FORM FIELDS (Right Side) -->
                 <div class="lg:w-2/3 grid grid-cols-1 gap-5">
                     <!-- Standard fields (same as before) -->
-                    <input type="text" name="name" id="modal-name" placeholder="Full Name" required class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+                    <input type="text" name="name" id="modal-name" placeholder="Full Name" required
+                        class="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
                     <div class="grid grid-cols-2 gap-4">
-                        <select name="gender" id="modal-gender" class="p-3 bg-black/30 border border-white/10 rounded-xl text-theme-main"><option value="Male">Male</option><option value="Female">Female</option></select>
-                        <select name="program" id="modal-program" class="p-3 bg-black/30 border border-white/10 rounded-xl text-theme-main" onchange="updateClassOptions('modal')"></select>
+                        <select name="gender" id="modal-gender"
+                            class="p-3 bg-black/30 border border-white/10 rounded-xl text-theme-main">
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                        <select name="program" id="modal-program"
+                            class="p-3 bg-black/30 border border-white/10 rounded-xl text-theme-main"
+                            onchange="updateClassOptions('modal')"></select>
                     </div>
                     <!-- (Add other fields: Class, Hall, Email, etc...) -->
-                    <select name="class_room" id="modal-class" class="p-3 bg-black/30 border border-white/10 rounded-xl text-theme-main"></select>
+                    <select name="class_room" id="modal-class"
+                        class="p-3 bg-black/30 border border-white/10 rounded-xl text-theme-main"></select>
                 </div>
             </div>
 
             <!-- BUTTONS -->
             <div class="flex gap-4 pt-4 border-t border-white/10">
-                <button type="submit" id="save-btn" class="flex-1 btn-gold py-3 rounded-xl font-bold text-black shadow-lg hover:scale-[1.01] transition">Save & Upload</button>
+                <button type="submit" id="save-btn"
+                    class="flex-1 btn-gold py-3 rounded-xl font-bold text-black shadow-lg hover:scale-[1.01] transition">Save
+                    & Upload</button>
             </div>
         </form>
     </div>
@@ -512,37 +620,37 @@
             const el = document.getElementById(id);
             if (!el) return; // Skip if missing
             const f = el.firstElementChild;
-            el.innerHTML = ''; 
-            if(f) el.appendChild(f); // Keep "Select..." option
+            el.innerHTML = '';
+            if (f) el.appendChild(f); // Keep "Select..." option
             opts.forEach(o => el.insertAdjacentHTML('beforeend', `<option value="${o}">${o}</option>`));
         };
 
         fill('modal-hall', CONFIG.halls);
         fill('bulk-new-hall', CONFIG.halls);
-        fill('modal-program', CONFIG.programs); 
+        fill('modal-program', CONFIG.programs);
         fill('quick-program', CONFIG.programs);
-        fill('bulk-new-program', CONFIG.programs); 
+        fill('bulk-new-program', CONFIG.programs);
         fill('filter-program', CONFIG.programs);
         fill('filter-hall', CONFIG.halls);
     }
 
     // Explicitly attach to window
-    window.updateClassOptions = function(context) {
+    window.updateClassOptions = function (context) {
         const progId = context === 'modal' ? 'modal-program' : 'quick-program';
         const classId = context === 'modal' ? 'modal-class' : 'quick-class';
 
         const progEl = document.getElementById(progId);
         const classEl = document.getElementById(classId);
-        
+
         if (!progEl || !classEl) return;
 
         const val = progEl.value;
         const conf = CONFIG.classConfig[val];
-        
+
         classEl.innerHTML = '<option value="">Select Class...</option>';
         if (conf) {
-            for(let y=1; y<=3; y++) {
-                for(let i=1; i<=conf.count; i++) {
+            for (let y = 1; y <= 3; y++) {
+                for (let i = 1; i <= conf.count; i++) {
                     const cVal = `${y}-${conf.code}-${i}`;
                     classEl.insertAdjacentHTML('beforeend', `<option value="${cVal}">${cVal}</option>`);
                 }
@@ -553,37 +661,41 @@
     // --- 5. DATA LOADING ---
     async function loadStudents() {
         const loader = document.getElementById('loading-state');
-        if(loader) loader.classList.remove('hidden');
-        
+        if (loader) loader.classList.remove('hidden');
+
         try {
             // Timestamp prevents caching
             const res = await apiRequest(`/api/students?per_page=2000&_t=${Date.now()}`);
             window.allStudents = res.students || [];
             updateStats();
             applyFilters();
-        } catch(e) { 
+        } catch (e) {
             console.error(e);
-        } finally { 
-            if(loader) loader.classList.add('hidden');
+        } finally {
+            if (loader) loader.classList.add('hidden');
         }
     }
 
     // --- 6. FILTERING & RENDERING ---
-    window.applyFilters = function() {
+    window.applyFilters = function () {
         const term = document.getElementById('name-search').value.toLowerCase();
         const hall = document.getElementById('filter-hall').value;
         const prog = document.getElementById('filter-program').value;
-        
+
         window.filteredStudents = window.allStudents.filter(s => {
-            if(term && !s.name.toLowerCase().includes(term) && !String(s.id).includes(term)) return false;
-            if(hall && s.hall !== hall) return false;
-            if(prog && s.program !== prog) return false;
+            if (term) {
+                // Multi-field search
+                const haystack = `${s.name} ${s.id} ${s.email} ${s.phone} ${s.program}`.toLowerCase();
+                if (!haystack.includes(term)) return false;
+            }
+            if (hall && s.hall !== hall) return false;
+            if (prog && s.program !== prog) return false;
             return true;
         });
 
         const countEl = document.getElementById('filtered-count');
-        if(countEl) countEl.innerText = window.filteredStudents.length;
-        
+        if (countEl) countEl.innerText = window.filteredStudents.length;
+
         window.currentPage = 1;
         renderStudents();
     }
@@ -598,12 +710,12 @@
         // Reset visibility
         [grid, table, list, empty, pagination].forEach(el => el && el.classList.add('hidden'));
 
-        if(window.filteredStudents.length === 0) {
-            if(empty) empty.classList.remove('hidden');
+        if (window.filteredStudents.length === 0) {
+            if (empty) empty.classList.remove('hidden');
             return;
         }
 
-        if(pagination) pagination.classList.remove('hidden');
+        if (pagination) pagination.classList.remove('hidden');
 
         // Paginate
         const start = (window.currentPage - 1) * window.itemsPerPage;
@@ -612,7 +724,7 @@
 
         // Update Text
         const safeStart = document.getElementById('pagination-start');
-        if(safeStart) {
+        if (safeStart) {
             safeStart.textContent = start + 1;
             document.getElementById('pagination-end').textContent = end;
             document.getElementById('pagination-total').textContent = window.filteredStudents.length;
@@ -621,9 +733,23 @@
         // Render Helpers
         const safe = (v) => v || '';
         const initial = (n) => (n || '?').charAt(0);
-        const getAvatar = (s) => s.photo_url 
+        const getAvatar = (s) => s.photo_url
             ? `<img src="${s.photo_url}" class="w-12 h-12 rounded-xl object-cover shadow border border-white/20">`
             : `<div class="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-lg">${initial(s.name)}</div>`;
+
+        // Program Color Mapper
+        const getProgramBadge = (prog) => {
+            const map = {
+                "General Science": "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
+                "Business": "bg-purple-500/20 text-purple-400 border-purple-500/30",
+                "General Arts": "bg-amber-500/20 text-amber-400 border-amber-500/30",
+                "Visual Arts": "bg-pink-500/20 text-pink-400 border-pink-500/30",
+                "Agriculture": "bg-green-500/20 text-green-400 border-green-500/30",
+                "Home Economics": "bg-rose-500/20 text-rose-400 border-rose-500/30"
+            };
+            const classes = map[prog] || "bg-gray-500/20 text-gray-400 border-gray-500/30";
+            return `<span class="px-2 py-1 rounded-md text-[10px] uppercase font-bold tracking-wider border ${classes}">${safe(prog)}</span>`;
+        };
 
         // GRID RENDERER
         if (window.currentViewMode === 'grid') {
@@ -631,53 +757,59 @@
             grid.innerHTML = data.map(s => `
                 <div class="glass-card p-6 relative group hover:border-gold-500/50 transition duration-300">
                     <div class="flex justify-between items-start mb-4">
-                        <div class="w-16 h-16 rounded-xl overflow-hidden shadow-lg border border-white/10 bg-black/40">
-                             ${s.photo_url 
-                                ? `<img src="${s.photo_url}" class="w-full h-full object-cover">`
-                                : `<div class="w-full h-full bg-gradient-to-br from-blue-600 to-indigo-900 flex items-center justify-center text-white font-bold text-2xl">${initial(s.name)}</div>`
-                             }
+                        <div class="relative w-16 h-16 rounded-xl overflow-hidden shadow-lg border border-white/10 bg-black/40 group-hover:scale-105 transition">
+                             ${s.photo_url
+                    ? `<img src="${s.photo_url}" class="w-full h-full object-cover">`
+                    : `<div class="w-full h-full bg-gradient-to-br from-blue-600 to-indigo-900 flex items-center justify-center text-white font-bold text-2xl">${initial(s.name)}</div>`
+                }
                         </div>
-                        <input type="checkbox" class="student-checkbox w-5 h-5 rounded border-white/20 bg-black/20 text-gold focus:ring-0 cursor-pointer" 
-                               onchange="toggleSelect(${s.id}, this.checked)" ${window.selectedStudents.has(s.id)?'checked':''}>
+                        <input type="checkbox" class="student-checkbox w-5 h-5 rounded border-white/20 bg-black/20 text-gold focus:ring-0 cursor-pointer transition" 
+                               onchange="toggleSelect(${s.id}, this.checked)" ${window.selectedStudents.has(s.id) ? 'checked' : ''}>
                     </div>
-                    <h3 class="text-lg font-bold text-theme-main truncate">${safe(s.name)}</h3>
                     
-                     <div class="flex flex-wrap gap-2 mt-2 mb-4">
-                        <span class="px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider bg-gold-500/20 text-gold border border-gold-500/30">
-                            ${safe(s.current_form)}
-                        </span>
-                        <span class="px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                    <div class="mb-3">
+                        <h3 class="text-lg font-bold text-theme-main truncate mb-1">${safe(s.name)}</h3>
+                        <p class="text-xs text-theme-muted flex items-center"><i class="material-icons-round text-xs mr-1 opacity-70">email</i> ${safe(s.email)}</p>
+                    </div>
+                    
+                     <div class="flex flex-wrap gap-2 mb-4">
+                         ${getProgramBadge(s.program)}
+                        <span class="px-2 py-1 rounded-md text-[10px] uppercase font-bold tracking-wider bg-blue-500/10 text-blue-300 border border-blue-500/20">
                             ${safe(s.class_room)}
                         </span>
                     </div>
                     
-                    <div class="border-t border-white/10 pt-3 flex justify-end gap-2 opacity-80 hover:opacity-100 transition">
-                         <button onclick="editStudent(${s.id})" class="text-yellow-400 hover:scale-110 transition"><i class="material-icons-round">edit</i></button>
-                         <button onclick="openDeleteModal(${s.id}, '${safe(s.name)}')" class="text-red-400 hover:scale-110 transition"><i class="material-icons-round">delete</i></button>
+                    <div class="border-t border-white/10 pt-3 flex justify-between items-center opacity-80 hover:opacity-100 transition">
+                         <span class="text-xs text-theme-muted uppercase font-mono">${safe(s.hall)}</span>
+                         <div class="flex gap-2">
+                             <button onclick="editStudent(${s.id})" class="p-1 rounded hover:bg-white/10 text-yellow-400 transition" title="Edit"><i class="material-icons-round text-lg">edit</i></button>
+                             <button onclick="openDeleteModal(${s.id}, '${safe(s.name)}')" class="p-1 rounded hover:bg-white/10 text-red-400 transition" title="Delete"><i class="material-icons-round text-lg">delete</i></button>
+                         </div>
                     </div>
                 </div>
             `).join('');
         }
-        
+
         // TABLE RENDERER
         else if (window.currentViewMode === 'table') {
             table.classList.remove('hidden');
             const tbody = document.getElementById('students-table-body');
             tbody.innerHTML = data.map(s => `
-                <tr class="hover:bg-white/5 border-b border-white/5 transition">
-                    <td class="px-6 py-4"><input type="checkbox" onchange="toggleSelect(${s.id}, this.checked)" ${window.selectedStudents.has(s.id)?'checked':''}></td>
+                <tr class="hover:bg-white/5 border-b border-white/5 transition group">
+                    <td class="px-6 py-4"><input type="checkbox" onchange="toggleSelect(${s.id}, this.checked)" ${window.selectedStudents.has(s.id) ? 'checked' : ''}></td>
                     <td class="px-6 py-4 flex items-center gap-3">
                          ${getAvatar(s)} 
                          <div>
-                            <p class="font-bold text-theme-main">${safe(s.name)}</p>
+                            <p class="font-bold text-theme-main group-hover:text-gold transition">${safe(s.name)}</p>
                             <p class="text-xs text-theme-muted">${safe(s.email)}</p>
                          </div>
                     </td>
-                    <td class="px-6 py-4 text-theme-muted">${safe(s.program)}</td>
+                    <td class="px-6 py-4">${getProgramBadge(s.program)}</td>
                     <td class="px-6 py-4 text-white font-mono text-xs">${safe(s.class_room)}</td>
+                    <td class="px-6 py-4 text-theme-muted text-sm">${safe(s.hall)}</td>
                     <td class="px-6 py-4">
-                        <button onclick="editStudent(${s.id})" class="text-gold mr-3"><i class="material-icons-round">edit</i></button>
-                        <button onclick="openDeleteModal(${s.id}, '${safe(s.name)}')" class="text-red-400"><i class="material-icons-round">delete</i></button>
+                        <button onclick="editStudent(${s.id})" class="text-gold mr-3 hover:scale-110 transition"><i class="material-icons-round">edit</i></button>
+                        <button onclick="openDeleteModal(${s.id}, '${safe(s.name)}')" class="text-red-400 hover:scale-110 transition"><i class="material-icons-round">delete</i></button>
                     </td>
                 </tr>
             `).join('');
@@ -685,11 +817,11 @@
     }
 
     // --- 7. MODAL ACTIONS (The Missing Logic) ---
-    
+
     // Explicit toggle function for window
-    window.toggleModal = function(id, show) {
+    window.toggleModal = function (id, show) {
         const el = document.getElementById(id);
-        if(el) {
+        if (el) {
             el.classList.toggle('hidden', !show);
             el.classList.toggle('flex', show);
         } else {
@@ -698,76 +830,76 @@
     }
 
     // Open/Close Add
-    window.openAddModal = function() {
+    window.openAddModal = function () {
         document.getElementById('form-main-student').reset();
-        document.getElementById('edit-student-id').value = ''; 
+        document.getElementById('edit-student-id').value = '';
         document.getElementById('photo-display').classList.add('hidden'); // Reset image
         document.getElementById('photo-placeholder').classList.remove('hidden');
         document.getElementById('modal-title').textContent = "New Admission";
         window.toggleModal('add-modal', true);
     }
-    
-    window.closeAddModal = function() { window.toggleModal('add-modal', false); }
+
+    window.closeAddModal = function () { window.toggleModal('add-modal', false); }
 
     // Open/Close Delete All
-    window.openDeleteAllModal = function() {
+    window.openDeleteAllModal = function () {
         document.getElementById('admin-password').value = '';
         window.toggleModal('delete-all-modal', true);
     }
-    
-    window.closeDeleteAllModal = function() { window.toggleModal('delete-all-modal', false); }
+
+    window.closeDeleteAllModal = function () { window.toggleModal('delete-all-modal', false); }
 
     // Logic for Delete All Submit
-    window.confirmDeleteAll = async function() {
+    window.confirmDeleteAll = async function () {
         const password = document.getElementById('admin-password').value;
-        if(!password) return showToast('Password required', 'error');
+        if (!password) return showToast('Password required', 'error');
 
         try {
             const res = await apiRequest('/api/students/delete-all', {
                 method: 'POST',
                 body: JSON.stringify({ password })
             });
-            
+
             showToast(res.message, 'success');
             window.closeDeleteAllModal();
             loadStudents(); // Reload grid (it should be empty)
-        } catch(e) {
+        } catch (e) {
             console.error(e);
             // apiRequest handles showing toast for error
         }
     }
 
     // --- 8. SINGLE STUDENT ACTIONS ---
-    
-    window.editStudent = function(id) {
+
+    window.editStudent = function (id) {
         // ID match handling (loose for string vs int)
         const s = window.allStudents.find(x => x.id == id);
-        if(!s) return console.error('Student ID not found');
-        
+        if (!s) return console.error('Student ID not found');
+
         document.getElementById('edit-student-id').value = s.id;
         document.getElementById('modal-name').value = s.name;
-        document.getElementById('modal-email').value = s.email||'';
-        document.getElementById('modal-phone').value = s.phone||'';
-        
+        document.getElementById('modal-email').value = s.email || '';
+        document.getElementById('modal-phone').value = s.phone || '';
+
         // Populate Selects and trigger cascading
         const pEl = document.getElementById('modal-program');
-        if(pEl) {
-             pEl.value = s.program || '';
-             // Must update classes based on this program immediately
-             window.updateClassOptions('modal');
-             // Small delay to allow options to populate before setting value
-             setTimeout(() => {
-                 document.getElementById('modal-class').value = s.class_room || '';
-             }, 0);
+        if (pEl) {
+            pEl.value = s.program || '';
+            // Must update classes based on this program immediately
+            window.updateClassOptions('modal');
+            // Small delay to allow options to populate before setting value
+            setTimeout(() => {
+                document.getElementById('modal-class').value = s.class_room || '';
+            }, 0);
         }
 
-        document.getElementById('modal-hall').value = s.hall||'';
-        document.getElementById('modal-dob').value = s.date_of_birth||'';
-        
+        document.getElementById('modal-hall').value = s.hall || '';
+        document.getElementById('modal-dob').value = s.date_of_birth || '';
+
         // Image Logic
         const pDisp = document.getElementById('photo-display');
         const pPlace = document.getElementById('photo-placeholder');
-        
+
         if (s.photo_url) {
             pDisp.src = s.photo_url;
             pDisp.classList.remove('hidden');
@@ -780,23 +912,23 @@
         document.getElementById('modal-title').textContent = "Edit Student";
         window.toggleModal('add-modal', true);
     }
-    
-    window.previewSelectedImage = function(input) {
-        if(input.files && input.files[0]) {
-             const reader = new FileReader();
-             reader.onload = (e) => {
-                 const img = document.getElementById('photo-display');
-                 img.src = e.target.result;
-                 img.classList.remove('hidden');
-                 document.getElementById('photo-placeholder').classList.add('hidden');
-             };
-             reader.readAsDataURL(input.files[0]);
+
+    window.previewSelectedImage = function (input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = document.getElementById('photo-display');
+                img.src = e.target.result;
+                img.classList.remove('hidden');
+                document.getElementById('photo-placeholder').classList.add('hidden');
+            };
+            reader.readAsDataURL(input.files[0]);
         }
     }
-    
+
     // Form Submit (Override default to use FormData)
     const form = document.getElementById('form-main-student');
-    if(form) {
+    if (form) {
         form.onsubmit = async (e) => {
             e.preventDefault();
             // ... (Copy existing FormData logic or standard)
@@ -804,7 +936,7 @@
             const url = id ? `/api/students/${id}` : '/api/students';
             const method = id ? 'PUT' : 'POST';
             const token = document.querySelector('meta[name="csrf-token"]').content;
-            
+
             const btn = document.getElementById('save-btn');
             const originalText = btn.innerText;
             btn.innerText = "Processing...";
@@ -813,35 +945,35 @@
             // Show Progress UI
             const progressBar = document.getElementById('upload-progress-bar');
             const progressContainer = document.getElementById('upload-progress-container');
-            
-            if(document.getElementById('photo-input').files.length > 0) {
-                 progressContainer.classList.remove('hidden');
-                 progressBar.style.width = '0%';
-                 // Fake progress animation
-                 setTimeout(() => progressBar.style.width = '40%', 500);
-                 setTimeout(() => progressBar.style.width = '80%', 1500);
+
+            if (document.getElementById('photo-input').files.length > 0) {
+                progressContainer.classList.remove('hidden');
+                progressBar.style.width = '0%';
+                // Fake progress animation
+                setTimeout(() => progressBar.style.width = '40%', 500);
+                setTimeout(() => progressBar.style.width = '80%', 1500);
             }
 
             try {
                 const fd = new FormData(form);
                 const res = await fetch(url, {
                     method: method,
-                    headers: {'X-CSRFToken': token},
+                    headers: { 'X-CSRFToken': token },
                     body: fd
                 });
-                
+
                 // Complete progress
                 progressBar.style.width = '100%';
-                
+
                 const data = await res.json();
-                
-                if(!res.ok) throw new Error(data.error || 'Request failed');
-                
+
+                if (!res.ok) throw new Error(data.error || 'Request failed');
+
                 showToast(id ? 'Updated Successfully!' : 'Student Created!', 'success');
                 window.closeAddModal();
                 loadStudents();
-                
-            } catch(e) {
+
+            } catch (e) {
                 showToast(e.message, 'error');
                 progressContainer.classList.add('hidden'); // Hide on error
             } finally {
@@ -860,23 +992,23 @@
         }, 300);
     });
 
-    window.toggleQuickAdd = function() {
+    window.toggleQuickAdd = function () {
         const form = document.getElementById('quick-add-form');
         form.classList.toggle('hidden');
         document.getElementById('quick-add-arrow').textContent = form.classList.contains('hidden') ? 'keyboard_arrow_down' : 'keyboard_arrow_up';
     }
-    
+
     window.setViewMode = (m) => { window.currentViewMode = m; renderStudents(); }
 
     window.resetAllFilters = () => {
-         document.getElementById('name-search').value = '';
-         document.getElementById('filter-hall').value = '';
-         window.loadStudents();
+        document.getElementById('name-search').value = '';
+        document.getElementById('filter-hall').value = '';
+        window.loadStudents();
     }
-    
+
     // Stats (Short version)
     function updateStats() {
-        if(document.getElementById('total-count')) document.getElementById('total-count').innerText = window.allStudents.length;
+        if (document.getElementById('total-count')) document.getElementById('total-count').innerText = window.allStudents.length;
         // ... (other stats code if needed)
     }
 
@@ -889,24 +1021,24 @@
         document.getElementById('next-page').addEventListener('click', () => { window.currentPage++; renderStudents(); });
         document.getElementById('prev-page').addEventListener('click', () => { window.currentPage--; renderStudents(); });
     }
-    
+
     // Single Delete
-    window.openDeleteModal = function(id, name) {
+    window.openDeleteModal = function (id, name) {
         window.deleteStudentId = id;
         document.getElementById('delete-student-name').innerText = name;
         window.toggleModal('delete-modal', true);
     }
-    
-    window.closeDeleteModal = function() { window.toggleModal('delete-modal', false); }
-    
-    window.confirmDelete = async function() {
+
+    window.closeDeleteModal = function () { window.toggleModal('delete-modal', false); }
+
+    window.confirmDelete = async function () {
         try {
             await apiRequest(`/api/students/${window.deleteStudentId}`, { method: 'DELETE' });
             showToast('Student deleted');
             window.closeDeleteModal();
             loadStudents();
-        } catch(e) {}
+        } catch (e) { }
     }
-    
+
 </script>
 {% endblock %}
