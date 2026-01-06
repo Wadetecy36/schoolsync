@@ -54,8 +54,8 @@ def upload_image(file):
         file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
         return filename
     except Exception as e:
-        print(f"❌ Upload Error: {e}")
-        return None
+        # Re-raise exception to be caught by the route handler and sent to UI
+        raise Exception(f"Upload Service Error: {str(e)}")
 
 def validate_file(file):
     if not file: return False, "No file provided"
@@ -152,7 +152,8 @@ def create_student():
         photo_url = None
         if 'photo' in request.files:
             file = request.files['photo']
-            if file and file.filename != '': photo_url = upload_image(file)
+            if file and file.filename != '': 
+                photo_url = upload_image(file)
 
         dob = None
         if data.get('date_of_birth'):
@@ -191,7 +192,7 @@ def update_student(id):
             file = request.files['photo']
             if file and file.filename != '':
                 url = upload_image(file)
-                if url: student.photo_file = url # Save Cloud URL
+                student.photo_file = url # Save Cloud URL
 
         # Update fields
         for k in ['name', 'gender', 'program', 'hall', 'class_room', 'email', 'phone', 'guardian_name', 'guardian_phone']:
