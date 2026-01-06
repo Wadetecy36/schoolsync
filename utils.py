@@ -19,7 +19,7 @@ def generate_otp():
 def send_async_email(app, msg):
     with app.app_context():
         try:
-            from app import mail
+            from extensions import mail
             mail.send(msg)
             print("✅ Background Email sent successfully!", file=sys.stdout)
         except Exception as e:

@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, jsonify, send_file, redirect, url_for, flash, current_app
-from models import db, Student, AcademicRecord, User, VALID_HALLS, VALID_PROGRAMS
+from extensions import db
+from models import Student, AcademicRecord, User, VALID_HALLS, VALID_PROGRAMS
 from datetime import datetime
 from sqlalchemy import or_, and_
 from flask_login import login_required, current_user

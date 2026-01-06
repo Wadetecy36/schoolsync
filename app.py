@@ -1,13 +1,6 @@
 from flask import Flask
 from config import config
-from models import db
-from flask_login import LoginManager
-from flask_wtf.csrf import CSRFProtect
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
-from flask_caching import Cache
-from flask_migrate import Migrate
-from flask_mail import Mail
+from extensions import db, csrf, limiter, cache, migrate, mail, login_manager
 import os
 import logging
 import sys  # Required for Vercel logging
@@ -15,17 +8,6 @@ from dotenv import load_dotenv
 
 # Load environment variables first
 load_dotenv()
-
-# Initialize extensions
-csrf = CSRFProtect()
-limiter = Limiter(
-    key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"],
-    storage_uri="memory://"
-)
-cache = Cache()
-migrate = Migrate()
-mail = Mail()
 
 def create_app(config_name=None):
     """Application factory pattern"""
@@ -59,7 +41,6 @@ def create_app(config_name=None):
     migrate.init_app(app, db)
     
     # Initialize Flask-Login
-    login_manager = LoginManager()
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Please log in to access this page.'
@@ -125,8 +106,9 @@ def register_cli_commands(app):
         else:
             print("✓ Database initialized (Admin already exists).")
 
+# Create global app instance for Vercel
 app = create_app()
 
 if __name__ == '__main__':
-    app = create_app()
+    # Use the already created app instance
     app.run(debug=True, host='0.0.0.0', port=5000)
