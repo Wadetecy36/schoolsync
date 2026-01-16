@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+
+{% block title %}Import Students - SchoolSync Pro{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8">
+    
+    <!-- Header -->
+    <div class="text-center">
+        <h1 class="text-3xl font-bold text-theme-main">Import Data</h1>
+        <p class="text-theme-muted mt-2">Bulk upload students via CSV or Excel</p>
+    </div>
+
+    <!-- Download Templates Section -->
+    <div class="glass-card p-8">
+        <h2 class="text-xl font-bold text-theme-main mb-6 flex items-center">
+            <i class="material-icons-round text-gold mr-3">file_download</i>
+            Download Templates
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- CSV Template -->
+            <a href="/api/download-template/csv" class="p-6 rounded-xl border border-white/10 bg-black/20 hover:border-blue-500/50 hover:bg-blue-500/10 transition group flex items-start space-x-4">
+                <div class="w-12 h-12 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400 group-hover:scale-110 transition">
+                    <i class="material-icons-round text-2xl">description</i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-theme-main group-hover:text-blue-300 transition">CSV Template</h4>
+                    <p class="text-sm text-theme-muted mt-1">Simple text format (Recommended)</p>
+                </div>
+            </a>
+
+            <!-- Excel Template -->
+            <a href="/api/download-template/excel" class="p-6 rounded-xl border border-white/10 bg-black/20 hover:border-green-500/50 hover:bg-green-500/10 transition group flex items-start space-x-4">
+                <div class="w-12 h-12 rounded-lg bg-green-500/20 flex items-center justify-center text-green-400 group-hover:scale-110 transition">
+                    <i class="material-icons-round text-2xl">table_view</i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-theme-main group-hover:text-green-300 transition">Excel Template</h4>
+                    <p class="text-sm text-theme-muted mt-1">Formatted spreadsheet with validation</p>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Upload Section -->
+    <div class="glass-card p-8">
+        <h2 class="text-xl font-bold text-theme-main mb-6 flex items-center">
+            <i class="material-icons-round text-gold mr-3">cloud_upload</i>
+            Upload File
+        </h2>
+        
+        <form id="upload-form" enctype="multipart/form-data">
+            <!-- CSRF Token -->
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <!-- File Drop Zone -->
+            <div id="drop-zone" class="relative border-2 border-dashed border-white/20 rounded-2xl p-12 text-center cursor-pointer hover:border-gold-500 hover:bg-white/5 transition-all duration-300 group">
+                <div class="relative z-10 flex flex-col items-center">
+                    <div class="w-20 h-20 bg-gradient-to-br from-yellow-500 to-amber-700 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-yellow-500/20 group-hover:scale-110 transition">
+                        <i class="material-icons-round text-white text-4xl">cloud_upload</i>
+                    </div>
+                    
+                    <h4 class="text-xl font-bold text-theme-main mb-2">Drop your file here</h4>
+                    <p class="text-theme-muted">or click to browse (.csv, .xlsx)</p>
+                    
+                    <input type="file" id="file-input" name="file" accept=".csv,.xlsx,.xls" class="hidden">
+                </div>
+            </div>
+            
+            <!-- File Info (Hidden Initially) -->
+            <div id="file-info" class="hidden mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center justify-between animate-fade-in">
+                <div class="flex items-center space-x-4">
+                    <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center text-blue-400">
+                        <i class="material-icons-round text-xl">insert_drive_file</i>
+                    </div>
+                    <div>
+                        <p class="font-bold text-theme-main" id="file-name"></p>
+                        <p class="text-xs text-theme-muted" id="file-size"></p>
+                    </div>
+                </div>
+                <button type="button" onclick="resetUpload()" class="text-red-400 hover:text-red-300 p-2 rounded-full hover:bg-red-500/10 transition">
+                    <i class="material-icons-round text-xl">close</i>
+                </button>
+            </div>
+
+            <!-- Progress Bar -->
+            <div id="progress-container" class="hidden mt-6 space-y-2">
+                <div class="flex justify-between text-xs text-theme-muted uppercase tracking-wider">
+                    <span>Uploading...</span>
+                    <span id="progress-percent" class="text-gold font-bold">0%</span>
+                </div>
+                <div class="h-2 bg-black/30 rounded-full overflow-hidden">
+                    <div id="progress-bar" class="h-full bg-gradient-to-r from-yellow-500 to-amber-600 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex space-x-4 mt-8">
+                <button type="submit" id="upload-btn" class="flex-1 btn-gold py-3 rounded-xl text-black shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition transform active:scale-95">
+                    <span id="upload-text" class="flex items-center justify-center">
+                        <i class="material-icons-round mr-2">upload</i> Start Import
+                    </span>
+                </button>
+            </div>
+        </form>
+
+        <!-- Results Area -->
+        <div id="results" class="hidden mt-8 p-4 rounded-xl border border-white/10 bg-black/20">
+            <div id="results-header" class="flex items-center mb-4">
+                <i id="results-icon" class="material-icons-round text-2xl mr-3">info</i>
+                <div>
+                    <h4 id="results-title" class="font-bold text-theme-main"></h4>
+                    <p id="results-message" class="text-sm text-theme-muted"></p>
+                </div>
+            </div>
+            <div id="error-list" class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar"></div>
+        </div>
+    </div>
+
+    <!-- Help Section -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="glass-card p-6">
+            <h3 class="font-bold text-theme-main mb-4 flex items-center">
+                <i class="material-icons-round text-red-400 mr-2">error_outline</i> Required
+            </h3>
+            <div class="p-3 bg-red-500/10 rounded-lg border border-red-500/20 flex items-center">
+                <i class="material-icons-round text-red-400 mr-2 text-sm">star</i>
+                <span class="text-theme-main font-mono text-sm">name</span>
+            </div>
+        </div>
+
+        <div class="glass-card p-6">
+            <h3 class="font-bold text-theme-main mb-4 flex items-center">
+                <i class="material-icons-round text-blue-400 mr-2">list</i> Optional
+            </h3>
+            <div class="flex flex-wrap gap-2">
+                <span class="px-2 py-1 bg-blue-500/10 text-blue-300 text-xs rounded border border-blue-500/20">email</span>
+                <span class="px-2 py-1 bg-blue-500/10 text-blue-300 text-xs rounded border border-blue-500/20">phone</span>
+                <span class="px-2 py-1 bg-blue-500/10 text-blue-300 text-xs rounded border border-blue-500/20">program</span>
+                <span class="px-2 py-1 bg-blue-500/10 text-blue-300 text-xs rounded border border-blue-500/20">hall</span>
+            </div>
+        </div>
+
+        <div class="glass-card p-6">
+            <h3 class="font-bold text-theme-main mb-4 flex items-center">
+                <i class="material-icons-round text-yellow-400 mr-2">lightbulb</i> Tips
+            </h3>
+            <ul class="text-sm text-theme-muted space-y-2 list-disc list-inside">
+                <li>Dates: YYYY-MM-DD</li>
+                <li>Empty rows are skipped</li>
+                <li>Max file size: 16MB</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div id="success-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-sm">
+    <div class="glass-card w-full max-w-sm p-8 text-center animate-fade-in border border-green-500/30">
+        <div class="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="material-icons-round text-green-400 text-3xl">check_circle</i>
+        </div>
+        <h3 class="text-2xl font-bold text-theme-main mb-2">Success!</h3>
+        <p id="success-message" class="text-theme-muted mb-6"></p>
+        <button onclick="closeSuccessModal()" class="w-full btn-gold py-2 rounded-lg text-black font-bold">Continue</button>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const fileInfo = document.getElementById('file-info');
+    const uploadForm = document.getElementById('upload-form');
+    const uploadBtn = document.getElementById('upload-btn');
+    const progressContainer = document.getElementById('progress-container');
+    const results = document.getElementById('results');
+    
+    let selectedFile = null;
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('border-gold-500', 'bg-white/5');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('border-gold-500', 'bg-white/5');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('border-gold-500', 'bg-white/5');
+        if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) handleFile(e.target.files[0]);
+    });
+
+    function handleFile(file) {
+        const validTypes = ['.csv', '.xlsx', '.xls'];
+        const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+        
+        if (!validTypes.includes(fileExt)) {
+            showToast('Invalid file type. Please upload CSV or Excel.', 'error');
+            return;
+        }
+
+        selectedFile = file;
+        fileInfo.classList.remove('hidden');
+        document.getElementById('file-name').textContent = file.name;
+        document.getElementById('file-size').textContent = (file.size / 1024).toFixed(2) + ' KB';
+        uploadBtn.disabled = false;
+        dropZone.classList.add('hidden'); // Hide dropzone to show file info cleaner
+    }
+
+    function resetUpload() {
+        selectedFile = null;
+        fileInput.value = '';
+        fileInfo.classList.add('hidden');
+        dropZone.classList.remove('hidden');
+        progressContainer.classList.add('hidden');
+        results.classList.add('hidden');
+        uploadBtn.disabled = false;
+        document.getElementById('upload-text').innerHTML = '<i class="material-icons-round mr-2">upload</i> Start Import';
+    }
+
+    function closeSuccessModal() {
+        document.getElementById('success-modal').classList.add('hidden');
+        document.getElementById('success-modal').classList.remove('flex');
+        resetUpload();
+    }
+
+    uploadForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!selectedFile) return showToast('Please select a file', 'warning');
+
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+        formData.append('csrf_token', csrfToken);
+
+        uploadBtn.disabled = true;
+        document.getElementById('upload-text').innerText = 'Importing...';
+        progressContainer.classList.remove('hidden');
+        results.classList.add('hidden');
+        
+        // Simulated Progress
+        let progress = 0;
+        const interval = setInterval(() => {
+            if (progress < 90) {
+                progress += 10;
+                document.getElementById('progress-bar').style.width = progress + '%';
+                document.getElementById('progress-percent').innerText = progress + '%';
+            }
+        }, 200);
+
+       try {
+            const response = await fetch('/api/import', {
+                method: 'POST',
+                body: formData
+            });
+            
+            // Check HTML error first
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                const text = await response.text();
+                // Logs helpful for debugging 404s
+                console.error("Server HTML Response:", text);
+                throw new Error("Server Error: Endpoint not found or crashed. Check console.");
+            }
+
+            const data = await response.json();
+
+            if (data.success) {
+                if (data.errors && data.errors.length > 0) {
+                    // Partial Success
+                    results.classList.remove('hidden');
+                    document.getElementById('results-title').innerText = 'Partial Success';
+                    document.getElementById('results-title').className = 'font-bold text-yellow-400';
+                    document.getElementById('results-icon').className = 'material-icons-round text-2xl mr-3 text-yellow-400';
+                    document.getElementById('results-message').innerText = `${data.message}. However, some rows failed:`;
+                    
+                    document.getElementById('error-list').innerHTML = data.errors.map(err => 
+                        `<div class="p-2 bg-red-500/10 text-red-300 text-xs rounded border border-red-500/20">${err}</div>`
+                    ).join('');
+                } else {
+                    // Full Success
+                    document.getElementById('success-message').innerText = data.message;
+                    document.getElementById('success-modal').classList.remove('hidden');
+                    document.getElementById('success-modal').classList.add('flex');
+                }
+            } else {
+                throw new Error(data.error);
+            }
+
+        } catch (error) {
+            clearInterval(interval);
+            progressContainer.classList.add('hidden');
+            showToast(error.message, 'error');
+            uploadBtn.disabled = false;
+            document.getElementById('upload-text').innerHTML = '<i class="material-icons-round mr-2">refresh</i> Try Again';
+        }
+    });
+</script>
+{% endblock %}

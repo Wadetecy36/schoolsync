@@ -1,0 +1,37 @@
+/* ALTERNATIVE FONTAWESOME - Unicode fallback */
+.icon {
+    font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+}
+
+/* Dashboard icons as Unicode */
+.icon-home::before { content: "🏠"; }
+.icon-users::before { content: "👥"; }
+.icon-chart::before { content: "📊"; }
+.icon-import::before { content: "📥"; }
+.icon-settings::before { content: "⚙️"; }
+.icon-logout::before { content: "🚪"; }
+.icon-user::before { content: "👤"; }
+.icon-check::before { content: "✅"; }
+.icon-warning::before { content: "⚠️"; }
+.icon-error::before { content: "❌"; }
+.icon-info::before { content: "ℹ️"; }
+.icon-download::before { content: "⬇️"; }
+.icon-upload::before { content: "⬆️"; }
+.icon-calendar::before { content: "📅"; }
+.icon-email::before { content: "✉️"; }
+.icon-phone::before { content: "📞"; }
+.icon-book::before { content: "📚"; }
+.icon-graduation::before { content: "🎓"; }
+.icon-building::before { content: "🏫"; }
+.icon-search::before { content: "🔍"; }
+.icon-filter::before { content: "🔎"; }
+.icon-edit::before { content: "✏️"; }
+.icon-trash::before { content: "🗑️"; }
+.icon-eye::before { content: "👁️"; }
+.icon-plus::before { content: "➕"; }
+.icon-minus::before { content: "➖"; }
+.icon-arrow-right::before { content: "➡️"; }
+.icon-arrow-left::before { content: "⬅️"; }
+.icon-arrow-up::before { content: "⬆️"; }
+.icon-arrow-down::before { content: "⬇️"; }
+.icon-menu::before { content: "☰"; }
