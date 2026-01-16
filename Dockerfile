@@ -1,17 +1,33 @@
-# Use a lightweight Python version
+# Use official Python runtime as a parent image
 FROM python:3.9-slim
 
 # Set working directory
 WORKDIR /app
 
-# 1. Copy ONLY requirements first (This allows Docker caching)
-COPY requirements.txt .
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV FLASK_APP=app.py
 
-# 2. Install dependencies (This layer is cached if requirements.txt doesn't change)
+# Install system dependencies (needed for PostgreSQL adapter)
+RUN apt-get update && apt-get install -y \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first (optimize cache)
+COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install gunicorn
 
-# 3. Copy the rest of the app code
-COPY . .
+# Copy project files
+COPY . /app/
 
-# 4. Command to run the app
-CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:10000"]
+# Make entrypoint executable
+RUN chmod +x entrypoint.sh
+
+# Expose port
+EXPOSE 10000
+
+# Start command
+CMD ["./entrypoint.sh"]
