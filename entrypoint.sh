@@ -4,7 +4,7 @@
 echo "Runnning database migrations..."
 flask db upgrade
 
-# Initialize database (safe to run multiple times - checks if admin exists)
+# Initialize database (safe to run multiple times)
 echo "Initializing database..."
 flask init-db
 
