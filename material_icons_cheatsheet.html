@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Material Icons Cheatsheet</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .material-icons-round {
+            font-family: 'Material Icons Round';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .icon-card {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 120px;
+            height: 100px;
+            margin: 10px;
+            padding: 15px;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            background: white;
+            transition: all 0.2s;
+        }
+        
+        .icon-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .icon-name {
+            margin-top: 8px;
+            font-size: 12px;
+            text-align: center;
+            color: #6b7280;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body class="p-8 bg-gray-50">
+    <h1 class="text-3xl font-bold mb-6">Material Icons Cheatsheet</h1>
+    
+    <div class="mb-8">
+        <h2 class="text-xl font-semibold mb-4">Usage in HTML:</h2>
+        <pre class="bg-gray-100 p-4 rounded-lg"><code>&lt;i class="material-icons-round"&gt;home&lt;/i&gt;
+&lt;i class="material-icons-round md-36"&gt;people&lt;/i&gt;
+&lt;i class="material-icons-round text-blue-600"&gt;bar_chart&lt;/i&gt;</code></pre>
+    </div>
+    
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <!-- Navigation -->
+        <div class="icon-card">
+            <i class="material-icons-round text-blue-600 text-3xl">home</i>
+            <span class="icon-name">home</span>
+        </div>
+        <div class="icon-card">
+            <i class="material-icons-round text-blue-600 text-3xl">people</i>
+            <span class="icon-name">people</span>
+        </div>
+        <div class="icon-card">
+            <i class="material-icons-round text-blue-600 text-3xl">bar_chart</i>
+            <span class="icon-name">bar_chart</span>
+        </div>
+        <div class="icon-card">
+            <i class="material-icons-round text-blue-600 text-3xl">file_upload</i>
+            <span class="icon-name">file_upload</span>
+        </div>
+        <div class="icon-card">
+            <i class="material-icons-round text-blue-600 text-3xl">person</i>
+            <span class="icon-name">person</span>
+        </div>
+        <div class="icon-card">
+            <i class="material-icons-round text-blue-600 text-3xl">settings</i>
+            <span class="icon-name">settings</span>
+        </div>
+        
+        <!-- Actions -->
+        <div class="icon-card">
+            <i class="material-icons-round text-green-600 text-3xl">add</i>
+            <span class="icon-name">add</span>
+        </div>
+        <div class="icon-card">
+            <i class="material-icons-round text-yellow-600 text-3xl">edit</i>
+            <span class="icon-name">edit</span>
+        </div>
+        <div class="icon-card">
+            <i class="material-icons-round text-red-600 text-3xl">delete</i>
+            <span class="icon-name">delete</span>
+        </div>
+        <div class="icon-card">
+            <i class="material-icons-round text-blue-600 text-3xl">visibility</i>
+            <span class="icon-name">visibility</span>
+        </div>
+        <div class="icon-card">
+            <i class="material-icons-round text-green-600 text-3xl">save</i>
+            <span class="icon-name">save</span>
+        </div>
+        <div class="icon-card">
+            <i class="material-icons-round text-blue-600 text-3xl">download</i>
+            <span class="icon-name">download</span>
+        </div>
+        
+        <!-- Status -->
+        <div class="icon-card">
+            <i class="material-icons-round text-green-600 text-3xl">check</i>
+            <span class="icon-name">check</span>
+        </div>
+        <div class="icon-card">
+            <i class="material-icons-round text-green-600 text-3xl">check_circle</i>
+            <span class="icon-name">check_circle</span>
+        </div>
+        <div class="icon-card">
+            <i class="material-icons-round text-red-600 text-3xl">close</i>
+            <span class="icon-name">close</span>
+        </div>
+        <div class="icon-card">
+            <i class="material-icons-round text-red-600 text-3xl">error</i>
+            <span class="icon-name">error</span>
+        </div>
+        <div class="icon-card">
+            <i class="material-icons-round text-yellow-600 text-3xl">warning</i>
+            <span class="icon-name">warning</span>
+        </div>
+        <div class="icon-card">
+            <i class="material-icons-round text-blue-600 text-3xl">info</i>
+            <span class="icon-name">info</span>
+        </div>
+        
+        <!-- Data/Form -->
+        <div class="icon-card">
+            <i class="material-icons-round text-purple-600 text-3xl">calendar_today</i>
+            <span class="icon-name">calendar_today</span>
+        </div>
+        <div class="icon-card">
+            <i class="material-icons-round text-purple-600 text-3xl">email</i>
+            <span class="icon-name">email</span>
+        </div>
+        <div class="icon-card">
+            <i class="material-icons-round text-purple-600 text-3xl">phone</i>
+            <span class="icon-name">phone</span>
+        </div>
+        <div class="icon-card">
+            <i class="material-icons-round text-purple-600 text-3xl">lock</i>
+            <span class="icon-name">lock</span>
+        </div>
+        <div class="icon-card">
+            <i class="material-icons-round text-purple-600 text-3xl">school</i>
+            <span class="icon-name">school</span>
+        </div>
+        <div class="icon-card">
+            <i class="material-icons-round text-purple-600 text-3xl">business</i>
+            <span class="icon-name">business</span>
+        </div>
+    </div>
+    
+    <div class="mt-8 p-4 bg-blue-50 rounded-lg">
+        <h3 class="font-semibold text-blue-800">How to use:</h3>
+        <p class="text-blue-700 mt-2">
+            Simply replace <code>&lt;i class="fas fa-home"&gt;&lt;/i&gt;</code> with 
+            <code>&lt;i class="material-icons-round"&gt;home&lt;/i&gt;</code>
+        </p>
+    </div>
+</body>
+</html>
