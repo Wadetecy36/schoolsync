@@ -364,7 +364,10 @@ def create_student():
         JSON: {success: bool,student: dict} or {error: str}
     """
     try:
-        data = request.form
+        if request.is_json:
+            data = request.get_json()
+        else:
+            data = request.form
         
         # Validate required fields
         name = data.get('name', '').strip()
@@ -427,9 +430,9 @@ def create_student():
             guardian_name=data.get('guardian_name'),
             guardian_phone=guardian_phone or None,
             date_of_birth=dob,
-            enrollment_year=datetime.now().year,
+            enrollment_year=int(data.get('enrollment_year', datetime.now().year)),
             photo_file=photo_url,
-            created_by=current_user.id
+            created_by=getattr(current_user, 'id', 1) # Fallback for internal secret auth
         )
         
         db.session.add(new_student)
@@ -478,7 +481,10 @@ def update_student(id):
         if not student.has_permission(current_user):
             return jsonify({'error': 'Unauthorized'}), 403
         
-        data = request.form
+        if request.is_json:
+            data = request.get_json()
+        else:
+            data = request.form
         
         # Update photo if provided
         if 'photo' in request.files:
