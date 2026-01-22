@@ -233,7 +233,162 @@ def settings():
     
     return render_template('settings.html', qr_code=qr_code, new_secret=secret)
 
+from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
+from flask_login import login_required, current_user
+from models import Student, Blacklist, db
+from datetime import datetime
 
+# Add these routes to your existing routes.py or create a new blueprint
+
+@app.route('/blacklist')
+@login_required
+def blacklist_page():
+    """Display blacklist management page"""
+    blacklisted = Blacklist.query.filter_by(is_active=True).order_by(Blacklist.date_added.desc()).all()
+    return render_template('blacklist.html', blacklisted=blacklisted)
+
+@app.route('/api/blacklist/add', methods=['POST'])
+@login_required
+def add_to_blacklist():
+    """Add a student to the blacklist"""
+    try:
+        data = request.get_json()
+        student_id = data.get('student_id')
+        reason = data.get('reason', '').strip()
+        
+        if not student_id:
+            return jsonify({'success': False, 'message': 'Student ID is required'}), 400
+        
+        if not reason:
+            return jsonify({'success': False, 'message': 'Reason is required'}), 400
+        
+        # Check if student exists
+        student = Student.query.get(student_id)
+        if not student:
+            return jsonify({'success': False, 'message': 'Student not found'}), 404
+        
+        # Check if already blacklisted
+        existing = Blacklist.query.filter_by(student_id=student_id, is_active=True).first()
+        if existing:
+            return jsonify({'success': False, 'message': 'Student is already blacklisted'}), 400
+        
+        # Add to blacklist
+        blacklist_entry = Blacklist(
+            student_id=student_id,
+            reason=reason,
+            added_by=current_user.id,
+            date_added=datetime.utcnow()
+        )
+        
+        db.session.add(blacklist_entry)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True, 
+            'message': f'{student.name} has been added to the blacklist',
+            'data': blacklist_entry.to_dict()
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/blacklist/remove/<int:blacklist_id>', methods=['DELETE'])
+@login_required
+def remove_from_blacklist(blacklist_id):
+    """Remove a student from the blacklist"""
+    try:
+        blacklist_entry = Blacklist.query.get(blacklist_id)
+        
+        if not blacklist_entry:
+            return jsonify({'success': False, 'message': 'Blacklist entry not found'}), 404
+        
+        student_name = blacklist_entry.student.name if blacklist_entry.student else 'Student'
+        
+        # Soft delete - mark as inactive
+        blacklist_entry.is_active = False
+        db.session.commit()
+        
+        return jsonify({
+            'success': True, 
+            'message': f'{student_name} has been removed from the blacklist'
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/blacklist/update/<int:blacklist_id>', methods=['PUT'])
+@login_required
+def update_blacklist_reason(blacklist_id):
+    """Update the reason for a blacklist entry"""
+    try:
+        data = request.get_json()
+        new_reason = data.get('reason', '').strip()
+        
+        if not new_reason:
+            return jsonify({'success': False, 'message': 'Reason is required'}), 400
+        
+        blacklist_entry = Blacklist.query.get(blacklist_id)
+        
+        if not blacklist_entry:
+            return jsonify({'success': False, 'message': 'Blacklist entry not found'}), 404
+        
+        blacklist_entry.reason = new_reason
+        db.session.commit()
+        
+        return jsonify({
+            'success': True, 
+            'message': 'Blacklist reason updated successfully',
+            'data': blacklist_entry.to_dict()
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/blacklist/check/<int:student_id>')
+@login_required
+def check_blacklist_status(student_id):
+    """Check if a student is blacklisted"""
+    blacklist_entry = Blacklist.query.filter_by(student_id=student_id, is_active=True).first()
+    
+    return jsonify({
+        'is_blacklisted': blacklist_entry is not None,
+        'data': blacklist_entry.to_dict() if blacklist_entry else None
+    }), 200
+
+@app.route('/api/students/search')
+@login_required
+def search_students():
+    """Search students by name for autocomplete"""
+    query = request.args.get('q', '').strip()
+    
+    if len(query) < 2:
+        return jsonify([]), 200
+    
+    students = Student.query.filter(
+        Student.name.ilike(f'%{query}%')
+    ).limit(10).all()
+    
+    results = []
+    for student in students:
+        # Check if blacklisted
+        is_blacklisted = Blacklist.query.filter_by(
+            student_id=student.id, 
+            is_active=True
+        ).first() is not None
+        
+        results.append({
+            'id': student.id,
+            'name': student.name,
+            'student_number': student.student_number,
+            'program': student.program,
+            'is_blacklisted': is_blacklisted
+        })
+    
+    return jsonify(results), 200
+    
 # ============================================
 # STUDENT API ENDPOINTS
 # ============================================
