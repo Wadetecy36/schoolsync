@@ -16,7 +16,7 @@ import re
 import hashlib
 
 from extensions import db
-
+from datetime import datetime
 
 # ============================================
 # VALIDATION CONSTANTS
@@ -150,6 +150,36 @@ class User(UserMixin, db.Model):
 
     def __repr__(self):
         return f'<User {self.username}>'
+
+class Blacklist(db.Model):
+    """Model for tracking blacklisted students"""
+    __tablename__ = 'blacklist'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey('students.id', ondelete='CASCADE'), nullable=False, unique=True)
+    reason = db.Column(db.Text, nullable=False)
+    added_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    date_added = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    
+    # Relationships
+    student = db.relationship('Student', backref=db.backref('blacklist_entry', uselist=False, lazy=True))
+    added_by_user = db.relationship('User', backref='blacklisted_students')
+    
+    def __repr__(self):
+        return f'<Blacklist {self.student.name if self.student else "Unknown"}>'
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'student_id': self.student_id,
+            'student_name': self.student.name if self.student else None,
+            'student_number': self.student.student_number if self.student else None,
+            'reason': self.reason,
+            'added_by': self.added_by_user.username if self.added_by_user else None,
+            'date_added': self.date_added.strftime('%Y-%m-%d %H:%M:%S'),
+            'is_active': self.is_active
+        }
 
 
 # ============================================
