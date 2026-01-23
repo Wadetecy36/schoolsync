@@ -730,7 +730,10 @@
         }
 
         // Render Helpers
-        const safe = (v) => v || '';
+        const safe = (v) => {
+            if (!v || String(v).toLowerCase() === 'nan' || String(v).toLowerCase() === 'none') return '';
+            return v;
+        };
         const initial = (n) => (n || '?').charAt(0);
         const getAvatar = (s) => s.photo_url
             ? `<img src="${s.photo_url}" class="w-12 h-12 rounded-xl object-cover shadow border border-white/20">`
@@ -760,7 +763,7 @@
                 return `
                 <div class="glass-card p-6 relative group ${borderClass} transition duration-300">
                     ${isBlacklisted ? `
-                        <div class="absolute -top-2 -right-2 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-lg shadow-lg z-10 flex items-center">
+                        <div class="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl shadow-lg z-10 flex items-center">
                             <i class="material-icons-round text-xs mr-1">warning</i> BLACKLISTED
                         </div>
                     ` : ''}
