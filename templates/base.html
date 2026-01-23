@@ -250,6 +250,60 @@
                 transform: translateY(0);
             }
         }
+
+        /* --- CUSTOM PREMIUM LOADER --- */
+        .loader-ring {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 4px solid transparent;
+            border-top-color: var(--gold-accent);
+            animation: spin 1.5s linear infinite;
+            position: relative;
+        }
+
+        .loader-ring::before,
+        .loader-ring::after {
+            content: '';
+            position: absolute;
+            inset: 8px;
+            border-radius: 50%;
+            border: 4px solid transparent;
+            border-top-color: var(--blue-accent);
+            animation: spin 2s linear infinite reverse;
+        }
+
+        .loader-ring::after {
+            inset: 20px;
+            border-top-color: var(--gold-accent);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loader-pulse {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.8;
+                filter: drop-shadow(0 0 5px var(--gold-accent));
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 1;
+                filter: drop-shadow(0 0 15px var(--gold-accent));
+            }
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -348,10 +402,24 @@
 
     <!-- Loading Overlay -->
     <div id="loading-overlay"
-        class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center backdrop-blur-sm">
-        <div class="glass p-8 rounded-2xl flex flex-col items-center">
-            <div class="w-12 h-12 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p class="text-gold font-semibold">Processing...</p>
+        class="fixed inset-0 bg-black/80 z-[100] hidden items-center justify-center backdrop-blur-md">
+        <div class="flex flex-col items-center">
+            <div class="relative flex items-center justify-center mb-6">
+                <!-- Inner Pulse Icon -->
+                <div class="absolute loader-pulse text-gold">
+                    <i class="material-icons-round text-4xl">school</i>
+                </div>
+                <!-- Outer Rotating Rings -->
+                <div class="loader-ring"></div>
+            </div>
+            <div class="text-center">
+                <p
+                    class="text-xl font-bold bg-gradient-to-r from-gold to-yellow-300 bg-clip-text text-transparent tracking-widest uppercase mb-1">
+                    SchoolSync</p>
+                <p
+                    class="text-xs text-theme-muted font-medium tracking-[0.2em] uppercase transition-opacity animate-pulse">
+                    Syncing Intelligence...</p>
+            </div>
         </div>
     </div>
 
@@ -405,8 +473,16 @@
         };
 
         window.loading = {
-            show: (msg) => document.getElementById('loading-overlay').classList.remove('hidden', 'flex'),
-            hide: () => document.getElementById('loading-overlay').classList.add('hidden')
+            show: (msg) => {
+                const el = document.getElementById('loading-overlay');
+                el.classList.remove('hidden');
+                el.classList.add('flex');
+            },
+            hide: () => {
+                const el = document.getElementById('loading-overlay');
+                el.classList.add('hidden');
+                el.classList.remove('flex');
+            }
         };
 
         window.apiRequest = async function (url, options = {}) {
