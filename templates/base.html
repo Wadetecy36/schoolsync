@@ -418,7 +418,10 @@
             try {
                 const response = await fetch(url, { ...options, headers: { ...defaultHeaders, ...options.headers } });
                 const data = await response.json();
-                if (!response.ok) throw new Error(data.error || 'Request failed');
+                if (!response.ok) {
+                    const errorMsg = data.message || data.error || data.msg || 'An unexpected error occurred';
+                    throw new Error(errorMsg);
+                }
                 loading.hide();
                 return data;
             } catch (error) {
