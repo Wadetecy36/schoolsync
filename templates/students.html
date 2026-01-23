@@ -81,26 +81,26 @@
             <i id="quick-add-arrow" class="material-icons-round text-theme-muted">keyboard_arrow_down</i>
         </div>
 
-        <div id="quick-add-form" class="hidden mt-6 pt-6 border-t border-white/10">
+        <div id="quick-add-form" class="hidden mt-6 pt-6 border-t border-theme">
             <form id="form-quick-add" class="space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <input type="text" name="name" placeholder="Full Name *" required
-                        class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+                        class="w-full px-4 py-3 bg-theme-input border-theme rounded-xl text-theme-main focus:border-gold-500">
 
                     <select name="program" id="quick-program" required
-                        class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-theme-main focus:border-gold-500"
+                        class="w-full px-4 py-3 bg-theme-input border-theme rounded-xl text-theme-main focus:border-gold-500"
                         onchange="updateClassOptions('quick')">
                         <option value="">Select Program...</option>
                     </select>
 
                     <select name="class_room" id="quick-class" required
-                        class="w-full px-4 py-3 bg-black/20 border border-white/10 rounded-xl text-theme-main focus:border-gold-500">
+                        class="w-full px-4 py-3 bg-theme-input border-theme rounded-xl text-theme-main focus:border-gold-500">
                         <option value="">Select Class...</option>
                     </select>
 
                     <button type="submit"
                         class="btn-gold px-6 py-3 rounded-xl text-black flex items-center justify-center font-bold">
-                        <i class="material-icons-round mr-2">add</i> Add
+                        <i class="material-icons-round mr-2">add</i> Add Student
                     </button>
                 </div>
             </form>
@@ -122,26 +122,27 @@
 
         <!-- Bulk Action Logic (Appears when items selected) -->
         <div id="bulk-actions-panel"
-            class="hidden flex gap-4 items-center bg-gold-500/10 px-4 py-2 rounded-xl border border-gold-500/20">
-            <div class="flex items-center bg-gold-500/20 px-3 py-1 rounded-lg text-gold border border-gold-500/30">
+            class="hidden flex gap-4 items-center bg-gold-500/5 px-4 py-2 rounded-xl border border-gold-500/20">
+            <div class="flex items-center text-gold font-bold">
                 <i class="material-icons-round text-sm mr-2">check_box</i>
-                <span id="selected-count" class="font-bold">0</span> &nbsp;Selected
+                <span id="selected-count" class="mr-1">0</span> Selected
             </div>
 
             <div class="flex items-center gap-2">
                 <select id="bulk-action"
-                    class="px-4 py-2 bg-black/20 border border-white/10 rounded-lg text-theme-main text-sm focus:border-gold-500">
+                    class="px-4 py-2 bg-theme-input border-theme rounded-lg text-theme-main text-sm focus:border-gold-500">
                     <option value="">Select Action...</option>
                     <option value="move-form">Change Form Level</option>
                     <option value="move-hall">Move Hall</option>
                     <option value="update-program">Update Program</option>
                     <option value="email">Send Email</option>
-                    <option value="delete">Delete</option>
+                    <option value="delete">Delete Permanently</option>
                 </select>
                 <button onclick="executeBulkAction()"
                     class="btn-gold px-4 py-2 rounded-lg text-sm text-black font-bold">Apply</button>
             </div>
-            <button onclick="clearSelections()" class="text-theme-muted hover:text-white text-sm flex items-center"><i
+            <button onclick="clearSelections()"
+                class="text-theme-muted hover:text-theme-main text-sm flex items-center transition"><i
                     class="material-icons-round text-sm mr-1">close</i> Clear</button>
         </div>
 
@@ -166,40 +167,43 @@
                             class="text-white font-bold">0</span> students</p>
                 </div>
 
-                <div class="space-y-4">
+                <div class="space-y-5">
                     <div>
-                        <label class="text-xs text-theme-muted uppercase tracking-wider mb-1 block">Search</label>
-                        <input type="text" id="name-search" placeholder="Name, ID..."
-                            class="w-full pl-3 pr-3 py-2 bg-black/20 border border-white/10 rounded-lg text-theme-main text-sm focus:border-gold-500 transition">
+                        <label class="text-xs font-bold text-theme-muted uppercase tracking-widest mb-2 block">Quick
+                            Search</label>
+                        <input type="text" id="name-search" placeholder="Name, ID, Email..."
+                            class="w-full px-4 py-3 bg-theme-input border-theme rounded-xl text-theme-main text-sm focus:border-gold-500 transition-all shadow-inner">
                     </div>
                     <div>
-                        <label class="text-xs text-theme-muted uppercase tracking-wider mb-1 block">Hall</label>
+                        <label class="text-xs font-bold text-theme-muted uppercase tracking-widest mb-2 block">Filter by
+                            Hall</label>
                         <select id="filter-hall"
-                            class="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-theme-main text-sm transition"
+                            class="w-full px-4 py-3 bg-theme-input border-theme rounded-xl text-theme-main text-sm transition-all"
                             onchange="applyFilters()">
                             <option value="">All Halls</option>
                         </select>
                     </div>
                     <div>
-                        <label class="text-xs text-theme-muted uppercase tracking-wider mb-1 block">Program</label>
+                        <label class="text-xs font-bold text-theme-muted uppercase tracking-widest mb-2 block">Filter by
+                            Program</label>
                         <select id="filter-program"
-                            class="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-theme-main text-sm transition"
+                            class="w-full px-4 py-3 bg-theme-input border-theme rounded-xl text-theme-main text-sm transition-all"
                             onchange="applyFilters()">
                             <option value="">All Programs</option>
                         </select>
                     </div>
                     <div>
-                        <label class="text-xs text-theme-muted uppercase tracking-wider mb-1 block">Admission
+                        <label class="text-xs font-bold text-theme-muted uppercase tracking-widest mb-2 block">Admission
                             Year</label>
                         <select id="filter-year"
-                            class="w-full px-3 py-2 bg-black/20 border border-white/10 rounded-lg text-theme-main text-sm transition"
+                            class="w-full px-4 py-3 bg-theme-input border-theme rounded-xl text-theme-main text-sm transition-all"
                             onchange="applyFilters()">
                             <option value="">All Years</option>
                         </select>
                     </div>
                     <button onclick="resetAllFilters()"
-                        class="w-full py-2 border border-white/10 rounded-lg text-theme-muted hover:text-white hover:bg-white/5 transition text-sm flex items-center justify-center">
-                        <i class="material-icons-round text-sm mr-2">refresh</i> Reset Filters
+                        class="w-full py-3 border border-theme rounded-xl text-theme-muted hover:text-theme-main hover:bg-white/5 transition-all text-sm flex items-center justify-center font-bold">
+                        <i class="material-icons-round text-sm mr-2 text-gold">refresh</i> Reset All Filters
                     </button>
                 </div>
             </div>
@@ -457,34 +461,34 @@
                 <div class="lg:w-2/3 grid grid-cols-1 md:grid-cols-2 gap-5">
                     <!-- Standard fields -->
                     <div class="md:col-span-2">
-                        <label class="block text-xs font-semibold text-theme-muted uppercase tracking-wider mb-2">Full
+                        <label class="block text-xs font-bold text-theme-muted uppercase tracking-widest mb-2">Full
                             Name</label>
                         <input type="text" name="name" id="modal-name" placeholder="e.g. John Doe" required
-                            class="w-full px-4 py-3 bg-gray-900 border-white/20 rounded-xl text-theme-main focus:border-gold-500">
+                            class="w-full px-4 py-3 bg-theme-input border-theme rounded-xl text-theme-main focus:border-gold-500 shadow-inner">
                     </div>
 
                     <div>
                         <label
-                            class="block text-xs font-semibold text-theme-muted uppercase tracking-wider mb-2">Gender</label>
+                            class="block text-xs font-bold text-theme-muted uppercase tracking-widest mb-2">Gender</label>
                         <select name="gender" id="modal-gender"
-                            class="w-full p-3 bg-gray-900 border-white/20 rounded-xl text-theme-main">
+                            class="w-full p-3 bg-theme-input border-theme rounded-xl text-theme-main">
                             <option value="Male">Male</option>
                             <option value="Female">Female</option>
                         </select>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-theme-muted uppercase tracking-wider mb-2">Date
-                            of Birth</label>
+                        <label class="block text-xs font-bold text-theme-muted uppercase tracking-widest mb-2">Date of
+                            Birth</label>
                         <input type="date" name="date_of_birth" id="modal-dob"
-                            class="w-full p-3 bg-gray-900 border-white/20 rounded-xl text-theme-main">
+                            class="w-full p-3 bg-theme-input border-theme rounded-xl text-theme-main">
                     </div>
 
                     <div>
                         <label
-                            class="block text-xs font-semibold text-theme-muted uppercase tracking-wider mb-2">Program</label>
+                            class="block text-xs font-bold text-theme-muted uppercase tracking-widest mb-2">Program</label>
                         <select name="program" id="modal-program" required
-                            class="w-full p-3 bg-gray-900 border-white/20 rounded-xl text-theme-main"
+                            class="w-full p-3 bg-theme-input border-theme rounded-xl text-theme-main"
                             onchange="updateClassOptions('modal')">
                             <option value="">Select Program...</option>
                         </select>
@@ -492,67 +496,63 @@
 
                     <div>
                         <label
-                            class="block text-xs font-semibold text-theme-muted uppercase tracking-wider mb-2">Class</label>
+                            class="block text-xs font-bold text-theme-muted uppercase tracking-widest mb-2">Class</label>
                         <select name="class_room" id="modal-class" required
-                            class="w-full p-3 bg-gray-900 border-white/20 rounded-xl text-theme-main">
+                            class="w-full p-3 bg-theme-input border-theme rounded-xl text-theme-main">
                             <option value="">Select Class...</option>
                         </select>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-semibold text-theme-muted uppercase tracking-wider mb-2">Hall
-                            of Residence</label>
+                        <label class="block text-xs font-bold text-theme-muted uppercase tracking-widest mb-2">Hall of
+                            Residence</label>
                         <select name="hall" id="modal-hall" required
-                            class="w-full p-3 bg-gray-900 border-white/20 rounded-xl text-theme-main">
+                            class="w-full p-3 bg-theme-input border-theme rounded-xl text-theme-main">
                             <option value="">Select Hall...</option>
                         </select>
                     </div>
 
                     <div>
                         <label
-                            class="block text-xs font-semibold text-theme-muted uppercase tracking-wider mb-2">Enrollment
+                            class="block text-xs font-bold text-theme-muted uppercase tracking-widest mb-2">Enrollment
                             Year</label>
                         <input type="number" name="enrollment_year" id="modal-enrollment-year" placeholder="2023"
-                            required class="w-full p-3 bg-gray-900 border-white/20 rounded-xl text-theme-main">
+                            required class="w-full p-3 bg-theme-input border-theme rounded-xl text-theme-main">
                     </div>
 
                     <div>
-                        <label
-                            class="block text-xs font-semibold text-theme-muted uppercase tracking-wider mb-2">Student
+                        <label class="block text-xs font-bold text-theme-muted uppercase tracking-widest mb-2">Student
                             Email</label>
                         <input type="email" name="email" id="modal-email" placeholder="student@example.com"
-                            class="w-full p-3 bg-gray-900 border-white/20 rounded-xl text-theme-main">
+                            class="w-full p-3 bg-theme-input border-theme rounded-xl text-theme-main font-mono text-sm">
                     </div>
 
                     <div>
-                        <label
-                            class="block text-xs font-semibold text-theme-muted uppercase tracking-wider mb-2">Student
+                        <label class="block text-xs font-bold text-theme-muted uppercase tracking-widest mb-2">Student
                             Phone</label>
                         <input type="text" name="phone" id="modal-phone" placeholder="+233..."
-                            class="w-full p-3 bg-gray-900 border-white/20 rounded-xl text-theme-main">
+                            class="w-full p-3 bg-theme-input border-theme rounded-xl text-theme-main font-mono text-sm">
                     </div>
 
-                    <div class="md:col-span-2 mt-2 border-t border-white/5 pt-4">
-                        <h4 class="text-sm font-bold text-gold mb-4 flex items-center">
-                            <i class="material-icons-round mr-2 text-sm">guardian</i> Guardian Information
+                    <div class="md:col-span-2 mt-2 border-t border-theme pt-4">
+                        <h4 class="text-xs font-bold text-gold mb-4 flex items-center tracking-widest uppercase">
+                            <i class="material-icons-round mr-2 text-sm">contact_phone</i> Guardian Information
                         </h4>
                     </div>
 
                     <div>
-                        <label
-                            class="block text-xs font-semibold text-theme-muted uppercase tracking-wider mb-2">Guardian
+                        <label class="block text-xs font-bold text-theme-muted uppercase tracking-widest mb-2">Guardian
                             Name</label>
                         <input type="text" name="guardian_name" id="modal-guardian-name"
-                            placeholder="Parent/Guardian Name"
-                            class="w-full p-3 bg-gray-900 border-white/20 rounded-xl text-theme-main">
+                            placeholder="Full name of guardian"
+                            class="w-full p-3 bg-theme-input border-theme rounded-xl text-theme-main">
                     </div>
 
                     <div>
-                        <label
-                            class="block text-xs font-semibold text-theme-muted uppercase tracking-wider mb-2">Guardian
+                        <label class="block text-xs font-bold text-theme-muted uppercase tracking-widest mb-2">Guardian
                             Phone</label>
-                        <input type="text" name="guardian_phone" id="modal-guardian-phone" placeholder="Guardian Phone"
-                            class="w-full p-3 bg-gray-900 border-white/20 rounded-xl text-theme-main">
+                        <input type="text" name="guardian_phone" id="modal-guardian-phone" placeholder="+233..."
+                            class="w-full p-3 bg-theme-input border-theme rounded-xl text-theme-main font-mono text-sm">
                     </div>
                 </div>
             </div>
@@ -796,7 +796,8 @@
                          </div>
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
 
         // TABLE RENDERER
