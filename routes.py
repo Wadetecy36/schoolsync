@@ -240,14 +240,14 @@ from datetime import datetime
 
 # Add these routes to your existing routes.py or create a new blueprint
 
-@app.route('/blacklist')
+@main.route('/blacklist')
 @login_required
 def blacklist_page():
     """Display blacklist management page"""
     blacklisted = Blacklist.query.filter_by(is_active=True).order_by(Blacklist.date_added.desc()).all()
     return render_template('blacklist.html', blacklisted=blacklisted)
 
-@app.route('/api/blacklist/add', methods=['POST'])
+@main.route('/api/blacklist/add', methods=['POST'])
 @login_required
 def add_to_blacklist():
     """Add a student to the blacklist"""
@@ -293,7 +293,7 @@ def add_to_blacklist():
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
 
-@app.route('/api/blacklist/remove/<int:blacklist_id>', methods=['DELETE'])
+@main.route('/api/blacklist/remove/<int:blacklist_id>', methods=['DELETE'])
 @login_required
 def remove_from_blacklist(blacklist_id):
     """Remove a student from the blacklist"""
@@ -318,7 +318,7 @@ def remove_from_blacklist(blacklist_id):
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
 
-@app.route('/api/blacklist/update/<int:blacklist_id>', methods=['PUT'])
+@main.route('/api/blacklist/update/<int:blacklist_id>', methods=['PUT'])
 @login_required
 def update_blacklist_reason(blacklist_id):
     """Update the reason for a blacklist entry"""
@@ -347,7 +347,7 @@ def update_blacklist_reason(blacklist_id):
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
 
-@app.route('/api/blacklist/check/<int:student_id>')
+@main.route('/api/blacklist/check/<int:student_id>')
 @login_required
 def check_blacklist_status(student_id):
     """Check if a student is blacklisted"""
@@ -358,7 +358,7 @@ def check_blacklist_status(student_id):
         'data': blacklist_entry.to_dict() if blacklist_entry else None
     }), 200
 
-@app.route('/api/students/search')
+@main.route('/api/students/search')
 @login_required
 def search_students():
     """Search students by name for autocomplete"""
@@ -382,7 +382,6 @@ def search_students():
         results.append({
             'id': student.id,
             'name': student.name,
-            'student_number': student.student_number,
             'program': student.program,
             'is_blacklisted': is_blacklisted
         })

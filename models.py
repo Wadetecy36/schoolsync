@@ -174,7 +174,6 @@ class Blacklist(db.Model):
             'id': self.id,
             'student_id': self.student_id,
             'student_name': self.student.name if self.student else None,
-            'student_number': self.student.student_number if self.student else None,
             'reason': self.reason,
             'added_by': self.added_by_user.username if self.added_by_user else None,
             'date_added': self.date_added.strftime('%Y-%m-%d %H:%M:%S'),
