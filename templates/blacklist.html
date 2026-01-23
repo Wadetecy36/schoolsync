@@ -119,24 +119,29 @@
                 </div>
                 <!-- Autocomplete Results -->
                 <div id="searchResults"
-                    class="absolute w-full mt-2 bg-theme-card border-theme rounded-xl shadow-2xl max-h-60 overflow-y-auto hidden z-20">
+                    class="absolute w-full mt-2 bg-[#1e293b] border border-white/10 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.6)] max-h-64 overflow-y-auto hidden z-[100] backdrop-blur-2xl">
                 </div>
             </div>
 
             <!-- Selected Student Display -->
             <input type="hidden" id="selectedStudentId">
-            <div id="selectedStudent" class="hidden p-4 bg-red-500/5 rounded-xl border border-red-500/20">
-                <p class="text-xs text-red-400 font-bold uppercase mb-1">Selected Student:</p>
-                <p class="text-theme-main font-bold" id="selectedStudentName"></p>
+            <div id="selectedStudent" class="hidden p-5 bg-red-500/10 rounded-xl border border-red-500/20 shadow-inner">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-[10px] text-red-400 font-bold uppercase tracking-widest mb-1">Target Student</p>
+                        <p class="text-theme-main font-bold text-lg" id="selectedStudentName"></p>
+                    </div>
+                    <i class="material-icons-round text-red-500/50 text-3xl">person_pin</i>
+                </div>
             </div>
 
             <!-- Reason -->
-            <div>
-                <label class="block text-xs font-bold text-theme-muted uppercase tracking-wider mb-2">Reason for
+            <div class="pt-2">
+                <label class="block text-xs font-bold text-theme-muted uppercase tracking-widest mb-2">Reason for
                     Blacklisting</label>
                 <textarea id="blacklistReason" rows="4" required
-                    class="w-full px-4 py-3 bg-theme-input border-theme rounded-xl text-theme-main focus:ring-2 focus:ring-red-500"
-                    placeholder="Enter short description of the reason..."></textarea>
+                    class="w-full px-4 py-3 bg-theme-input border-theme rounded-xl text-theme-main focus:ring-2 focus:ring-red-500 shadow-inner resize-none"
+                    placeholder="Provide a detailed reason for this action..."></textarea>
             </div>
 
             <div class="flex gap-3 pt-2">
@@ -206,14 +211,15 @@
                     const resultsDiv = document.getElementById('searchResults');
 
                     if (students.length === 0) {
-                        resultsDiv.innerHTML = '<div class="p-3 text-theme-muted italic">No students found</div>';
+                        resultsDiv.innerHTML = '<div class="p-4 text-theme-muted italic text-sm">No students found</div>';
                     } else {
-                        resultsDiv.innerHTML = students.map(student => `
-                        <div class="p-3 hover:bg-white/5 cursor-pointer transition-colors border-b border-theme last:border-0" 
-                             onclick='selectStudent(${JSON.stringify(student)})'>
+                        window.currentSearchResults = students; // Store globally
+                        resultsDiv.innerHTML = students.map((student, idx) => `
+                        <div class="p-4 hover:bg-white/10 cursor-pointer transition-all border-b border-white/5 last:border-0" 
+                             onclick="handleSelectFromList(${idx})">
                             <p class="text-theme-main font-bold">${student.name}</p>
-                            <p class="text-xs text-theme-muted font-mono">${student.id} • ${student.program}</p>
-                            ${student.is_blacklisted ? '<span class="text-[10px] text-red-500 font-bold uppercase mt-1 inline-block">Already Blacklisted</span>' : ''}
+                            <p class="text-xs text-theme-muted font-mono mt-0.5">${student.id} • ${student.program}</p>
+                            ${student.is_blacklisted ? '<span class="text-[10px] text-red-500 font-bold uppercase mt-1.5 inline-block bg-red-500/10 px-2 py-0.5 rounded">Already Blacklisted</span>' : ''}
                         </div>
                     `).join('');
                     }
@@ -223,6 +229,11 @@
         }, 300);
     });
 
+    function handleSelectFromList(index) {
+        const student = window.currentSearchResults[index];
+        selectStudent(student);
+    }
+
     function selectStudent(student) {
         if (student.is_blacklisted) {
             showToast('This student is already blacklisted!', 'error');
@@ -231,7 +242,7 @@
 
         selectedStudentData = student;
         document.getElementById('selectedStudentId').value = student.id;
-        document.getElementById('selectedStudentName').textContent = `${student.name} (#${student.id})`;
+        document.getElementById('selectedStudentName').textContent = `${student.name}`;
         document.getElementById('selectedStudent').classList.remove('hidden');
         document.getElementById('searchResults').classList.add('hidden');
         document.getElementById('studentSearch').value = '';
