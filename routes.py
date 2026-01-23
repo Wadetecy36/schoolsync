@@ -747,11 +747,33 @@ def bulk_move_form():
         if not new_year:
             return jsonify({'error': 'Invalid target form'}), 400
         
-        # Update enrollment year for selected students
-        Student.query.filter(Student.id.in_(ids)).update(
-            {Student.enrollment_year: new_year},
-            synchronize_session=False
-        )
+        # Fetch and update students individually to handle classroom prefix logic and history
+        from models import AcademicRecord
+        students = Student.query.filter(Student.id.in_(ids)).all()
+        
+        for s in students:
+            s.enrollment_year = new_year
+            
+            # 1. Update specific classroom prefix (e.g., "1-SCI-1" -> "2-SCI-1")
+            # This makes the change immediately visible in the data table
+            if s.class_room and '-' in s.class_room:
+                parts = s.class_room.split('-', 1)
+                # target is "Form 1", "Form 2", "Form 3", or "Completed"
+                if target.startswith("Form"):
+                    form_num = target.split(' ')[-1] # Extracts "1", "2", or "3"
+                    s.class_room = f"{form_num}-{parts[1]}"
+                elif target == "Completed":
+                    s.class_room = f"G-{parts[1]}" # 'G' for Graduated
+            
+            # 2. Add an academic record for the new form level
+            # This ensures they have a record to store grades/remarks for their new form
+            new_record = AcademicRecord(
+                student_id=s.id,
+                form=target,
+                year=datetime.now().year
+            )
+            db.session.add(new_record)
+        
         db.session.commit()
         
         # Log bulk operation
