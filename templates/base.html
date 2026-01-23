@@ -489,10 +489,18 @@
             loading.show();
             const csrfMeta = document.querySelector('meta[name="csrf-token"]');
             const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
-            const defaultHeaders = { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken };
+
+            const isFormData = options.body instanceof FormData;
+            const defaultHeaders = { 'X-CSRFToken': csrfToken };
+            if (!isFormData) {
+                defaultHeaders['Content-Type'] = 'application/json';
+            }
 
             try {
-                const response = await fetch(url, { ...options, headers: { ...defaultHeaders, ...options.headers } });
+                const response = await fetch(url, {
+                    ...options,
+                    headers: { ...defaultHeaders, ...options.headers }
+                });
                 const data = await response.json();
                 if (!response.ok) {
                     const errorMsg = data.message || data.error || data.msg || 'An unexpected error occurred';

@@ -120,6 +120,11 @@
             </button>
         </div>
 
+        <button onclick="selectAllStudents()"
+            class="px-4 py-2 rounded-lg border border-gold-500/30 text-gold hover:bg-gold-500/10 transition flex items-center text-sm font-bold">
+            <i class="material-icons-round mr-2">done_all</i> Select All
+        </button>
+
         <!-- Bulk Action Logic (Appears when items selected) -->
         <div id="bulk-actions-panel"
             class="hidden flex gap-4 items-center bg-gold-500/5 px-4 py-2 rounded-xl border border-gold-500/20">
@@ -136,6 +141,7 @@
                     <option value="move-hall">Move Hall</option>
                     <option value="update-program">Update Program</option>
                     <option value="email">Send Email</option>
+                    <option value="blacklist">Blacklist Selected</option>
                     <option value="delete">Delete Permanently</option>
                 </select>
                 <button onclick="executeBulkAction()"
@@ -233,10 +239,14 @@
             </div>
 
             <div id="loading-state" class="text-center py-20 hidden">
-                <div
-                    class="w-12 h-12 border-4 border-gold-500 border-t-transparent rounded-full animate-spin mx-auto mb-4">
+                <div class="relative flex items-center justify-center mb-6">
+                    <div class="absolute loader-pulse text-gold opacity-50">
+                        <i class="material-icons-round text-2xl">school</i>
+                    </div>
+                    <div class="loader-ring !w-16 !h-16 !border-[3px]"></div>
                 </div>
-                <p class="text-theme-muted">Loading students...</p>
+                <p class="text-theme-muted font-medium tracking-widest uppercase text-[10px] animate-pulse">Syncing
+                    Students...</p>
             </div>
             <div id="empty-state" class="hidden text-center py-20">
                 <i class="material-icons-round text-4xl text-theme-muted mb-3">search_off</i>
@@ -347,6 +357,43 @@
                 <button type="submit" class="btn-gold px-6 py-2 rounded-lg text-black font-bold">Send</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Bulk Blacklist Modal -->
+<div id="bulk-blacklist-modal"
+    class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
+    <div class="glass-card w-full max-w-md p-8 animate-fade-in border border-red-500/30">
+        <div class="flex items-center gap-3 mb-6">
+            <div class="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center text-red-500">
+                <i class="material-icons-round">block</i>
+            </div>
+            <div>
+                <h3 class="text-xl font-bold text-theme-main">Bulk Blacklist</h3>
+                <p class="text-xs text-theme-muted">You are blacklisting <span id="bulk-blacklist-count"
+                        class="text-red-500 font-bold">0</span> students</p>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-theme-muted mb-2">Reason for Blacklisting</label>
+                <textarea id="bulk-blacklist-reason" rows="3"
+                    placeholder="e.g. Disciplinary issues, Outstanding fees..."
+                    class="w-full px-4 py-3 bg-gray-900 border-white/20 rounded-xl text-theme-main focus:border-red-500 outline-none transition"></textarea>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button onclick="confirmBulkBlacklist()"
+                    class="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-bold shadow-lg transition">
+                    Blacklist Students
+                </button>
+                <button onclick="window.toggleModal('bulk-blacklist-modal', false)"
+                    class="flex-1 bg-white/10 hover:bg-white/20 text-white py-3 rounded-xl transition">
+                    Cancel
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -1108,13 +1155,13 @@
 
     // --- 10. BULK ACTIONS LOGIC ---
 
-    window.toggleSelect = function (id, checked) {
+    window.toggleSelect = function (id, checked, skipUIUpdate = false) {
         if (checked) {
             window.selectedStudents.add(id);
         } else {
             window.selectedStudents.delete(id);
         }
-        updateBulkActionsUI();
+        if (!skipUIUpdate) updateBulkActionsUI();
     }
 
     function updateBulkActionsUI() {
@@ -1162,6 +1209,10 @@
             case 'email':
                 window.toggleModal('bulk-email-modal', true);
                 break;
+            case 'blacklist':
+                document.getElementById('bulk-blacklist-count').innerText = ids.length;
+                window.toggleModal('bulk-blacklist-modal', true);
+                break;
             case 'delete':
                 if (confirm(`Are you sure you want to delete ${ids.length} students? This cannot be undone.`)) {
                     await performBulkDelete(ids);
@@ -1169,6 +1220,42 @@
                 break;
         }
     }
+
+    window.confirmBulkBlacklist = async function () {
+        const reason = document.getElementById('bulk-blacklist-reason').value.trim();
+        const ids = Array.from(window.selectedStudents);
+
+        if (!reason) return showToast('Please provide a reason', 'warning');
+
+        try {
+            const res = await apiRequest('/api/students/bulk-blacklist', {
+                method: 'POST',
+                body: JSON.stringify({ ids, reason })
+            });
+            showToast(res.message, 'success');
+            window.toggleModal('bulk-blacklist-modal', false);
+            document.getElementById('bulk-blacklist-reason').value = '';
+            clearSelections();
+            loadStudents();
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    window.selectAllStudents = function () {
+        if (!window.filteredStudents || window.filteredStudents.length === 0) {
+            return showToast('No students to select', 'info');
+        }
+        window.filteredStudents.forEach(s => window.toggleSelect(s.id, true, true));
+        updateBulkActionsUI();
+        renderStudents();
+        showToast(`Selected all ${window.filteredStudents.length} filtered students`, 'success');
+    }
+
+    // Modal Close Handlers
+    window.closeMoveHallModal = () => window.toggleModal('move-hall-modal', false);
+    window.closeUpdateProgramModal = () => window.toggleModal('update-program-modal', false);
+    window.closeBulkEmailModal = () => window.toggleModal('bulk-email-modal', false);
 
     // Bulk Action API Calls
     async function performBulkDelete(ids) {
@@ -1225,13 +1312,40 @@
         } catch (e) { }
     }
 
-    // Select All Toggle
+    // Bulk Email Submission
+    const bulkEmailForm = document.getElementById('bulk-email-form');
+    if (bulkEmailForm) {
+        bulkEmailForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const subject = document.getElementById('email-subject').value.trim();
+            const message = document.getElementById('email-message').value.trim();
+            const ids = Array.from(window.selectedStudents);
+
+            if (!subject || !message) return showToast('Subject and message required', 'warning');
+
+            try {
+                const res = await apiRequest('/api/students/bulk-email', {
+                    method: 'POST',
+                    body: JSON.stringify({ ids, subject, message })
+                });
+                showToast(res.message, 'success');
+                window.closeBulkEmailModal();
+                bulkEmailForm.reset();
+                clearSelections();
+            } catch (e) {
+                console.error(e);
+            }
+        };
+    }
+
+    // Select All Toggle (Table)
     const selectAllDetails = document.getElementById('select-all-table');
     if (selectAllDetails) {
         selectAllDetails.addEventListener('change', (e) => {
             const checked = e.target.checked;
-            window.filteredStudents.forEach(s => window.toggleSelect(s.id, checked));
-            renderStudents(); // Re-render to update checkboxes
+            window.filteredStudents.forEach(s => window.toggleSelect(s.id, checked, true));
+            updateBulkActionsUI();
+            renderStudents();
         });
     }
 

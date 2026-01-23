@@ -12,7 +12,7 @@ from flask import (
     redirect, url_for, flash, current_app
 )
 from extensions import db
-from models import Student, AcademicRecord, User, VALID_HALLS, VALID_PROGRAMS
+from models import Student, AcademicRecord, User, Blacklist, VALID_HALLS, VALID_PROGRAMS
 from datetime import datetime
 from sqlalchemy import or_, and_, func
 from flask_login import login_required, current_user
@@ -287,6 +287,50 @@ def add_to_blacklist():
             'success': True, 
             'message': f'{student.name} has been added to the blacklist',
             'data': blacklist_entry.to_dict()
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@main.route('/api/students/bulk-blacklist', methods=['POST'])
+@login_required
+def bulk_blacklist():
+    """Add multiple students to the blacklist"""
+    try:
+        data = request.get_json()
+        student_ids = data.get('ids', [])
+        reason = data.get('reason', 'Bulk blacklisted').strip()
+        
+        if not student_ids:
+            return jsonify({'success': False, 'message': 'No students selected'}), 400
+            
+        count = 0
+        for sid in student_ids:
+            # Check if student exists
+            student = Student.query.get(sid)
+            if not student:
+                continue
+                
+            # Check if already blacklisted
+            existing = Blacklist.query.filter_by(student_id=sid, is_active=True).first()
+            if existing:
+                continue
+                
+            # Add to blacklist
+            blacklist_entry = Blacklist(
+                student_id=sid,
+                reason=reason,
+                added_by=current_user.id,
+                date_added=datetime.utcnow()
+            )
+            db.session.add(blacklist_entry)
+            count += 1
+            
+        db.session.commit()
+        return jsonify({
+            'success': True, 
+            'message': f'{count} students have been blacklisted'
         }), 200
         
     except Exception as e:
@@ -841,6 +885,129 @@ def bulk_action():
         current_app.logger.error(f"Bulk action error: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@main.route('/api/students/bulk-update', methods=['POST'])
+@login_required
+def bulk_update():
+    """Bulk update a specific field for multiple students"""
+    try:
+        data = request.get_json()
+        ids = data.get('ids', [])
+        field = data.get('field')
+        value = data.get('value')
+        
+        if not ids or not field:
+            return jsonify({'error': 'Missing required data'}), 400
+            
+        # Validate field and value
+        if field not in ['hall', 'program', 'class_room']:
+            return jsonify({'error': 'Invalid update field'}), 400
+            
+        Student.query.filter(Student.id.in_(ids)).update({field: value}, synchronize_session=False)
+        db.session.commit()
+        
+        log_bulk_operation(
+            user_id=current_user.id,
+            operation_type=f'update_{field}',
+            count=len(ids),
+            success_count=len(ids)
+        )
+        
+        return jsonify({
+            'success': True, 
+            'message': f'Successfully updated {field} for {len(ids)} students'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@main.route('/api/students/bulk-delete', methods=['POST'])
+@login_required
+def bulk_delete():
+    """Delete multiple students at once"""
+    try:
+        data = request.get_json()
+        ids = data.get('ids', [])
+        
+        if not ids:
+            return jsonify({'error': 'No students selected'}), 400
+            
+        # Delete academic records first (due to FK constraints if not CASCADE)
+        # Assuming CASCASE is on, but let's be safe
+        AcademicRecord.query.filter(AcademicRecord.student_id.in_(ids)).delete(synchronize_session=False)
+        Student.query.filter(Student.id.in_(ids)).delete(synchronize_session=False)
+        
+        db.session.commit()
+        
+        log_bulk_operation(
+            user_id=current_user.id,
+            operation_type='delete',
+            count=len(ids),
+            success_count=len(ids)
+        )
+        
+        return jsonify({
+            'success': True, 
+            'message': f'Successfully deleted {len(ids)} students'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@main.route('/api/students/bulk-email', methods=['POST'])
+@login_required
+def bulk_email():
+    """Send emails to multiple students"""
+    try:
+        data = request.get_json()
+        ids = data.get('ids', [])
+        subject = data.get('subject', '').strip()
+        message_text = data.get('message', '').strip()
+        
+        if not ids or not subject or not message_text:
+            return jsonify({'error': 'Missing required data'}), 400
+            
+        students = Student.query.filter(Student.id.in_(ids)).all()
+        emails = [s.email for s in students if s.email]
+        
+        if not emails:
+            return jsonify({'error': 'None of the selected students have email addresses'}), 400
+            
+        # Send emails asynchronously
+        from utils import send_async_email
+        from flask_mail import Message
+        
+        app = current_app._get_current_object()
+        
+        # In a real app, we might want to send one email with BCC or individual emails
+        # For this system, individual emails might be better for personalization later
+        # But for now, let's send them in a loop or a single message with BCC
+        
+        msg = Message(
+            subject,
+            bcc=emails, # Use BCC for privacy
+            body=f"{message_text}\n\n---\nSent via SchoolSync Pro"
+        )
+        
+        thread = Thread(target=send_async_email, args=[app, msg])
+        thread.start()
+        
+        log_bulk_operation(
+            user_id=current_user.id,
+            operation_type='email',
+            count=len(emails),
+            success_count=len(emails)
+        )
+        
+        return jsonify({
+            'success': True, 
+            'message': f'Email queued for {len(emails)} students'
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @main.route('/api/students/delete-all', methods=['POST'])
 @login_required
