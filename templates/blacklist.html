@@ -265,34 +265,30 @@
             return;
         }
 
-        fetch('/api/blacklist/add', {
+        apiRequest('/api/blacklist/add', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ student_id: studentId, reason: reason })
         })
-            .then(res => res.json())
             .then(data => {
                 if (data.success) {
                     showToast(data.message, 'success');
                     setTimeout(() => location.reload(), 500);
-                } else {
-                    showToast(data.message, 'error');
                 }
             })
-            .catch(err => showToast('An error occurred', 'error'));
+            .catch(err => {
+                // apiRequest already shows a toast for errors
+                console.error('Blacklist add error:', err);
+            });
     });
 
     function removeFromBlacklist(id) {
         if (!confirm('Are you sure you want to remove this student from the blacklist?')) return;
 
-        fetch(`/api/blacklist/remove/${id}`, { method: 'DELETE' })
-            .then(res => res.json())
+        apiRequest(`/api/blacklist/remove/${id}`, { method: 'DELETE' })
             .then(data => {
                 if (data.success) {
                     showToast(data.message, 'success');
                     setTimeout(() => location.reload(), 500);
-                } else {
-                    showToast(data.message, 'error');
                 }
             });
     }
@@ -323,18 +319,14 @@
         const id = document.getElementById('editBlacklistId').value;
         const reason = document.getElementById('editReason').value.trim();
 
-        fetch(`/api/blacklist/update/${id}`, {
+        apiRequest(`/api/blacklist/update/${id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ reason: reason })
         })
-            .then(res => res.json())
             .then(data => {
                 if (data.success) {
                     showToast(data.message, 'success');
                     setTimeout(() => location.reload(), 500);
-                } else {
-                    showToast(data.message, 'error');
                 }
             });
     });
