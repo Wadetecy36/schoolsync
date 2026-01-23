@@ -64,28 +64,26 @@
                 LIGHT THEME (Friendly & Clear)
                 Aesthetic: Clean, Approachable, High Contrast
             */
-            --bg-color: #f8fafc;
-            /* Slate 50 */
-            --glass-bg: rgba(255, 255, 255, 0.85);
-            --glass-border: rgba(226, 232, 240, 0.8);
-            /* Slate 200 */
+            --bg-color: #f1f5f9;
+            /* Lighter Slate background */
+            --glass-bg: rgba(255, 255, 255, 0.9);
+            --glass-border: rgba(0, 0, 0, 0.1);
             --text-main: #0f172a;
-            /* Slate 900 */
-            --text-muted: #64748b;
-            /* Slate 500 */
+            /* Deep Slate 900 */
+            --text-muted: #475569;
+            /* Slate 600 - More readable */
             --card-bg: #ffffff;
-            --card-hover: #f1f5f9;
-            /* Slate 100 */
-            --nav-bg: rgba(255, 255, 255, 0.9);
+            --card-hover: #f8fafc;
+            --nav-bg: rgba(255, 255, 255, 0.95);
             --input-bg: #ffffff;
-            --gold-accent: #d97706;
-            /* Amber 600 - Darker for visibility */
-            --blue-accent: #2563eb;
-            /* Blue 600 */
+            --gold-accent: #b45309;
+            /* Amber 700 - Better visibility */
+            --blue-accent: #1d4ed8;
+            /* Blue 700 */
 
             /* Glow effects (subtle) */
-            --glow-primary: rgba(37, 99, 235, 0.05);
-            --glow-secondary: rgba(217, 119, 6, 0.05);
+            --glow-primary: rgba(37, 99, 235, 0.08);
+            --glow-secondary: rgba(180, 83, 9, 0.08);
         }
 
         body {
@@ -146,12 +144,25 @@
         }
 
         /* --- TEXT & ACCENTS --- */
+        /* --- THEME-BASED UTILITIES --- */
         .text-theme-main {
             color: var(--text-main);
         }
 
         .text-theme-muted {
             color: var(--text-muted);
+        }
+
+        .bg-theme-card {
+            background-color: var(--card-bg);
+        }
+
+        .border-theme {
+            border-color: var(--glass-border);
+        }
+
+        .bg-theme-input {
+            background-color: var(--input-bg);
         }
 
         .text-gold {

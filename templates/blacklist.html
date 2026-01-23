@@ -8,61 +8,71 @@
         <!-- Header -->
         <div class="flex justify-between items-center mb-8">
             <div>
-                <h1 class="text-3xl font-bold text-white mb-2">Blacklist Management</h1>
-                <p class="text-gray-300">Manage students requiring special attention</p>
+                <h1 class="text-3xl font-bold text-theme-main mb-2">Blacklist Management</h1>
+                <p class="text-theme-muted">Manage students requiring special attention</p>
             </div>
             <button onclick="openAddModal()"
-                class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl">
-                <i class="material-icons align-middle mr-2">add</i>Add to Blacklist
+                class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center">
+                <i class="material-icons-round mr-2">add</i>Add to Blacklist
             </button>
         </div>
 
         <!-- Search Bar -->
         <div class="mb-6 relative">
             <input type="text" id="searchInput" placeholder="Search blacklisted students..."
-                class="w-full px-4 py-3 pl-12 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500">
-            <i class="material-icons absolute left-4 top-3.5 text-gray-400">search</i>
+                class="w-full px-4 py-3 pl-12 bg-theme-input backdrop-blur-md border-theme rounded-xl text-theme-main focus:ring-2 focus:ring-red-500 transition-all">
+            <i class="material-icons-round absolute left-4 top-1/2 -translate-y-1/2 text-theme-muted">search</i>
         </div>
 
         <!-- Blacklist Table -->
-        <div class="bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20 overflow-hidden">
+        <div class="glass-card shadow-2xl overflow-hidden border-theme">
             <div class="overflow-x-auto">
                 <table class="w-full">
-                    <thead class="bg-white/5 border-b border-white/10">
+                    <thead class="bg-black/5 border-b border-theme">
                         <tr>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-200">Student Name</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-200">Student ID</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-200">Reason</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-200">Added By</th>
-                            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-200">Date Added</th>
-                            <th class="px-6 py-4 text-center text-sm font-semibold text-gray-200">Actions</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-theme-muted uppercase tracking-wider">
+                                Student Name</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-theme-muted uppercase tracking-wider">
+                                Student ID</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-theme-muted uppercase tracking-wider">
+                                Reason</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-theme-muted uppercase tracking-wider">
+                                Added By</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-theme-muted uppercase tracking-wider">
+                                Date Added</th>
+                            <th
+                                class="px-6 py-4 text-center text-xs font-bold text-theme-muted uppercase tracking-wider">
+                                Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="blacklistTable">
+                    <tbody id="blacklistTable" class="divide-y divide-white/5">
                         {% if blacklisted %}
                         {% for entry in blacklisted %}
-                        <tr class="border-b border-white/5 hover:bg-white/5 transition-colors" data-id="{{ entry.id }}">
-                            <td class="px-6 py-4 text-white font-medium">{{ entry.student.name }}</td>
-                            <td class="px-6 py-4 text-gray-300">{{ entry.student.id }}</td>
-                            <td class="px-6 py-4 text-gray-300 max-w-xs truncate" title="{{ entry.reason }}">{{
-                                entry.reason }}</td>
-                            <td class="px-6 py-4 text-gray-300">{{ entry.added_by_user.username }}</td>
-                            <td class="px-6 py-4 text-gray-300">{{ entry.date_added.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <tr class="hover:bg-white/5 transition-colors group" data-id="{{ entry.id }}">
+                            <td class="px-6 py-4 text-theme-main font-semibold">{{ entry.student.name }}</td>
+                            <td class="px-6 py-4 text-theme-muted font-mono text-sm">{{ entry.student.id }}</td>
+                            <td class="px-6 py-4 text-theme-muted max-w-xs truncate" title="{{ entry.reason }}">
+                                {{ entry.reason }}
+                            </td>
+                            <td class="px-6 py-4 text-theme-muted text-sm">{{ entry.added_by_user.username }}</td>
+                            <td class="px-6 py-4 text-theme-muted text-sm">{{ entry.date_added.strftime('%Y-%m-%d
+                                %H:%M') }}</td>
                             <td class="px-6 py-4" data-reason="{{ entry.reason }}">
-                                <div class="flex justify-center gap-2">
+                                <div class="flex justify-center gap-1">
                                     <button onclick="handleViewReason(this)"
-                                        class="p-2 text-blue-400 hover:text-blue-300 transition-colors"
+                                        class="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-lg transition-all"
                                         title="View Reason" data-id="{{ entry.id }}">
-                                        <i class="material-icons">visibility</i>
+                                        <i class="material-icons-round">visibility</i>
                                     </button>
                                     <button onclick="handleEditReason(this)"
-                                        class="p-2 text-yellow-400 hover:text-yellow-300 transition-colors"
+                                        class="p-2 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10 rounded-lg transition-all"
                                         title="Edit Reason" data-id="{{ entry.id }}">
-                                        <i class="material-icons">edit</i>
+                                        <i class="material-icons-round">edit</i>
                                     </button>
                                     <button onclick="removeFromBlacklist({{ entry.id }})"
-                                        class="p-2 text-red-400 hover:text-red-300 transition-colors" title="Remove">
-                                        <i class="material-icons">delete</i>
+                                        class="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all"
+                                        title="Remove">
+                                        <i class="material-icons-round">delete</i>
                                     </button>
                                 </div>
                             </td>
@@ -70,9 +80,11 @@
                         {% endfor %}
                         {% else %}
                         <tr>
-                            <td colspan="6" class="px-6 py-8 text-center text-gray-400">
-                                <i class="material-icons text-5xl mb-2">check_circle</i>
-                                <p>No students currently blacklisted</p>
+                            <td colspan="6" class="px-6 py-12 text-center text-theme-muted">
+                                <div class="flex flex-col items-center opacity-50">
+                                    <i class="material-icons-round text-6xl mb-3">check_circle</i>
+                                    <p class="text-lg font-medium">No students currently blacklisted</p>
+                                </div>
                             </td>
                         </tr>
                         {% endif %}
@@ -84,49 +96,56 @@
 </div>
 
 <!-- Add to Blacklist Modal -->
-<div id="addModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div
-        class="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-2xl border border-white/20 max-w-md w-full p-6">
+<div id="addModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 items-center justify-center p-4">
+    <div class="glass-card max-w-md w-full p-8 shadow-2xl border-theme animate-fade-in">
         <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold text-white">Add to Blacklist</h2>
-            <button onclick="closeAddModal()" class="text-gray-400 hover:text-white transition-colors">
-                <i class="material-icons">close</i>
+            <h2 class="text-2xl font-bold text-theme-main">Add to Blacklist</h2>
+            <button onclick="closeAddModal()" class="text-theme-muted hover:text-theme-main transition-colors">
+                <i class="material-icons-round">close</i>
             </button>
         </div>
 
-        <form id="addBlacklistForm">
+        <form id="addBlacklistForm" class="space-y-6">
             <!-- Student Search -->
-            <div class="mb-4 relative">
-                <label class="block text-gray-300 mb-2 font-semibold">Search Student</label>
-                <input type="text" id="studentSearch" autocomplete="off"
-                    class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"
-                    placeholder="Type student name...">
+            <div class="relative">
+                <label class="block text-xs font-bold text-theme-muted uppercase tracking-wider mb-2">Search
+                    Student</label>
+                <div class="relative">
+                    <input type="text" id="studentSearch" autocomplete="off"
+                        class="w-full px-4 py-3 pl-10 bg-theme-input border-theme rounded-xl text-theme-main focus:ring-2 focus:ring-red-500"
+                        placeholder="Type name or ID...">
+                    <i
+                        class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-theme-muted text-sm">search</i>
+                </div>
+                <!-- Autocomplete Results -->
                 <div id="searchResults"
-                    class="absolute w-full mt-2 bg-gray-800 border border-white/20 rounded-lg shadow-xl max-h-60 overflow-y-auto hidden z-10">
+                    class="absolute w-full mt-2 bg-theme-card border-theme rounded-xl shadow-2xl max-h-60 overflow-y-auto hidden z-20">
                 </div>
             </div>
 
+            <!-- Selected Student Display -->
             <input type="hidden" id="selectedStudentId">
-            <div id="selectedStudent" class="hidden mb-4 p-3 bg-white/10 rounded-lg border border-white/20">
-                <p class="text-sm text-gray-400 mb-1">Selected Student:</p>
-                <p class="text-white font-semibold" id="selectedStudentName"></p>
+            <div id="selectedStudent" class="hidden p-4 bg-red-500/5 rounded-xl border border-red-500/20">
+                <p class="text-xs text-red-400 font-bold uppercase mb-1">Selected Student:</p>
+                <p class="text-theme-main font-bold" id="selectedStudentName"></p>
             </div>
 
             <!-- Reason -->
-            <div class="mb-6">
-                <label class="block text-gray-300 mb-2 font-semibold">Reason for Blacklisting</label>
+            <div>
+                <label class="block text-xs font-bold text-theme-muted uppercase tracking-wider mb-2">Reason for
+                    Blacklisting</label>
                 <textarea id="blacklistReason" rows="4" required
-                    class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"
-                    placeholder="Enter the reason..."></textarea>
+                    class="w-full px-4 py-3 bg-theme-input border-theme rounded-xl text-theme-main focus:ring-2 focus:ring-red-500"
+                    placeholder="Enter short description of the reason..."></textarea>
             </div>
 
-            <div class="flex gap-3">
+            <div class="flex gap-3 pt-2">
                 <button type="submit"
-                    class="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-all">
+                    class="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold shadow-lg transition-all active:scale-95">
                     Add to Blacklist
                 </button>
                 <button type="button" onclick="closeAddModal()"
-                    class="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-semibold transition-all">
+                    class="px-6 py-3 bg-theme-input hover:bg-white/10 text-theme-main border-theme rounded-xl font-bold transition-all">
                     Cancel
                 </button>
             </div>
@@ -135,33 +154,31 @@
 </div>
 
 <!-- View/Edit Reason Modal -->
-<div id="reasonModal"
-    class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div
-        class="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-2xl border border-white/20 max-w-md w-full p-6">
+<div id="reasonModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 items-center justify-center p-4">
+    <div class="glass-card max-w-md w-full p-8 shadow-2xl border-theme animate-fade-in">
         <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold text-white" id="reasonModalTitle">Blacklist Reason</h2>
-            <button onclick="closeReasonModal()" class="text-gray-400 hover:text-white transition-colors">
-                <i class="material-icons">close</i>
+            <h2 class="text-2xl font-bold text-theme-main" id="reasonModalTitle">Blacklist Reason</h2>
+            <button onclick="closeReasonModal()" class="text-theme-muted hover:text-theme-main transition-colors">
+                <i class="material-icons-round">close</i>
             </button>
         </div>
 
-        <form id="editReasonForm">
+        <form id="editReasonForm" class="space-y-6">
             <input type="hidden" id="editBlacklistId">
-            <div class="mb-6">
-                <textarea id="editReason" rows="4"
-                    class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"
+            <div>
+                <textarea id="editReason" rows="5"
+                    class="w-full px-4 py-3 bg-theme-input border-theme rounded-xl text-theme-main focus:ring-2 focus:ring-red-500"
                     readonly></textarea>
             </div>
 
             <div id="editButtons" class="flex gap-3">
                 <button type="submit"
-                    class="flex-1 px-6 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-semibold transition-all">
+                    class="flex-1 px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold shadow-lg transition-all">
                     Update Reason
                 </button>
                 <button type="button" onclick="closeReasonModal()"
-                    class="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-semibold transition-all">
-                    Cancel
+                    class="px-6 py-3 bg-theme-input hover:bg-white/10 text-theme-main border-theme rounded-xl font-bold transition-all">
+                    Close
                 </button>
             </div>
         </form>
@@ -189,14 +206,14 @@
                     const resultsDiv = document.getElementById('searchResults');
 
                     if (students.length === 0) {
-                        resultsDiv.innerHTML = '<div class="p-3 text-gray-400">No students found</div>';
+                        resultsDiv.innerHTML = '<div class="p-3 text-theme-muted italic">No students found</div>';
                     } else {
                         resultsDiv.innerHTML = students.map(student => `
-                        <div class="p-3 hover:bg-white/10 cursor-pointer transition-colors border-b border-white/10 last:border-0" 
+                        <div class="p-3 hover:bg-white/5 cursor-pointer transition-colors border-b border-theme last:border-0" 
                              onclick='selectStudent(${JSON.stringify(student)})'>
-                            <p class="text-white font-semibold">${student.name}</p>
-                            <p class="text-sm text-gray-400">${student.id} • ${student.program}</p>
-                            ${student.is_blacklisted ? '<span class="text-xs text-red-400">Already Blacklisted</span>' : ''}
+                            <p class="text-theme-main font-bold">${student.name}</p>
+                            <p class="text-xs text-theme-muted font-mono">${student.id} • ${student.program}</p>
+                            ${student.is_blacklisted ? '<span class="text-[10px] text-red-500 font-bold uppercase mt-1 inline-block">Already Blacklisted</span>' : ''}
                         </div>
                     `).join('');
                     }
@@ -208,13 +225,13 @@
 
     function selectStudent(student) {
         if (student.is_blacklisted) {
-            alert('This student is already blacklisted!');
+            showToast('This student is already blacklisted!', 'error');
             return;
         }
 
         selectedStudentData = student;
         document.getElementById('selectedStudentId').value = student.id;
-        document.getElementById('selectedStudentName').textContent = `${student.name} (${student.id})`;
+        document.getElementById('selectedStudentName').textContent = `${student.name} (#${student.id})`;
         document.getElementById('selectedStudent').classList.remove('hidden');
         document.getElementById('searchResults').classList.add('hidden');
         document.getElementById('studentSearch').value = '';
@@ -228,12 +245,12 @@
         const reason = document.getElementById('blacklistReason').value.trim();
 
         if (!studentId) {
-            alert('Please select a student');
+            showToast('Please select a student', 'error');
             return;
         }
 
         if (!reason) {
-            alert('Please enter a reason');
+            showToast('Please enter a reason', 'error');
             return;
         }
 
@@ -245,13 +262,13 @@
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    alert(data.message);
-                    location.reload();
+                    showToast(data.message, 'success');
+                    setTimeout(() => location.reload(), 500);
                 } else {
-                    alert(data.message);
+                    showToast(data.message, 'error');
                 }
             })
-            .catch(err => alert('An error occurred'));
+            .catch(err => showToast('An error occurred', 'error'));
     });
 
     function removeFromBlacklist(id) {
@@ -261,10 +278,10 @@
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    alert(data.message);
-                    location.reload();
+                    showToast(data.message, 'success');
+                    setTimeout(() => location.reload(), 500);
                 } else {
-                    alert(data.message);
+                    showToast(data.message, 'error');
                 }
             });
     }
@@ -275,7 +292,7 @@
         document.getElementById('editReason').value = reason;
         document.getElementById('editReason').readOnly = true;
         document.getElementById('editButtons').classList.add('hidden');
-        document.getElementById('reasonModal').classList.remove('hidden');
+        toggleModal('reasonModal', true);
     }
 
     function handleEditReason(btn) {
@@ -286,7 +303,7 @@
         document.getElementById('editReason').value = reason;
         document.getElementById('editReason').readOnly = false;
         document.getElementById('editButtons').classList.remove('hidden');
-        document.getElementById('reasonModal').classList.remove('hidden');
+        toggleModal('reasonModal', true);
     }
 
     document.getElementById('editReasonForm').addEventListener('submit', function (e) {
@@ -303,27 +320,38 @@
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    alert(data.message);
-                    location.reload();
+                    showToast(data.message, 'success');
+                    setTimeout(() => location.reload(), 500);
                 } else {
-                    alert(data.message);
+                    showToast(data.message, 'error');
                 }
             });
     });
 
+    function toggleModal(id, show) {
+        const el = document.getElementById(id);
+        if (show) {
+            el.classList.remove('hidden');
+            el.classList.add('flex');
+        } else {
+            el.classList.add('hidden');
+            el.classList.remove('flex');
+        }
+    }
+
     function openAddModal() {
-        document.getElementById('addModal').classList.remove('hidden');
+        toggleModal('addModal', true);
     }
 
     function closeAddModal() {
-        document.getElementById('addModal').classList.add('hidden');
+        toggleModal('addModal', false);
         document.getElementById('addBlacklistForm').reset();
         document.getElementById('selectedStudent').classList.add('hidden');
         selectedStudentData = null;
     }
 
     function closeReasonModal() {
-        document.getElementById('reasonModal').classList.add('hidden');
+        toggleModal('reasonModal', false);
     }
 
     // Search filter
@@ -332,6 +360,7 @@
         const rows = document.querySelectorAll('#blacklistTable tr');
 
         rows.forEach(row => {
+            if (row.querySelector('td[colspan]')) return; // Skip empty row
             const text = row.textContent.toLowerCase();
             row.style.display = text.includes(searchTerm) ? '' : 'none';
         });
