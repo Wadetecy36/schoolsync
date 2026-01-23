@@ -313,7 +313,8 @@ class Student(db.Model):
             'phone': self.phone,
             'guardian_name': self.guardian_name,
             'guardian_phone': self.guardian_phone,
-            'created_by': self.created_by
+            'created_by': self.created_by,
+            'is_blacklisted': self.blacklist_entry.is_active if self.blacklist_entry else False
         }
 
     def has_permission(self, user):

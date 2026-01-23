@@ -753,14 +753,23 @@
         // GRID RENDERER
         if (window.currentViewMode === 'grid') {
             grid.classList.remove('hidden');
-            grid.innerHTML = data.map(s => `
-                <div class="glass-card p-6 relative group hover:border-gold-500/50 transition duration-300">
+            grid.innerHTML = data.map(s => {
+                const isBlacklisted = s.is_blacklisted;
+                const borderClass = isBlacklisted ? 'border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.2)]' : 'hover:border-gold-500/50';
+
+                return `
+                <div class="glass-card p-6 relative group ${borderClass} transition duration-300">
+                    ${isBlacklisted ? `
+                        <div class="absolute -top-2 -right-2 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-lg shadow-lg z-10 flex items-center">
+                            <i class="material-icons-round text-xs mr-1">warning</i> BLACKLISTED
+                        </div>
+                    ` : ''}
                     <div class="flex justify-between items-start mb-4">
                         <div class="relative w-16 h-16 rounded-xl overflow-hidden shadow-lg border border-white/10 bg-black/40 group-hover:scale-105 transition">
                              ${s.photo_url
-                    ? `<img src="${s.photo_url}" class="w-full h-full object-cover">`
-                    : `<div class="w-full h-full bg-gradient-to-br from-blue-600 to-indigo-900 flex items-center justify-center text-white font-bold text-2xl">${initial(s.name)}</div>`
-                }
+                        ? `<img src="${s.photo_url}" class="w-full h-full object-cover">`
+                        : `<div class="w-full h-full bg-gradient-to-br from-blue-600 to-indigo-900 flex items-center justify-center text-white font-bold text-2xl">${initial(s.name)}</div>`
+                    }
                         </div>
                         <input type="checkbox" class="student-checkbox w-5 h-5 rounded border-white/20 bg-black/20 text-gold focus:ring-0 cursor-pointer transition" 
                                onchange="toggleSelect(${s.id}, this.checked)" ${window.selectedStudents.has(s.id) ? 'checked' : ''}>
@@ -794,13 +803,23 @@
         else if (window.currentViewMode === 'table') {
             table.classList.remove('hidden');
             const tbody = document.getElementById('students-table-body');
-            tbody.innerHTML = data.map(s => `
-                <tr class="hover:bg-white/5 border-b border-white/5 transition group">
-                    <td class="px-6 py-4"><input type="checkbox" onchange="toggleSelect(${s.id}, this.checked)" ${window.selectedStudents.has(s.id) ? 'checked' : ''}></td>
+            tbody.innerHTML = data.map(s => {
+                const isBlacklisted = s.is_blacklisted;
+                return `
+                <tr class="hover:bg-white/5 border-b border-white/5 transition group ${isBlacklisted ? 'bg-red-500/5' : ''}">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center">
+                            ${isBlacklisted ? '<div class="w-1 h-8 bg-red-500 rounded-full mr-3"></div>' : ''}
+                            <input type="checkbox" onchange="toggleSelect(${s.id}, this.checked)" ${window.selectedStudents.has(s.id) ? 'checked' : ''}>
+                        </div>
+                    </td>
                     <td class="px-6 py-4 flex items-center gap-3">
                          ${getAvatar(s)} 
                          <div>
-                            <p class="font-bold text-theme-main group-hover:text-gold transition">${safe(s.name)}</p>
+                            <p class="font-bold text-theme-main group-hover:text-gold transition flex items-center">
+                                ${safe(s.name)}
+                                ${isBlacklisted ? '<i class="material-icons-round text-red-500 text-sm ml-2" title="Blacklisted">warning</i>' : ''}
+                            </p>
                             <p class="text-xs text-theme-muted">${safe(s.email)}</p>
                          </div>
                     </td>
@@ -813,7 +832,8 @@
                         <button onclick="openDeleteModal(${s.id}, '${safe(s.name)}')" class="text-red-400 hover:scale-110 transition"><i class="material-icons-round">delete</i></button>
                     </td>
                 </tr>
-            `).join('');
+            `;
+            }).join('');
         }
     }
 
