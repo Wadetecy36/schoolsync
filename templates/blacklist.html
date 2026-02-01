@@ -1,0 +1,372 @@
+{% extends "base.html" %}
+
+{% block title %}Blacklist Management - SchoolSync{% endblock %}
+
+{% block content %}
+<div class="min-h-screen py-8 px-4">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-theme-main mb-2">Blacklist Management</h1>
+                <p class="text-theme-muted">Manage students requiring special attention</p>
+            </div>
+            <button onclick="openAddModal()"
+                class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center">
+                <i class="material-icons-round mr-2">add</i>Add to Blacklist
+            </button>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="mb-6 relative">
+            <input type="text" id="searchInput" placeholder="Search blacklisted students..."
+                class="w-full px-4 py-3 pl-12 bg-theme-input backdrop-blur-md border-theme rounded-xl text-theme-main focus:ring-2 focus:ring-red-500 transition-all">
+            <i class="material-icons-round absolute left-4 top-1/2 -translate-y-1/2 text-theme-muted">search</i>
+        </div>
+
+        <!-- Blacklist Table -->
+        <div class="glass-card shadow-2xl overflow-hidden border-theme">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-black/5 border-b border-theme">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-theme-muted uppercase tracking-wider">
+                                Student Name</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-theme-muted uppercase tracking-wider">
+                                Student ID</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-theme-muted uppercase tracking-wider">
+                                Reason</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-theme-muted uppercase tracking-wider">
+                                Added By</th>
+                            <th class="px-6 py-4 text-left text-xs font-bold text-theme-muted uppercase tracking-wider">
+                                Date Added</th>
+                            <th
+                                class="px-6 py-4 text-center text-xs font-bold text-theme-muted uppercase tracking-wider">
+                                Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="blacklistTable" class="divide-y divide-white/5">
+                        {% if blacklisted %}
+                        {% for entry in blacklisted %}
+                        <tr class="hover:bg-white/5 transition-colors group" data-id="{{ entry.id }}">
+                            <td class="px-6 py-4 text-theme-main font-semibold">{{ entry.student.name }}</td>
+                            <td class="px-6 py-4 text-theme-muted font-mono text-sm">{{ entry.student.id }}</td>
+                            <td class="px-6 py-4 text-theme-muted max-w-xs truncate" title="{{ entry.reason }}">
+                                {{ entry.reason }}
+                            </td>
+                            <td class="px-6 py-4 text-theme-muted text-sm">{{ entry.added_by_user.username }}</td>
+                            <td class="px-6 py-4 text-theme-muted text-sm">{{ entry.date_added.strftime('%Y-%m-%d
+                                %H:%M') }}</td>
+                            <td class="px-6 py-4" data-reason="{{ entry.reason }}">
+                                <div class="flex justify-center gap-1">
+                                    <button onclick="handleViewReason(this)"
+                                        class="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-lg transition-all"
+                                        title="View Reason" data-id="{{ entry.id }}">
+                                        <i class="material-icons-round">visibility</i>
+                                    </button>
+                                    <button onclick="handleEditReason(this)"
+                                        class="p-2 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10 rounded-lg transition-all"
+                                        title="Edit Reason" data-id="{{ entry.id }}">
+                                        <i class="material-icons-round">edit</i>
+                                    </button>
+                                    <button onclick="removeFromBlacklist({{ entry.id }})"
+                                        class="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all"
+                                        title="Remove">
+                                        <i class="material-icons-round">delete</i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="px-6 py-12 text-center text-theme-muted">
+                                <div class="flex flex-col items-center opacity-50">
+                                    <i class="material-icons-round text-6xl mb-3">check_circle</i>
+                                    <p class="text-lg font-medium">No students currently blacklisted</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add to Blacklist Modal -->
+<div id="addModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 items-center justify-center p-4">
+    <div class="glass-card max-w-md w-full p-8 shadow-2xl border-theme animate-fade-in">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-theme-main">Add to Blacklist</h2>
+            <button onclick="closeAddModal()" class="text-theme-muted hover:text-theme-main transition-colors">
+                <i class="material-icons-round">close</i>
+            </button>
+        </div>
+
+        <form id="addBlacklistForm" class="space-y-6">
+            <!-- Student Search -->
+            <div class="relative">
+                <label class="block text-xs font-bold text-theme-muted uppercase tracking-wider mb-2">Search
+                    Student</label>
+                <div class="relative">
+                    <input type="text" id="studentSearch" autocomplete="off"
+                        class="w-full px-4 py-3 pl-10 bg-theme-input border-theme rounded-xl text-theme-main focus:ring-2 focus:ring-red-500"
+                        placeholder="Type name or ID...">
+                    <i
+                        class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-theme-muted text-sm">search</i>
+                </div>
+                <!-- Autocomplete Results -->
+                <div id="searchResults"
+                    class="absolute w-full mt-2 bg-[#1e293b] border border-white/10 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.6)] max-h-64 overflow-y-auto hidden z-[100] backdrop-blur-2xl">
+                </div>
+            </div>
+
+            <!-- Selected Student Display -->
+            <input type="hidden" id="selectedStudentId">
+            <div id="selectedStudent" class="hidden p-5 bg-red-500/10 rounded-xl border border-red-500/20 shadow-inner">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-[10px] text-red-400 font-bold uppercase tracking-widest mb-1">Target Student</p>
+                        <p class="text-theme-main font-bold text-lg" id="selectedStudentName"></p>
+                    </div>
+                    <i class="material-icons-round text-red-500/50 text-3xl">person_pin</i>
+                </div>
+            </div>
+
+            <!-- Reason -->
+            <div class="pt-2">
+                <label class="block text-xs font-bold text-theme-muted uppercase tracking-widest mb-2">Reason for
+                    Blacklisting</label>
+                <textarea id="blacklistReason" rows="4" required
+                    class="w-full px-4 py-3 bg-theme-input border-theme rounded-xl text-theme-main focus:ring-2 focus:ring-red-500 shadow-inner resize-none"
+                    placeholder="Provide a detailed reason for this action..."></textarea>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button type="submit"
+                    class="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold shadow-lg transition-all active:scale-95">
+                    Add to Blacklist
+                </button>
+                <button type="button" onclick="closeAddModal()"
+                    class="px-6 py-3 bg-theme-input hover:bg-white/10 text-theme-main border-theme rounded-xl font-bold transition-all">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- View/Edit Reason Modal -->
+<div id="reasonModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 items-center justify-center p-4">
+    <div class="glass-card max-w-md w-full p-8 shadow-2xl border-theme animate-fade-in">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-theme-main" id="reasonModalTitle">Blacklist Reason</h2>
+            <button onclick="closeReasonModal()" class="text-theme-muted hover:text-theme-main transition-colors">
+                <i class="material-icons-round">close</i>
+            </button>
+        </div>
+
+        <form id="editReasonForm" class="space-y-6">
+            <input type="hidden" id="editBlacklistId">
+            <div>
+                <textarea id="editReason" rows="5"
+                    class="w-full px-4 py-3 bg-theme-input border-theme rounded-xl text-theme-main focus:ring-2 focus:ring-red-500"
+                    readonly></textarea>
+            </div>
+
+            <div id="editButtons" class="flex gap-3">
+                <button type="submit"
+                    class="flex-1 px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold shadow-lg transition-all">
+                    Update Reason
+                </button>
+                <button type="button" onclick="closeReasonModal()"
+                    class="px-6 py-3 bg-theme-input hover:bg-white/10 text-theme-main border-theme rounded-xl font-bold transition-all">
+                    Close
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let searchTimeout;
+    let selectedStudentData = null;
+
+    // Student search autocomplete
+    document.getElementById('studentSearch').addEventListener('input', function (e) {
+        clearTimeout(searchTimeout);
+        const query = e.target.value.trim();
+
+        if (query.length < 2) {
+            document.getElementById('searchResults').classList.add('hidden');
+            return;
+        }
+
+        searchTimeout = setTimeout(() => {
+            fetch(`/api/students/search?q=${encodeURIComponent(query)}`)
+                .then(res => res.json())
+                .then(students => {
+                    const resultsDiv = document.getElementById('searchResults');
+
+                    if (students.length === 0) {
+                        resultsDiv.innerHTML = '<div class="p-4 text-theme-muted italic text-sm">No students found</div>';
+                    } else {
+                        window.currentSearchResults = students; // Store globally
+                        resultsDiv.innerHTML = students.map((student, idx) => `
+                        <div class="p-4 hover:bg-white/10 cursor-pointer transition-all border-b border-white/5 last:border-0" 
+                             onclick="handleSelectFromList(${idx})">
+                            <p class="text-theme-main font-bold">${student.name}</p>
+                            <p class="text-xs text-theme-muted font-mono mt-0.5">${student.id} • ${student.program}</p>
+                            ${student.is_blacklisted ? '<span class="text-[10px] text-red-500 font-bold uppercase mt-1.5 inline-block bg-red-500/10 px-2 py-0.5 rounded">Already Blacklisted</span>' : ''}
+                        </div>
+                    `).join('');
+                    }
+
+                    resultsDiv.classList.remove('hidden');
+                });
+        }, 300);
+    });
+
+    function handleSelectFromList(index) {
+        const student = window.currentSearchResults[index];
+        selectStudent(student);
+    }
+
+    function selectStudent(student) {
+        if (student.is_blacklisted) {
+            showToast('This student is already blacklisted!', 'error');
+            return;
+        }
+
+        selectedStudentData = student;
+        document.getElementById('selectedStudentId').value = student.id;
+        document.getElementById('selectedStudentName').textContent = `${student.name}`;
+        document.getElementById('selectedStudent').classList.remove('hidden');
+        document.getElementById('searchResults').classList.add('hidden');
+        document.getElementById('studentSearch').value = '';
+    }
+
+    // Add to blacklist form
+    document.getElementById('addBlacklistForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const studentId = document.getElementById('selectedStudentId').value;
+        const reason = document.getElementById('blacklistReason').value.trim();
+
+        if (!studentId) {
+            showToast('Please select a student', 'error');
+            return;
+        }
+
+        if (!reason) {
+            showToast('Please enter a reason', 'error');
+            return;
+        }
+
+        apiRequest('/api/blacklist/add', {
+            method: 'POST',
+            body: JSON.stringify({ student_id: studentId, reason: reason })
+        })
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    setTimeout(() => location.reload(), 500);
+                }
+            })
+            .catch(err => {
+                // apiRequest already shows a toast for errors
+                console.error('Blacklist add error:', err);
+            });
+    });
+
+    function removeFromBlacklist(id) {
+        if (!confirm('Are you sure you want to remove this student from the blacklist?')) return;
+
+        apiRequest(`/api/blacklist/remove/${id}`, { method: 'DELETE' })
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    setTimeout(() => location.reload(), 500);
+                }
+            });
+    }
+
+    function handleViewReason(btn) {
+        const reason = btn.closest('td').getAttribute('data-reason');
+        document.getElementById('reasonModalTitle').textContent = 'Blacklist Reason';
+        document.getElementById('editReason').value = reason;
+        document.getElementById('editReason').readOnly = true;
+        document.getElementById('editButtons').classList.add('hidden');
+        toggleModal('reasonModal', true);
+    }
+
+    function handleEditReason(btn) {
+        const id = btn.getAttribute('data-id');
+        const reason = btn.closest('td').getAttribute('data-reason');
+        document.getElementById('reasonModalTitle').textContent = 'Edit Blacklist Reason';
+        document.getElementById('editBlacklistId').value = id;
+        document.getElementById('editReason').value = reason;
+        document.getElementById('editReason').readOnly = false;
+        document.getElementById('editButtons').classList.remove('hidden');
+        toggleModal('reasonModal', true);
+    }
+
+    document.getElementById('editReasonForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const id = document.getElementById('editBlacklistId').value;
+        const reason = document.getElementById('editReason').value.trim();
+
+        apiRequest(`/api/blacklist/update/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify({ reason: reason })
+        })
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    setTimeout(() => location.reload(), 500);
+                }
+            });
+    });
+
+    function toggleModal(id, show) {
+        const el = document.getElementById(id);
+        if (show) {
+            el.classList.remove('hidden');
+            el.classList.add('flex');
+        } else {
+            el.classList.add('hidden');
+            el.classList.remove('flex');
+        }
+    }
+
+    function openAddModal() {
+        toggleModal('addModal', true);
+    }
+
+    function closeAddModal() {
+        toggleModal('addModal', false);
+        document.getElementById('addBlacklistForm').reset();
+        document.getElementById('selectedStudent').classList.add('hidden');
+        selectedStudentData = null;
+    }
+
+    function closeReasonModal() {
+        toggleModal('reasonModal', false);
+    }
+
+    // Search filter
+    document.getElementById('searchInput').addEventListener('input', function (e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const rows = document.querySelectorAll('#blacklistTable tr');
+
+        rows.forEach(row => {
+            if (row.querySelector('td[colspan]')) return; // Skip empty row
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}

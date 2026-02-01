@@ -1,0 +1,1353 @@
+{% extends "base.html" %}
+
+{% block title %}Students - SchoolSync Pro{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-theme-main">Students</h1>
+            <p class="text-theme-muted">Browse and manage student records</p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+            <!-- Delete All Button -->
+            <button onclick="openDeleteAllModal()"
+                class="px-4 py-2 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition flex items-center group">
+                <i class="material-icons-round mr-2">delete_sweep</i>
+                <span>Delete All</span>
+            </button>
+
+            <a href="/import"
+                class="px-6 py-2 rounded-xl border border-white/10 hover:bg-white/10 text-theme-main transition flex items-center group">
+                <i class="material-icons-round mr-2 text-gold group-hover:scale-110 transition">cloud_upload</i>
+                <span>Import</span>
+            </a>
+            <button onclick="openAddModal()"
+                class="btn-gold px-6 py-2 rounded-xl text-black flex items-center font-bold shadow-lg hover:shadow-yellow-500/20 transition">
+                <i class="material-icons-round mr-2">person_add</i>
+                <span>Add Student</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div class="glass-card p-6 relative overflow-hidden group">
+            <div
+                class="absolute right-0 top-0 w-24 h-24 bg-blue-500/10 rounded-bl-full -mr-4 -mt-4 transition group-hover:bg-blue-500/20">
+            </div>
+            <p class="text-theme-muted text-sm">Total Students</p>
+            <p class="text-2xl font-bold text-theme-main mt-1" id="total-count">0</p>
+            <i class="material-icons-round absolute bottom-4 right-4 text-3xl text-blue-500/20">groups</i>
+        </div>
+
+        <div class="glass-card p-6 relative overflow-hidden group">
+            <div
+                class="absolute right-0 top-0 w-24 h-24 bg-green-500/10 rounded-bl-full -mr-4 -mt-4 transition group-hover:bg-green-500/20">
+            </div>
+            <p class="text-theme-muted text-sm">Avg Age</p>
+            <p class="text-2xl font-bold text-theme-main mt-1" id="avg-age">0</p>
+            <i class="material-icons-round absolute bottom-4 right-4 text-3xl text-green-500/20">cake</i>
+        </div>
+
+        <div class="glass-card p-6 relative overflow-hidden group">
+            <div
+                class="absolute right-0 top-0 w-24 h-24 bg-purple-500/10 rounded-bl-full -mr-4 -mt-4 transition group-hover:bg-purple-500/20">
+            </div>
+            <p class="text-theme-muted text-sm">Top Program</p>
+            <p class="text-xl font-bold text-theme-main mt-1 truncate" id="top-program">-</p>
+            <i class="material-icons-round absolute bottom-4 right-4 text-3xl text-purple-500/20">school</i>
+        </div>
+
+        <div class="glass-card p-6 relative overflow-hidden group">
+            <div
+                class="absolute right-0 top-0 w-24 h-24 bg-yellow-500/10 rounded-bl-full -mr-4 -mt-4 transition group-hover:bg-yellow-500/20">
+            </div>
+            <p class="text-theme-muted text-sm">New This Month</p>
+            <p class="text-2xl font-bold text-theme-main mt-1" id="new-this-month">0</p>
+            <i class="material-icons-round absolute bottom-4 right-4 text-3xl text-yellow-500/20">person_add</i>
+        </div>
+    </div>
+
+    <!-- Quick Add Form -->
+    <div class="glass-card p-6">
+        <div class="flex items-center justify-between cursor-pointer" onclick="toggleQuickAdd()">
+            <h3 class="font-bold text-theme-main flex items-center">
+                <i class="material-icons-round text-gold mr-2">flash_on</i>
+                Quick Add Student
+            </h3>
+            <i id="quick-add-arrow" class="material-icons-round text-theme-muted">keyboard_arrow_down</i>
+        </div>
+
+        <div id="quick-add-form" class="hidden mt-6 pt-6 border-t border-theme">
+            <form id="form-quick-add" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <input type="text" name="name" placeholder="Full Name *" required
+                        class="w-full px-4 py-3 bg-theme-input border-theme rounded-xl text-theme-main focus:border-gold-500">
+
+                    <select name="program" id="quick-program" required
+                        class="w-full px-4 py-3 bg-theme-input border-theme rounded-xl text-theme-main focus:border-gold-500"
+                        onchange="updateClassOptions('quick')">
+                        <option value="">Select Program...</option>
+                    </select>
+
+                    <select name="class_room" id="quick-class" required
+                        class="w-full px-4 py-3 bg-theme-input border-theme rounded-xl text-theme-main focus:border-gold-500">
+                        <option value="">Select Class...</option>
+                    </select>
+
+                    <button type="submit"
+                        class="btn-gold px-6 py-3 rounded-xl text-black flex items-center justify-center font-bold">
+                        <i class="material-icons-round mr-2">add</i> Add Student
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Actions & Bulk -->
+    <div class="glass-card p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div class="flex bg-black/20 rounded-lg p-1">
+            <button onclick="setViewMode('grid')" id="view-grid"
+                class="px-4 py-2 rounded-md text-gold bg-white/10 flex items-center">
+                <i class="material-icons-round mr-2">grid_view</i> Grid
+            </button>
+            <button onclick="setViewMode('table')" id="view-table"
+                class="px-4 py-2 rounded-md text-theme-muted flex items-center">
+                <i class="material-icons-round mr-2">table_rows</i> Table
+            </button>
+        </div>
+
+        <button onclick="selectAllStudents()"
+            class="px-4 py-2 rounded-lg border border-gold-500/30 text-gold hover:bg-gold-500/10 transition flex items-center text-sm font-bold">
+            <i class="material-icons-round mr-2">done_all</i> Select All
+        </button>
+
+        <!-- Bulk Action Logic (Appears when items selected) -->
+        <div id="bulk-actions-panel"
+            class="hidden flex gap-4 items-center bg-gold-500/5 px-4 py-2 rounded-xl border border-gold-500/20">
+            <div class="flex items-center text-gold font-bold">
+                <i class="material-icons-round text-sm mr-2">check_box</i>
+                <span id="selected-count" class="mr-1">0</span> Selected
+            </div>
+
+            <div class="flex items-center gap-2">
+                <select id="bulk-action"
+                    class="px-4 py-2 bg-theme-input border-theme rounded-lg text-theme-main text-sm focus:border-gold-500">
+                    <option value="">Select Action...</option>
+                    <option value="move-form">Change Form Level</option>
+                    <option value="move-hall">Move Hall</option>
+                    <option value="update-program">Update Program</option>
+                    <option value="email">Send Email</option>
+                    <option value="blacklist">Blacklist Selected</option>
+                    <option value="delete">Delete Permanently</option>
+                </select>
+                <button onclick="executeBulkAction()"
+                    class="btn-gold px-4 py-2 rounded-lg text-sm text-black font-bold">Apply</button>
+            </div>
+            <button onclick="clearSelections()"
+                class="text-theme-muted hover:text-theme-main text-sm flex items-center transition"><i
+                    class="material-icons-round text-sm mr-1">close</i> Clear</button>
+        </div>
+
+        <!-- Export -->
+        <div class="flex gap-2">
+            <button onclick="exportToCSV()" class="p-2 text-green-400 hover:bg-white/10 rounded-lg transition"
+                title="Export CSV">
+                <i class="material-icons-round">description</i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <!-- Sidebar Filters -->
+        <div class="lg:col-span-1 space-y-6">
+            <div class="glass-card p-6 sticky top-24">
+                <h3 class="font-bold text-theme-main mb-4 flex items-center"><i
+                        class="material-icons-round text-gold mr-2">filter_list</i> Filters</h3>
+                <div class="mb-6 p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
+                    <p class="text-sm text-blue-300 font-medium text-center">Showing <span id="filtered-count"
+                            class="text-white font-bold">0</span> students</p>
+                </div>
+
+                <div class="space-y-5">
+                    <div>
+                        <label class="text-xs font-bold text-theme-muted uppercase tracking-widest mb-2 block">Quick
+                            Search</label>
+                        <input type="text" id="name-search" placeholder="Name, ID, Email..."
+                            class="w-full px-4 py-3 bg-theme-input border-theme rounded-xl text-theme-main text-sm focus:border-gold-500 transition-all shadow-inner">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-theme-muted uppercase tracking-widest mb-2 block">Filter by
+                            Hall</label>
+                        <select id="filter-hall"
+                            class="w-full px-4 py-3 bg-theme-input border-theme rounded-xl text-theme-main text-sm transition-all"
+                            onchange="applyFilters()">
+                            <option value="">All Halls</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-theme-muted uppercase tracking-widest mb-2 block">Filter by
+                            Program</label>
+                        <select id="filter-program"
+                            class="w-full px-4 py-3 bg-theme-input border-theme rounded-xl text-theme-main text-sm transition-all"
+                            onchange="applyFilters()">
+                            <option value="">All Programs</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-theme-muted uppercase tracking-widest mb-2 block">Admission
+                            Year</label>
+                        <select id="filter-year"
+                            class="w-full px-4 py-3 bg-theme-input border-theme rounded-xl text-theme-main text-sm transition-all"
+                            onchange="applyFilters()">
+                            <option value="">All Years</option>
+                        </select>
+                    </div>
+                    <button onclick="resetAllFilters()"
+                        class="w-full py-3 border border-theme rounded-xl text-theme-muted hover:text-theme-main hover:bg-white/5 transition-all text-sm flex items-center justify-center font-bold">
+                        <i class="material-icons-round text-sm mr-2 text-gold">refresh</i> Reset All Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Area -->
+        <div class="lg:col-span-3">
+            <!-- Results Grid -->
+            <div id="students-grid-view" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            <div id="students-table-view" class="hidden glass-card overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-left">
+                        <thead class="bg-black/20 text-theme-muted text-xs uppercase">
+                            <tr>
+                                <th class="px-6 py-3"><input type="checkbox" id="select-all-table"
+                                        class="rounded bg-black/20 border-white/20 text-gold focus:ring-0"></th>
+                                <th class="px-6 py-3">Student</th>
+                                <th class="px-6 py-3">Program</th>
+                                <th class="px-6 py-3">Class</th>
+                                <th class="px-6 py-3">Hall</th>
+                                <th class="px-6 py-3">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="students-table-body" class="text-sm text-theme-main divide-y divide-white/5"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="loading-state" class="text-center py-20 hidden">
+                <div class="relative flex items-center justify-center mb-6">
+                    <div class="absolute loader-pulse text-gold opacity-50">
+                        <i class="material-icons-round text-2xl">school</i>
+                    </div>
+                    <div class="loader-ring !w-16 !h-16 !border-[3px]"></div>
+                </div>
+                <p class="text-theme-muted font-medium tracking-widest uppercase text-[10px] animate-pulse">Syncing
+                    Students...</p>
+            </div>
+            <div id="empty-state" class="hidden text-center py-20">
+                <i class="material-icons-round text-4xl text-theme-muted mb-3">search_off</i>
+                <h3 class="text-xl font-bold text-theme-main">No students found</h3>
+            </div>
+
+            <!-- Pagination -->
+            <div id="pagination" class="hidden flex items-center justify-between pt-6 mt-6 border-t border-white/10">
+                <span class="text-sm text-theme-muted">
+                    Showing <span id="pagination-start" class="text-white font-bold">0</span> to <span
+                        id="pagination-end" class="text-white font-bold">0</span> of <span id="pagination-total"
+                        class="text-white font-bold">0</span>
+                </span>
+                <div class="flex space-x-2">
+                    <button id="prev-page"
+                        class="p-2 rounded-lg border border-white/10 hover:bg-white/10 text-theme-muted disabled:opacity-30"><i
+                            class="material-icons-round">chevron_left</i></button>
+                    <button id="next-page"
+                        class="p-2 rounded-lg border border-white/10 hover:bg-white/10 text-theme-muted disabled:opacity-30"><i
+                            class="material-icons-round">chevron_right</i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= MODALS ================= -->
+
+
+
+<!-- CHANGE FORM LEVEL MODAL -->
+<div id="move-form-modal"
+    class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
+    <div class="glass-card w-full max-w-sm p-8 text-center animate-fade-in border border-blue-500/30">
+        <i class="material-icons-round text-4xl text-blue-400 mb-4">school</i>
+        <h3 class="text-xl font-bold text-theme-main mb-2">Change Form Level</h3>
+        <p class="text-sm text-theme-muted mb-4">Promote or move selected students to:</p>
+        <select id="target-form-select"
+            class="w-full p-3 bg-gray-900 border-white/20 rounded-xl text-theme-main mb-6 focus:border-blue-500">
+            <option value="Form 1">Form 1 (Freshman)</option>
+            <option value="Form 2">Form 2</option>
+            <option value="Form 3">Form 3</option>
+            <option value="Completed">Graduated</option>
+        </select>
+        <div class="flex gap-3">
+            <button onclick="confirmMoveForm()"
+                class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg font-bold">Update</button>
+            <button onclick="toggleModal('move-form-modal', false)"
+                class="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Move Hall Modal -->
+<div id="move-hall-modal"
+    class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
+    <div class="glass-card w-full max-w-md p-8 animate-fade-in">
+        <h3 class="text-xl font-bold text-theme-main mb-4">Move Students</h3>
+        <div class="space-y-4">
+            <select id="bulk-new-hall"
+                class="w-full px-4 py-3 bg-gray-900 border-white/20 rounded-xl text-theme-main focus:border-gold-500">
+                <option value="">Select New Hall...</option>
+            </select>
+            <div class="flex gap-3">
+                <button onclick="confirmMoveHall()"
+                    class="flex-1 btn-gold py-2 rounded-lg text-black font-bold">Move</button>
+                <button onclick="closeMoveHallModal()"
+                    class="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Program Modal -->
+<div id="update-program-modal"
+    class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
+    <div class="glass-card w-full max-w-md p-8 animate-fade-in">
+        <h3 class="text-xl font-bold text-theme-main mb-4">Update Program</h3>
+        <div class="space-y-4">
+            <select id="bulk-new-program"
+                class="w-full px-4 py-3 bg-gray-900 border-white/20 rounded-xl text-theme-main focus:border-gold-500">
+                <option value="">Select New Program...</option>
+            </select>
+            <div class="flex gap-3">
+                <button onclick="confirmUpdateProgram()"
+                    class="flex-1 btn-gold py-2 rounded-lg text-black font-bold">Update</button>
+                <button onclick="closeUpdateProgramModal()"
+                    class="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Email Modal -->
+<div id="bulk-email-modal"
+    class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
+    <div class="glass-card w-full max-w-lg p-8 animate-fade-in">
+        <h3 class="text-xl font-bold text-theme-main mb-4 flex items-center"><i
+                class="material-icons-round text-blue-400 mr-2">email</i> Send Email</h3>
+        <form id="bulk-email-form" class="space-y-4">
+            <input type="text" id="email-subject" placeholder="Subject"
+                class="w-full px-4 py-3 bg-gray-900 border-white/20 rounded-xl text-theme-main focus:border-blue-500">
+            <textarea id="email-message" rows="5" placeholder="Message..."
+                class="w-full px-4 py-3 bg-gray-900 border-white/20 rounded-xl text-theme-main focus:border-blue-500"></textarea>
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="closeBulkEmailModal()"
+                    class="px-4 py-2 text-theme-muted hover:text-white transition">Cancel</button>
+                <button type="submit" class="btn-gold px-6 py-2 rounded-lg text-black font-bold">Send</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Bulk Blacklist Modal -->
+<div id="bulk-blacklist-modal"
+    class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
+    <div class="glass-card w-full max-w-md p-8 animate-fade-in border border-red-500/30">
+        <div class="flex items-center gap-3 mb-6">
+            <div class="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center text-red-500">
+                <i class="material-icons-round">block</i>
+            </div>
+            <div>
+                <h3 class="text-xl font-bold text-theme-main">Bulk Blacklist</h3>
+                <p class="text-xs text-theme-muted">You are blacklisting <span id="bulk-blacklist-count"
+                        class="text-red-500 font-bold">0</span> students</p>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-theme-muted mb-2">Reason for Blacklisting</label>
+                <textarea id="bulk-blacklist-reason" rows="3"
+                    placeholder="e.g. Disciplinary issues, Outstanding fees..."
+                    class="w-full px-4 py-3 bg-gray-900 border-white/20 rounded-xl text-theme-main focus:border-red-500 outline-none transition"></textarea>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button onclick="confirmBulkBlacklist()"
+                    class="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-bold shadow-lg transition">
+                    Blacklist Students
+                </button>
+                <button onclick="window.toggleModal('bulk-blacklist-modal', false)"
+                    class="flex-1 bg-white/10 hover:bg-white/20 text-white py-3 rounded-xl transition">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete All Modal -->
+<div id="delete-all-modal"
+    class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
+    <div
+        class="glass-card w-full max-w-sm p-8 text-center animate-fade-in border border-red-500/50 shadow-[0_0_50px_rgba(239,68,68,0.2)]">
+        <div
+            class="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-red-500 border border-red-500/30">
+            <i class="material-icons-round text-4xl">warning</i>
+        </div>
+        <h3 class="text-2xl font-bold text-red-500 mb-2">Delete Everything?</h3>
+        <p class="text-theme-muted mb-6">This will wipe all students and records database. This action is irreversible.
+        </p>
+        <input type="password" id="admin-password" placeholder="Enter Admin Password"
+            class="w-full px-4 py-3 bg-black/40 border border-red-500/30 rounded-xl text-white mb-6 focus:border-red-500 focus:ring-1 focus:ring-red-500">
+        <div class="flex gap-3">
+            <button onclick="confirmDeleteAll()"
+                class="flex-1 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-bold shadow-lg">Wipe
+                Data</button>
+            <button onclick="closeDeleteAllModal()"
+                class="flex-1 bg-white/10 hover:bg-white/20 text-white py-3 rounded-xl">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Single Delete Modal -->
+<div id="delete-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
+    <div class="glass-card w-full max-w-sm p-8 text-center animate-fade-in border border-red-500/30">
+        <div
+            class="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
+            <i class="material-icons-round text-3xl">delete_forever</i>
+        </div>
+        <h3 class="text-xl font-bold text-theme-main mb-2">Delete Student?</h3>
+        <p class="text-theme-muted mb-6">Are you sure you want to delete <span id="delete-student-name"
+                class="text-white font-bold"></span>?</p>
+        <div class="flex gap-3">
+            <button onclick="confirmDelete()"
+                class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-bold shadow-lg">Delete</button>
+            <button onclick="closeDeleteModal()"
+                class="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Quick View Modal -->
+<div id="quick-view-modal"
+    class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
+    <div class="glass-card w-full max-w-md p-8 animate-fade-in relative">
+        <button onclick="closeQuickViewModal()"
+            class="absolute top-4 right-4 text-theme-muted hover:text-white transition"><i
+                class="material-icons-round text-2xl">close</i></button>
+        <div id="quick-view-content"></div>
+    </div>
+</div>
+
+
+<!-- ADD/EDIT STUDENT MODAL -->
+<div id="add-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4 backdrop-blur-md">
+    <div
+        class="glass-card w-full max-w-3xl max-h-[90vh] overflow-y-auto p-8 animate-fade-in shadow-2xl border border-white/10">
+
+        <div class="flex justify-between items-center mb-8 border-b border-white/10 pb-4">
+            <h3 class="text-2xl font-bold text-theme-main" id="modal-title">Student Details</h3>
+            <button onclick="closeAddModal()" class="text-theme-muted hover:text-white transition"><i
+                    class="material-icons-round text-2xl">close</i></button>
+        </div>
+
+        <form id="form-main-student" class="space-y-6" enctype="multipart/form-data">
+            <input type="hidden" id="edit-student-id">
+
+            <div class="flex flex-col lg:flex-row gap-8">
+
+                <!-- PROFILE PICTURE SECTION -->
+                <div class="lg:w-1/3 flex flex-col items-center">
+                    <div class="relative group cursor-pointer w-48 h-48">
+
+                        <!-- 1. The Actual Image (Hidden by default, shown if exists) -->
+                        <img id="photo-display" src=""
+                            class="w-full h-full rounded-full object-cover border-4 border-white/10 shadow-2xl bg-black/50 hidden">
+
+                        <!-- 2. The Placeholder (Shown if no image) -->
+                        <div id="photo-placeholder"
+                            class="w-full h-full rounded-full flex items-center justify-center bg-gradient-to-br from-gray-700 to-black border-4 border-white/10 shadow-2xl">
+                            <i class="material-icons-round text-6xl text-white/50">person</i>
+                        </div>
+
+                        <!-- Edit Overlay -->
+                        <div
+                            class="absolute inset-0 rounded-full bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300">
+                            <i class="material-icons-round text-white text-3xl mb-1">cloud_upload</i>
+                            <span class="text-xs text-white font-medium">Click to Upload</span>
+                        </div>
+
+                        <!-- File Input -->
+                        <input type="file" name="photo" id="photo-input"
+                            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*"
+                            onchange="previewSelectedImage(this)">
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div id="upload-progress-container"
+                        class="w-full mt-4 bg-gray-700 h-2 rounded-full overflow-hidden hidden">
+                        <div id="upload-progress-bar"
+                            class="h-full bg-gradient-to-r from-gold-500 to-yellow-300 w-0 transition-all duration-200">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FORM FIELDS (Right Side) -->
+                <div class="lg:w-2/3 grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <!-- Standard fields -->
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-theme-muted uppercase tracking-widest mb-2">Full
+                            Name</label>
+                        <input type="text" name="name" id="modal-name" placeholder="e.g. John Doe" required
+                            class="w-full px-4 py-3 bg-theme-input border-theme rounded-xl text-theme-main focus:border-gold-500 shadow-inner">
+                    </div>
+
+                    <div>
+                        <label
+                            class="block text-xs font-bold text-theme-muted uppercase tracking-widest mb-2">Gender</label>
+                        <select name="gender" id="modal-gender"
+                            class="w-full p-3 bg-theme-input border-theme rounded-xl text-theme-main">
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-theme-muted uppercase tracking-widest mb-2">Date of
+                            Birth</label>
+                        <input type="date" name="date_of_birth" id="modal-dob"
+                            class="w-full p-3 bg-theme-input border-theme rounded-xl text-theme-main">
+                    </div>
+
+                    <div>
+                        <label
+                            class="block text-xs font-bold text-theme-muted uppercase tracking-widest mb-2">Program</label>
+                        <select name="program" id="modal-program" required
+                            class="w-full p-3 bg-theme-input border-theme rounded-xl text-theme-main"
+                            onchange="updateClassOptions('modal')">
+                            <option value="">Select Program...</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label
+                            class="block text-xs font-bold text-theme-muted uppercase tracking-widest mb-2">Class</label>
+                        <select name="class_room" id="modal-class" required
+                            class="w-full p-3 bg-theme-input border-theme rounded-xl text-theme-main">
+                            <option value="">Select Class...</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-theme-muted uppercase tracking-widest mb-2">Hall of
+                            Residence</label>
+                        <select name="hall" id="modal-hall" required
+                            class="w-full p-3 bg-theme-input border-theme rounded-xl text-theme-main">
+                            <option value="">Select Hall...</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label
+                            class="block text-xs font-bold text-theme-muted uppercase tracking-widest mb-2">Enrollment
+                            Year</label>
+                        <input type="number" name="enrollment_year" id="modal-enrollment-year" placeholder="2023"
+                            required class="w-full p-3 bg-theme-input border-theme rounded-xl text-theme-main">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-theme-muted uppercase tracking-widest mb-2">Student
+                            Email</label>
+                        <input type="email" name="email" id="modal-email" placeholder="student@example.com"
+                            class="w-full p-3 bg-theme-input border-theme rounded-xl text-theme-main font-mono text-sm">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-theme-muted uppercase tracking-widest mb-2">Student
+                            Phone</label>
+                        <input type="text" name="phone" id="modal-phone" placeholder="+233..."
+                            class="w-full p-3 bg-theme-input border-theme rounded-xl text-theme-main font-mono text-sm">
+                    </div>
+
+                    <div class="md:col-span-2 mt-2 border-t border-theme pt-4">
+                        <h4 class="text-xs font-bold text-gold mb-4 flex items-center tracking-widest uppercase">
+                            <i class="material-icons-round mr-2 text-sm">contact_phone</i> Guardian Information
+                        </h4>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-theme-muted uppercase tracking-widest mb-2">Guardian
+                            Name</label>
+                        <input type="text" name="guardian_name" id="modal-guardian-name"
+                            placeholder="Full name of guardian"
+                            class="w-full p-3 bg-theme-input border-theme rounded-xl text-theme-main">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-theme-muted uppercase tracking-widest mb-2">Guardian
+                            Phone</label>
+                        <input type="text" name="guardian_phone" id="modal-guardian-phone" placeholder="+233..."
+                            class="w-full p-3 bg-theme-input border-theme rounded-xl text-theme-main font-mono text-sm">
+                    </div>
+                </div>
+            </div>
+
+            <!-- BUTTONS -->
+            <div class="flex gap-4 pt-4 border-t border-white/10">
+                <button type="submit" id="save-btn"
+                    class="flex-1 btn-gold py-3 rounded-xl font-bold text-black shadow-lg hover:scale-[1.01] transition">Save
+                    & Upload</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script>
+    // --- 1. CONFIGURATION ---
+    const CONFIG = {
+        halls: ["Alema Hall", "Ellen Hall", "Halm Addo Hall", "Nana Wereko Ampem II Hall", "Wilson Q .Tei Hall", "Awuletey Hall", "Peter Ala Adjetey Hall", "Nana Akuako Sarpong Hall", "Nana Awuah Darko Ampem Hall"],
+        programs: ["General Science", "Business", "General Arts", "Visual Arts", "Agriculture", "Home Economics"],
+        classConfig: {
+            "General Science": { code: "Science", count: 13 },
+            "Business": { code: "Business", count: 9 },
+            "General Arts": { code: "GeneralArts", count: 9 },
+            "Visual Arts": { code: "VisualArts", count: 3 },
+            "Agriculture": { code: "Agriculture", count: 2 },
+            "Home Economics": { code: "HomeEcons", count: 2 }
+        }
+    };
+
+    // --- 2. GLOBAL STATE ---
+    window.allStudents = [];
+    window.filteredStudents = [];
+    window.selectedStudents = new Set();
+    window.currentPage = 1;
+    window.itemsPerPage = 12;
+    window.currentViewMode = 'grid';
+    window.currentViewMode = 'grid';
+    window.deleteStudentId = null;
+    window.moveFormStudentId = null; // Track single student for move
+
+    // --- 3. INITIALIZATION ---
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log("App Initializing...");
+        safeInitDropdowns();
+        loadStudents();
+        setupEventListeners();
+    });
+
+    // --- 4. DROPDOWN LOGIC (Crash Proof) ---
+    function safeInitDropdowns() {
+        const fill = (id, opts) => {
+            const el = document.getElementById(id);
+            if (!el) return; // Skip if missing
+            const f = el.firstElementChild;
+            el.innerHTML = '';
+            if (f) el.appendChild(f); // Keep "Select..." option
+            opts.forEach(o => el.insertAdjacentHTML('beforeend', `<option value="${o}">${o}</option>`));
+        };
+
+        fill('modal-hall', CONFIG.halls);
+        fill('bulk-new-hall', CONFIG.halls);
+        fill('modal-program', CONFIG.programs);
+        fill('quick-program', CONFIG.programs);
+        fill('bulk-new-program', CONFIG.programs);
+        fill('filter-program', CONFIG.programs);
+        fill('filter-hall', CONFIG.halls);
+
+        // Year Filter (2000 - Current)
+        const currentYear = new Date().getFullYear();
+        const years = [];
+        for (let y = currentYear; y >= 2000; y--) years.push(y);
+        fill('filter-year', years);
+    }
+
+    // Explicitly attach to window
+    window.updateClassOptions = function (context) {
+        const progId = context === 'modal' ? 'modal-program' : 'quick-program';
+        const classId = context === 'modal' ? 'modal-class' : 'quick-class';
+
+        const progEl = document.getElementById(progId);
+        const classEl = document.getElementById(classId);
+
+        if (!progEl || !classEl) return;
+
+        const val = progEl.value;
+        const conf = CONFIG.classConfig[val];
+
+        classEl.innerHTML = '<option value="">Select Class...</option>';
+        if (conf) {
+            for (let y = 1; y <= 3; y++) {
+                for (let i = 1; i <= conf.count; i++) {
+                    const cVal = `${y}-${conf.code}-${i}`;
+                    classEl.insertAdjacentHTML('beforeend', `<option value="${cVal}">${cVal}</option>`);
+                }
+            }
+        }
+    }
+
+    // --- 5. DATA LOADING ---
+    async function loadStudents() {
+        const loader = document.getElementById('loading-state');
+        if (loader) loader.classList.remove('hidden');
+
+        try {
+            // Timestamp prevents caching
+            const res = await apiRequest(`/api/students?per_page=2000&_t=${Date.now()}`);
+            window.allStudents = res.students || [];
+            updateStats();
+            applyFilters();
+        } catch (e) {
+            console.error(e);
+        } finally {
+            if (loader) loader.classList.add('hidden');
+        }
+    }
+
+    // --- 6. FILTERING & RENDERING ---
+    window.applyFilters = function () {
+        const term = document.getElementById('name-search').value.toLowerCase();
+        const hall = document.getElementById('filter-hall').value;
+        const prog = document.getElementById('filter-program').value;
+
+        window.filteredStudents = window.allStudents.filter(s => {
+            if (term) {
+                // Multi-field search
+                const haystack = `${s.name} ${s.id} ${s.email} ${s.phone} ${s.program}`.toLowerCase();
+                if (!haystack.includes(term)) return false;
+            }
+            if (hall && s.hall !== hall) return false;
+            if (prog && s.program !== prog) return false;
+
+            const year = document.getElementById('filter-year').value;
+            if (year && s.enrollment_year != year) return false;
+
+            return true;
+        });
+
+        const countEl = document.getElementById('filtered-count');
+        if (countEl) countEl.innerText = window.filteredStudents.length;
+
+        window.currentPage = 1;
+        renderStudents();
+    }
+
+    window.renderStudents = function () {
+        const grid = document.getElementById('students-grid-view');
+        const table = document.getElementById('students-table-view');
+        const list = document.getElementById('students-list-view');
+        const pagination = document.getElementById('pagination');
+        const empty = document.getElementById('empty-state');
+
+        // Reset visibility
+        [grid, table, list, empty, pagination].forEach(el => el && el.classList.add('hidden'));
+
+        if (window.filteredStudents.length === 0) {
+            if (empty) empty.classList.remove('hidden');
+            return;
+        }
+
+        if (pagination) pagination.classList.remove('hidden');
+
+        // Paginate
+        const start = (window.currentPage - 1) * window.itemsPerPage;
+        const end = Math.min(start + window.itemsPerPage, window.filteredStudents.length);
+        const data = window.filteredStudents.slice(start, end);
+
+        // Update Text
+        const safeStart = document.getElementById('pagination-start');
+        if (safeStart) {
+            safeStart.textContent = start + 1;
+            document.getElementById('pagination-end').textContent = end;
+            document.getElementById('pagination-total').textContent = window.filteredStudents.length;
+        }
+
+        // Render Helpers
+        const safe = (v) => {
+            if (!v || String(v).toLowerCase() === 'nan' || String(v).toLowerCase() === 'none') return '';
+            return v;
+        };
+        const initial = (n) => (n || '?').charAt(0);
+        const getAvatar = (s) => s.photo_url
+            ? `<img src="${s.photo_url}" class="w-12 h-12 rounded-xl object-cover shadow border border-white/20">`
+            : `<div class="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-lg">${initial(s.name)}</div>`;
+
+        // Program Color Mapper
+        const getProgramBadge = (prog) => {
+            const map = {
+                "General Science": "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
+                "Business": "bg-purple-500/20 text-purple-400 border-purple-500/30",
+                "General Arts": "bg-amber-500/20 text-amber-400 border-amber-500/30",
+                "Visual Arts": "bg-pink-500/20 text-pink-400 border-pink-500/30",
+                "Agriculture": "bg-green-500/20 text-green-400 border-green-500/30",
+                "Home Economics": "bg-rose-500/20 text-rose-400 border-rose-500/30"
+            };
+            const classes = map[prog] || "bg-gray-500/20 text-gray-400 border-gray-500/30";
+            return `<span class="px-2 py-1 rounded-md text-[10px] uppercase font-bold tracking-wider border ${classes}">${safe(prog)}</span>`;
+        };
+
+        // GRID RENDERER
+        if (window.currentViewMode === 'grid') {
+            grid.classList.remove('hidden');
+            grid.innerHTML = data.map(s => {
+                const isBlacklisted = s.is_blacklisted;
+                const borderClass = isBlacklisted ? 'border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.2)]' : 'hover:border-gold-500/50';
+
+                return `
+                <div class="glass-card p-6 relative group ${borderClass} transition duration-300">
+                    ${isBlacklisted ? `
+                        <div class="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl shadow-lg z-10 flex items-center">
+                            <i class="material-icons-round text-xs mr-1">warning</i> BLACKLISTED
+                        </div>
+                    ` : ''}
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="relative w-16 h-16 rounded-xl overflow-hidden shadow-lg border border-white/10 bg-black/40 group-hover:scale-105 transition">
+                             ${s.photo_url
+                        ? `<img src="${s.photo_url}" class="w-full h-full object-cover">`
+                        : `<div class="w-full h-full bg-gradient-to-br from-blue-600 to-indigo-900 flex items-center justify-center text-white font-bold text-2xl">${initial(s.name)}</div>`
+                    }
+                        </div>
+                        <input type="checkbox" class="student-checkbox w-5 h-5 rounded border-white/20 bg-black/20 text-gold focus:ring-0 cursor-pointer transition" 
+                               onchange="toggleSelect(${s.id}, this.checked)" ${window.selectedStudents.has(s.id) ? 'checked' : ''}>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h3 class="text-lg font-bold text-theme-main truncate mb-1">${safe(s.name)}</h3>
+                        <p class="text-xs text-theme-muted flex items-center"><i class="material-icons-round text-xs mr-1 opacity-70">email</i> ${safe(s.email)}</p>
+                    </div>
+                    
+                     <div class="flex flex-wrap gap-2 mb-4">
+                         ${getProgramBadge(s.program)}
+                        <span class="px-2 py-1 rounded-md text-[10px] uppercase font-bold tracking-wider bg-blue-500/10 text-blue-300 border border-blue-500/20">
+                            ${safe(s.class_room)}
+                        </span>
+                    </div>
+                    
+                     <div class="border-t border-white/10 pt-3 flex justify-between items-center opacity-80 hover:opacity-100 transition">
+                         <span class="text-xs text-theme-muted uppercase font-mono">${safe(s.hall)}</span>
+                         <div class="flex gap-2">
+                             <button onclick="openMoveFormModal(${s.id})" class="p-1 rounded hover:bg-white/10 text-blue-400 transition" title="Move Form"><i class="material-icons-round text-lg">school</i></button>
+                             <button onclick="window.editStudent('${s.id}')" class="p-1 rounded hover:bg-white/10 text-yellow-400 transition" title="Edit"><i class="material-icons-round text-lg">edit</i></button>
+                             <button onclick="openDeleteModal(${s.id}, '${safe(s.name)}')" class="p-1 rounded hover:bg-white/10 text-red-400 transition" title="Delete"><i class="material-icons-round text-lg">delete</i></button>
+                         </div>
+                    </div>
+                </div>
+            `;
+            }).join('');
+        }
+
+        // TABLE RENDERER
+        else if (window.currentViewMode === 'table') {
+            table.classList.remove('hidden');
+            const tbody = document.getElementById('students-table-body');
+            tbody.innerHTML = data.map(s => {
+                const isBlacklisted = s.is_blacklisted;
+                return `
+                <tr class="hover:bg-white/5 border-b border-white/5 transition group ${isBlacklisted ? 'bg-red-500/5' : ''}">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center">
+                            ${isBlacklisted ? '<div class="w-1 h-8 bg-red-500 rounded-full mr-3"></div>' : ''}
+                            <input type="checkbox" onchange="toggleSelect(${s.id}, this.checked)" ${window.selectedStudents.has(s.id) ? 'checked' : ''}>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 flex items-center gap-3">
+                         ${getAvatar(s)} 
+                         <div>
+                            <p class="font-bold text-theme-main group-hover:text-gold transition flex items-center">
+                                ${safe(s.name)}
+                                ${isBlacklisted ? '<i class="material-icons-round text-red-500 text-sm ml-2" title="Blacklisted">warning</i>' : ''}
+                            </p>
+                            <p class="text-xs text-theme-muted">${safe(s.email)}</p>
+                         </div>
+                    </td>
+                    <td class="px-6 py-4">${getProgramBadge(s.program)}</td>
+                    <td class="px-6 py-4 text-white font-mono text-xs">${safe(s.class_room)}</td>
+                    <td class="px-6 py-4 text-theme-muted text-sm">${safe(s.hall)}</td>
+                    <td class="px-6 py-4">
+                        <button onclick="openMoveFormModal(${s.id})" class="text-blue-400 mr-3 hover:scale-110 transition" title="Move Form"><i class="material-icons-round">school</i></button>
+                        <button onclick="window.editStudent('${s.id}')" class="text-gold mr-3 hover:scale-110 transition"><i class="material-icons-round">edit</i></button>
+                        <button onclick="openDeleteModal(${s.id}, '${safe(s.name)}')" class="text-red-400 hover:scale-110 transition"><i class="material-icons-round">delete</i></button>
+                    </td>
+                </tr>
+            `;
+            }).join('');
+        }
+    }
+
+    // --- 7. MODAL ACTIONS (The Missing Logic) ---
+
+    // Explicit toggle function for window
+    window.toggleModal = function (id, show) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.classList.toggle('hidden', !show);
+            el.classList.toggle('flex', show);
+        } else {
+            console.error(`Modal with ID '${id}' not found!`);
+        }
+    }
+
+    // Open/Close Add
+    window.openAddModal = function () {
+        document.getElementById('form-main-student').reset();
+        document.getElementById('edit-student-id').value = '';
+
+        // Default Enrollment Year to current year
+        const yearInput = document.getElementById('modal-enrollment-year');
+        if (yearInput) yearInput.value = new Date().getFullYear();
+
+        // Reset cascaded class dropdown
+        const classEl = document.getElementById('modal-class');
+        if (classEl) classEl.innerHTML = '<option value="">Select Class...</option>';
+
+        document.getElementById('photo-display').classList.add('hidden'); // Reset image
+        document.getElementById('photo-placeholder').classList.remove('hidden');
+        document.getElementById('modal-title').textContent = "New Admission";
+        window.toggleModal('add-modal', true);
+    }
+
+    window.closeAddModal = function () { window.toggleModal('add-modal', false); }
+
+    // Open/Close Delete All
+    window.openDeleteAllModal = function () {
+        document.getElementById('admin-password').value = '';
+        window.toggleModal('delete-all-modal', true);
+    }
+
+    window.closeDeleteAllModal = function () { window.toggleModal('delete-all-modal', false); }
+
+    // Logic for Delete All Submit
+    // --- 7.5 MOVE FORM LOGIC ---
+    window.openMoveFormModal = function (id) {
+        window.moveFormStudentId = id; // Set ID
+        window.toggleModal('move-form-modal', true);
+    }
+
+    window.confirmMoveForm = async function () {
+        const target = document.getElementById('target-form-select').value;
+        const ids = window.moveFormStudentId ? [window.moveFormStudentId] : Array.from(window.selectedStudents);
+
+        if (ids.length === 0) return showToast('No students selected', 'warning');
+
+        try {
+            const res = await apiRequest('/api/students/move-form', {
+                method: 'POST',
+                body: JSON.stringify({ ids, target_form: target })
+            });
+            showToast(res.message, 'success');
+            window.toggleModal('move-form-modal', false);
+            window.moveFormStudentId = null; // Reset
+            loadStudents();
+        } catch (e) { console.error(e); }
+    }
+
+    // Existing Delete All Logic...
+    window.confirmDeleteAll = async function () {
+        const password = document.getElementById('admin-password').value;
+        if (!password) return showToast('Password required', 'error');
+
+        try {
+            const res = await apiRequest('/api/students/delete-all', {
+                method: 'POST',
+                body: JSON.stringify({ password })
+            });
+
+            showToast(res.message, 'success');
+            window.closeDeleteAllModal();
+            loadStudents(); // Reload grid (it should be empty)
+        } catch (e) {
+            console.error(e);
+            // apiRequest handles showing toast for error
+        }
+    }
+
+    // --- 8. SINGLE STUDENT ACTIONS ---
+
+    window.editStudent = function (id) {
+        console.log("Editing student ID:", id);
+        // ID match handling (loose for string vs int)
+        const s = window.allStudents.find(x => x.id == id);
+        if (!s) return console.error('Student ID not found');
+
+        document.getElementById('edit-student-id').value = s.id || '';
+        document.getElementById('modal-name').value = s.name || '';
+        document.getElementById('modal-gender').value = s.gender || 'Male';
+        document.getElementById('modal-email').value = s.email || '';
+        document.getElementById('modal-phone').value = s.phone || '';
+        document.getElementById('modal-enrollment-year').value = s.enrollment_year || '';
+        document.getElementById('modal-hall').value = s.hall || '';
+        document.getElementById('modal-dob').value = s.date_of_birth || '';
+        document.getElementById('modal-guardian-name').value = s.guardian_name || '';
+        document.getElementById('modal-guardian-phone').value = s.guardian_phone || '';
+
+        // Populate Selects and trigger cascading
+        const pEl = document.getElementById('modal-program');
+        if (pEl) {
+            pEl.value = s.program || '';
+            // Must update classes based on this program immediately
+            window.updateClassOptions('modal');
+            // Small delay to allow options to populate before setting value
+            setTimeout(() => {
+                const classEl = document.getElementById('modal-class');
+                if (classEl) classEl.value = s.class_room || '';
+            }, 50);
+        }
+
+        // Image Logic
+        const pDisp = document.getElementById('photo-display');
+        const pPlace = document.getElementById('photo-placeholder');
+
+        if (s.photo_url) {
+            pDisp.src = s.photo_url;
+            pDisp.classList.remove('hidden');
+            pPlace.classList.add('hidden');
+        } else {
+            pDisp.classList.add('hidden');
+            pPlace.classList.remove('hidden');
+        }
+
+        document.getElementById('modal-title').textContent = "Edit Student";
+        window.toggleModal('add-modal', true);
+    }
+
+    window.previewSelectedImage = function (input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = document.getElementById('photo-display');
+                img.src = e.target.result;
+                img.classList.remove('hidden');
+                document.getElementById('photo-placeholder').classList.add('hidden');
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // Form Submit (Override default to use FormData)
+    const form = document.getElementById('form-main-student');
+    if (form) {
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            // ... (Copy existing FormData logic or standard)
+            const id = document.getElementById('edit-student-id').value;
+            const url = id ? `/api/students/${id}` : '/api/students';
+            const method = id ? 'PUT' : 'POST';
+            const token = document.querySelector('meta[name="csrf-token"]').content;
+
+            const btn = document.getElementById('save-btn');
+            const originalText = btn.innerText;
+            btn.innerText = "Processing...";
+            btn.disabled = true;
+
+            // Show Progress UI
+            const progressBar = document.getElementById('upload-progress-bar');
+            const progressContainer = document.getElementById('upload-progress-container');
+
+            if (document.getElementById('photo-input').files.length > 0) {
+                progressContainer.classList.remove('hidden');
+                progressBar.style.width = '0%';
+                // Fake progress animation
+                setTimeout(() => progressBar.style.width = '40%', 500);
+                setTimeout(() => progressBar.style.width = '80%', 1500);
+            }
+
+            try {
+                const fd = new FormData(form);
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'X-CSRFToken': token },
+                    body: fd
+                });
+
+                // Complete progress
+                progressBar.style.width = '100%';
+
+                const data = await res.json();
+
+                if (!res.ok) throw new Error(data.error || 'Request failed');
+
+                showToast(id ? 'Updated Successfully!' : 'Student Created!', 'success');
+                window.closeAddModal();
+                loadStudents();
+
+            } catch (e) {
+                showToast(e.message, 'error');
+                progressContainer.classList.add('hidden'); // Hide on error
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+                setTimeout(() => progressContainer.classList.add('hidden'), 1000);
+            }
+        };
+    }
+
+    // --- 9. HELPERS (Search/Toggle/Etc) ---
+    document.getElementById('name-search').addEventListener('input', (e) => {
+        clearTimeout(window.searchDebounce);
+        window.searchDebounce = setTimeout(() => {
+            window.applyFilters();
+        }, 300);
+    });
+
+    window.toggleQuickAdd = function () {
+        const form = document.getElementById('quick-add-form');
+        form.classList.toggle('hidden');
+        document.getElementById('quick-add-arrow').textContent = form.classList.contains('hidden') ? 'keyboard_arrow_down' : 'keyboard_arrow_up';
+    }
+
+    window.setViewMode = (m) => { window.currentViewMode = m; renderStudents(); }
+
+    window.resetAllFilters = () => {
+        document.getElementById('name-search').value = '';
+        document.getElementById('filter-hall').value = '';
+        document.getElementById('filter-program').value = '';
+        document.getElementById('filter-year').value = '';
+        window.loadStudents();
+    }
+
+    // Stats (Short version)
+    function updateStats() {
+        if (document.getElementById('total-count')) document.getElementById('total-count').innerText = window.allStudents.length;
+        // ... (other stats code if needed)
+    }
+
+    function setupEventListeners() {
+        document.getElementById('items-per-page').addEventListener('change', (e) => {
+            window.itemsPerPage = e.target.value === 'all' ? 10000 : parseInt(e.target.value);
+            window.currentPage = 1;
+            renderStudents();
+        });
+        document.getElementById('next-page').addEventListener('click', () => { window.currentPage++; renderStudents(); });
+        document.getElementById('prev-page').addEventListener('click', () => { window.currentPage--; renderStudents(); });
+    }
+
+    // Single Delete
+    window.openDeleteModal = function (id, name) {
+        window.deleteStudentId = id;
+        document.getElementById('delete-student-name').innerText = name;
+        window.toggleModal('delete-modal', true);
+    }
+
+    window.closeDeleteModal = function () { window.toggleModal('delete-modal', false); }
+
+    window.confirmDelete = async function () {
+        try {
+            await apiRequest(`/api/students/${window.deleteStudentId}`, { method: 'DELETE' });
+            showToast('Student deleted');
+            window.closeDeleteModal();
+            loadStudents();
+        } catch (e) { }
+    }
+
+    // --- 10. BULK ACTIONS LOGIC ---
+
+    window.toggleSelect = function (id, checked, skipUIUpdate = false) {
+        if (checked) {
+            window.selectedStudents.add(id);
+        } else {
+            window.selectedStudents.delete(id);
+        }
+        if (!skipUIUpdate) updateBulkActionsUI();
+    }
+
+    function updateBulkActionsUI() {
+        const count = window.selectedStudents.size;
+        const panel = document.getElementById('bulk-actions-panel');
+        document.getElementById('selected-count').innerText = count;
+
+        if (count > 0) {
+            panel.classList.remove('hidden');
+            panel.classList.add('flex');
+            // Animate in
+            panel.classList.remove('translate-y-4', 'opacity-0');
+            panel.classList.add('translate-y-0', 'opacity-100');
+        } else {
+            panel.classList.add('hidden');
+            panel.classList.remove('flex');
+        }
+    }
+
+    window.clearSelections = function () {
+        window.selectedStudents.clear();
+        document.querySelectorAll('.student-checkbox').forEach(cb => cb.checked = false);
+        document.getElementById('select-all-table').checked = false;
+        updateBulkActionsUI();
+    }
+
+    window.executeBulkAction = async function () {
+        const action = document.getElementById('bulk-action').value;
+        const ids = Array.from(window.selectedStudents);
+
+        if (ids.length === 0) return showToast('No students selected', 'warning');
+        if (!action) return showToast('Please select an action', 'warning');
+
+        // Route action
+        switch (action) {
+            case 'move-form':
+                window.openMoveFormModal(); // Uses selected IDs by default
+                break;
+            case 'move-hall':
+                window.toggleModal('move-hall-modal', true);
+                break;
+            case 'update-program':
+                window.toggleModal('update-program-modal', true);
+                break;
+            case 'email':
+                window.toggleModal('bulk-email-modal', true);
+                break;
+            case 'blacklist':
+                document.getElementById('bulk-blacklist-count').innerText = ids.length;
+                window.toggleModal('bulk-blacklist-modal', true);
+                break;
+            case 'delete':
+                if (confirm(`Are you sure you want to delete ${ids.length} students? This cannot be undone.`)) {
+                    await performBulkDelete(ids);
+                }
+                break;
+        }
+    }
+
+    window.confirmBulkBlacklist = async function () {
+        const reason = document.getElementById('bulk-blacklist-reason').value.trim();
+        const ids = Array.from(window.selectedStudents);
+
+        if (!reason) return showToast('Please provide a reason', 'warning');
+
+        try {
+            const res = await apiRequest('/api/students/bulk-blacklist', {
+                method: 'POST',
+                body: JSON.stringify({ ids, reason })
+            });
+            showToast(res.message, 'success');
+            window.toggleModal('bulk-blacklist-modal', false);
+            document.getElementById('bulk-blacklist-reason').value = '';
+            clearSelections();
+            loadStudents();
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    window.selectAllStudents = function () {
+        if (!window.filteredStudents || window.filteredStudents.length === 0) {
+            return showToast('No students to select', 'info');
+        }
+        window.filteredStudents.forEach(s => window.toggleSelect(s.id, true, true));
+        updateBulkActionsUI();
+        renderStudents();
+        showToast(`Selected all ${window.filteredStudents.length} filtered students`, 'success');
+    }
+
+    // Modal Close Handlers
+    window.closeMoveHallModal = () => window.toggleModal('move-hall-modal', false);
+    window.closeUpdateProgramModal = () => window.toggleModal('update-program-modal', false);
+    window.closeBulkEmailModal = () => window.toggleModal('bulk-email-modal', false);
+
+    // Bulk Action API Calls
+    async function performBulkDelete(ids) {
+        try {
+            const res = await apiRequest('/api/students/bulk-delete', {
+                method: 'POST',
+                body: JSON.stringify({ ids })
+            });
+            showToast(res.message, 'success');
+            clearSelections();
+            loadStudents();
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    window.confirmMoveHall = async function () {
+        const hall = document.getElementById('bulk-new-hall').value;
+        if (!hall) return showToast('Select a hall', 'warning');
+
+        try {
+            await apiRequest('/api/students/bulk-update', {
+                method: 'POST',
+                body: JSON.stringify({
+                    ids: Array.from(window.selectedStudents),
+                    field: 'hall',
+                    value: hall
+                })
+            });
+            showToast('Hall updated successfully', 'success');
+            window.toggleModal('move-hall-modal', false);
+            clearSelections();
+            loadStudents();
+        } catch (e) { }
+    }
+
+    window.confirmUpdateProgram = async function () {
+        const prog = document.getElementById('bulk-new-program').value;
+        if (!prog) return showToast('Select a program', 'warning');
+
+        try {
+            await apiRequest('/api/students/bulk-update', {
+                method: 'POST',
+                body: JSON.stringify({
+                    ids: Array.from(window.selectedStudents),
+                    field: 'program',
+                    value: prog
+                })
+            });
+            showToast('Program updated successfully', 'success');
+            window.toggleModal('update-program-modal', false);
+            clearSelections();
+            loadStudents();
+        } catch (e) { }
+    }
+
+    // Bulk Email Submission
+    const bulkEmailForm = document.getElementById('bulk-email-form');
+    if (bulkEmailForm) {
+        bulkEmailForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const subject = document.getElementById('email-subject').value.trim();
+            const message = document.getElementById('email-message').value.trim();
+            const ids = Array.from(window.selectedStudents);
+
+            if (!subject || !message) return showToast('Subject and message required', 'warning');
+
+            try {
+                const res = await apiRequest('/api/students/bulk-email', {
+                    method: 'POST',
+                    body: JSON.stringify({ ids, subject, message })
+                });
+                showToast(res.message, 'success');
+                window.closeBulkEmailModal();
+                bulkEmailForm.reset();
+                clearSelections();
+            } catch (e) {
+                console.error(e);
+            }
+        };
+    }
+
+    // Select All Toggle (Table)
+    const selectAllDetails = document.getElementById('select-all-table');
+    if (selectAllDetails) {
+        selectAllDetails.addEventListener('change', (e) => {
+            const checked = e.target.checked;
+            window.filteredStudents.forEach(s => window.toggleSelect(s.id, checked, true));
+            updateBulkActionsUI();
+            renderStudents();
+        });
+    }
+
+</script>
+{% endblock %}

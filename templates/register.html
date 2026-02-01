@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - SchoolSync Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="icon" href="./favicon.ico" sizes="any">
+
+
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .register-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        .floating {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+
+<body class="register-gradient min-h-screen flex items-center justify-center p-4">
+    <!-- Background Decorations -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl floating"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-500 opacity-5 rounded-full blur-3xl floating"
+            style="animation-delay: 2s;"></div>
+    </div>
+
+    <div class="relative z-10 w-full max-w-lg animate-fade-in">
+        <!-- Logo/Header -->
+        <div class="text-center mb-8">
+            <div class="inline-block p-4 mb-4">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="SchoolSync Logo"
+                    class="w-24 h-24 object-contain drop-shadow-2xl">
+            </div>
+            <h1 class="text-4xl font-bold text-white mb-2">Create Account</h1>
+            <p class="text-white text-opacity-80">Join SchoolSync Pro as an administrator</p>
+        </div>
+
+        <!-- Register Card -->
+        <div class="bg-white rounded-2xl shadow-2xl p-8">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div
+                class="mb-6 p-4 rounded-lg {{ 'bg-red-100 border border-red-200 text-red-800' if category == 'error' else 'bg-green-100 border border-green-200 text-green-800' }}">
+                <div class="flex items-center">
+                    <i class="material-icons-round mr-2">{{ 'error' if category == 'error' else 'check_circle' }}</i>
+                    <span>{{ message }}</span>
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <form method="POST" id="register-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <!-- Full Name -->
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="material-icons-round text-gray-400">badge</i>
+                            </div>
+                            <input type="text" name="full_name" required
+                                class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                placeholder="John Doe" autocomplete="name">
+                        </div>
+                    </div>
+
+                    <!-- Username -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Username *</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="material-icons-round text-gray-400">alternate_email</i>
+                            </div>
+                            <input type="text" name="username" required pattern="[a-zA-Z0-9_]{3,}"
+                                class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                placeholder="johndoe" autocomplete="username">
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Letters, numbers, underscores only</p>
+                    </div>
+
+                    <!-- Email -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email Address *</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="material-icons-round text-gray-400">email</i>
+                            </div>
+                            <input type="email" name="email" required
+                                class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                placeholder="john@example.com" autocomplete="email">
+                        </div>
+                    </div>
+
+                    <!-- Password -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Password *</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="material-icons-round text-gray-400">lock</i>
+                            </div>
+                            <input type="password" name="password" required minlength="8" id="password"
+                                class="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                placeholder="Min. 8 characters" autocomplete="new-password">
+                            <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                                onclick="togglePassword('password', 'password-icon')">
+                                <i class="material-icons-round text-gray-400" id="password-icon">visibility</i>
+                            </button>
+                        </div>
+                        <div class="mt-2 space-y-1">
+                            <div class="flex items-center space-x-2">
+                                <div class="progress-bar flex-1">
+                                    <div class="progress-fill bg-red-500" id="strength-bar" style="width: 0%"></div>
+                                </div>
+                                <span class="text-xs font-medium" id="strength-text">Weak</span>
+                            </div>
+                            <p class="text-xs text-gray-500">Must include: 8+ chars, uppercase, lowercase, number,
+                                special char</p>
+                        </div>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password *</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="material-icons-round text-gray-400">lock_open</i>
+                            </div>
+                            <input type="password" name="confirm_password" required id="confirm-password"
+                                class="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                placeholder="Confirm your password" autocomplete="new-password">
+                            <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                                onclick="togglePassword('confirm-password', 'confirm-icon')">
+                                <i class="material-icons-round text-gray-400" id="confirm-icon">visibility</i>
+                            </button>
+                        </div>
+                        <p class="text-xs text-red-600 mt-1 hidden" id="password-match-error">
+                            <i class="material-icons-round" style="font-size: 14px; vertical-align: middle;">error</i>
+                            Passwords do not match
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Password Requirements Checklist -->
+                <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                    <p class="text-sm font-medium text-gray-700 mb-2">Password Requirements:</p>
+                    <div class="space-y-1 text-xs">
+                        <div class="flex items-center text-gray-500" id="req-length">
+                            <i class="material-icons-round mr-2" style="font-size: 16px;">radio_button_unchecked</i>
+                            At least 8 characters
+                        </div>
+                        <div class="flex items-center text-gray-500" id="req-uppercase">
+                            <i class="material-icons-round mr-2" style="font-size: 16px;">radio_button_unchecked</i>
+                            One uppercase letter
+                        </div>
+                        <div class="flex items-center text-gray-500" id="req-lowercase">
+                            <i class="material-icons-round mr-2" style="font-size: 16px;">radio_button_unchecked</i>
+                            One lowercase letter
+                        </div>
+                        <div class="flex items-center text-gray-500" id="req-number">
+                            <i class="material-icons-round mr-2" style="font-size: 16px;">radio_button_unchecked</i>
+                            One number
+                        </div>
+                        <div class="flex items-center text-gray-500" id="req-special">
+                            <i class="material-icons-round mr-2" style="font-size: 16px;">radio_button_unchecked</i>
+                            One special character (!@#$%^&*)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Terms Agreement -->
+                <div class="mb-6">
+                    <label class="flex items-start cursor-pointer">
+                        <input type="checkbox" name="terms" required
+                            class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 mt-1">
+                        <span class="ml-2 text-sm text-gray-600">
+                            I agree to the
+                            <a href="#" class="text-indigo-600 hover:text-indigo-800 font-medium">Terms of Service</a>
+                            and
+                            <a href="#" class="text-indigo-600 hover:text-indigo-800 font-medium">Privacy Policy</a>
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="submit-btn"
+                    class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-3 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl mb-4 flex items-center justify-center">
+                    <i class="material-icons-round mr-2">how_to_reg</i>
+                    Create Account
+                </button>
+
+                <!-- Back to Login -->
+                <div class="text-center">
+                    <p class="text-gray-600">
+                        Already have an account?
+                        <a href="/login" class="text-indigo-600 hover:text-indigo-800 font-semibold">Sign in here</a>
+                    </p>
+                </div>
+            </form>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-6 text-white text-opacity-60 text-sm">
+            <p>SchoolSync Pro Administration Portal</p>
+        </div>
+    </div>
+
+    <script>
+        // Password strength checker with requirements validation
+        const passwordInput = document.getElementById('password');
+        const confirmInput = document.getElementById('confirm-password');
+        const strengthBar = document.getElementById('strength-bar');
+        const strengthText = document.getElementById('strength-text');
+        const matchError = document.getElementById('password-match-error');
+
+        // Password requirements elements
+        const reqLength = document.getElementById('req-length');
+        const reqUppercase = document.getElementById('req-uppercase');
+        const reqLowercase = document.getElementById('req-lowercase');
+        const reqNumber = document.getElementById('req-number');
+        const reqSpecial = document.getElementById('req-special');
+
+        function updateRequirement(element, passed) {
+            const icon = element.querySelector('i');
+            if (passed) {
+                element.classList.remove('text-gray-500');
+                element.classList.add('text-green-600');
+                icon.textContent = 'check_circle';
+            } else {
+                element.classList.remove('text-green-600');
+                element.classList.add('text-gray-500');
+                icon.textContent = 'radio_button_unchecked';
+            }
+        }
+
+        passwordInput.addEventListener('input', function () {
+            const password = this.value;
+            let strength = 0;
+            let requirements = {
+                length: false,
+                uppercase: false,
+                lowercase: false,
+                number: false,
+                special: false
+            };
+
+            // Length check
+            if (password.length >= 8) {
+                strength += 20;
+                requirements.length = true;
+            }
+            updateRequirement(reqLength, requirements.length);
+
+            // Uppercase check
+            if (/[A-Z]/.test(password)) {
+                strength += 20;
+                requirements.uppercase = true;
+            }
+            updateRequirement(reqUppercase, requirements.uppercase);
+
+            // Lowercase check
+            if (/[a-z]/.test(password)) {
+                strength += 20;
+                requirements.lowercase = true;
+            }
+            updateRequirement(reqLowercase, requirements.lowercase);
+
+            // Number check
+            if (/[0-9]/.test(password)) {
+                strength += 20;
+                requirements.number = true;
+            }
+            updateRequirement(reqNumber, requirements.number);
+
+            // Special character check
+            if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+                strength += 20;
+                requirements.special = true;
+            }
+            updateRequirement(reqSpecial, requirements.special);
+
+            // Update strength bar
+            strengthBar.style.width = strength + '%';
+
+            if (strength <= 40) {
+                strengthBar.className = 'progress-fill bg-red-500';
+                strengthText.textContent = 'Weak';
+                strengthText.className = 'text-xs font-medium text-red-600';
+            } else if (strength <= 60) {
+                strengthBar.className = 'progress-fill bg-orange-500';
+                strengthText.textContent = 'Fair';
+                strengthText.className = 'text-xs font-medium text-orange-600';
+            } else if (strength < 100) {
+                strengthBar.className = 'progress-fill bg-yellow-500';
+                strengthText.textContent = 'Good';
+                strengthText.className = 'text-xs font-medium text-yellow-600';
+            } else {
+                strengthBar.className = 'progress-fill bg-green-500';
+                strengthText.textContent = 'Strong';
+                strengthText.className = 'text-xs font-medium text-green-600';
+            }
+
+            // Check password match
+            if (confirmInput.value) {
+                checkPasswordMatch();
+            }
+        });
+
+        // Password match checker
+        confirmInput.addEventListener('input', checkPasswordMatch);
+
+        function checkPasswordMatch() {
+            if (confirmInput.value && passwordInput.value !== confirmInput.value) {
+                matchError.classList.remove('hidden');
+                confirmInput.classList.add('border-red-500');
+                confirmInput.classList.remove('border-gray-300');
+            } else {
+                matchError.classList.add('hidden');
+                confirmInput.classList.remove('border-red-500');
+                confirmInput.classList.add('border-gray-300');
+            }
+        }
+
+        // Toggle password visibility
+        function togglePassword(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.textContent = 'visibility_off';
+            } else {
+                input.type = 'password';
+                icon.textContent = 'visibility';
+            }
+        }
+
+        // Form validation and submission
+        document.getElementById('register-form').addEventListener('submit', function (e) {
+            // Check password match
+            if (passwordInput.value !== confirmInput.value) {
+                e.preventDefault();
+                matchError.classList.remove('hidden');
+                confirmInput.classList.add('border-red-500');
+                confirmInput.focus();
+                return false;
+            }
+
+            // Check password strength
+            const password = passwordInput.value;
+            if (password.length < 8 ||
+                !/[A-Z]/.test(password) ||
+                !/[a-z]/.test(password) ||
+                !/[0-9]/.test(password) ||
+                !/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+                e.preventDefault();
+                alert('Please ensure your password meets all requirements.');
+                passwordInput.focus();
+                return false;
+            }
+
+            // Show loading state
+            const button = document.getElementById('submit-btn');
+            const originalHTML = button.innerHTML;
+            button.innerHTML = '<i class="material-icons-round mr-2 animate-spin">sync</i> Creating account...';
+            button.disabled = true;
+
+            // Re-enable after timeout (fallback)
+            setTimeout(() => {
+                button.innerHTML = originalHTML;
+                button.disabled = false;
+            }, 5000);
+        });
+
+        // Real-time username validation
+        const usernameInput = document.querySelector('input[name="username"]');
+        usernameInput.addEventListener('input', function () {
+            this.value = this.value.replace(/[^a-zA-Z0-9_]/g, '');
+        });
+    </script>
+</body>
+
+</html>

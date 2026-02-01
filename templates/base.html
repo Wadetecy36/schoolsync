@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{% block title %}SchoolSync Pro{% endblock %}</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Theme Initialization Script (Prevents Flash) -->
+    <script>
+        (function () {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+
+    <style>
+        /* --- DYNAMIC THEME VARIABLES --- */
+        :root {
+            /* 
+                DARK THEME (Gold & Royal Blue) 
+                Aesthetic: Premium, Deep, Elegant
+            */
+            --bg-color: #0f172a;
+            /* Slate 900 - Richer Navy */
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            /* Slate 800 with opacity */
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f1f5f9;
+            /* Slate 100 */
+            --text-muted: #94a3b8;
+            /* Slate 400 */
+            --card-bg: rgba(30, 41, 59, 0.4);
+            --card-hover: rgba(51, 65, 85, 0.5);
+            /* Slate 700 */
+            --nav-bg: rgba(15, 23, 42, 0.85);
+            /* Slate 900 */
+            --input-bg: rgba(15, 23, 42, 0.6);
+            --gold-accent: #fbbf24;
+            /* Amber 400 - Warm Gold */
+            --blue-accent: #3b82f6;
+            /* Blue 500 */
+
+            /* Glow effects */
+            --glow-primary: rgba(59, 130, 246, 0.15);
+            /* Blue glow */
+            --glow-secondary: rgba(251, 191, 36, 0.1);
+            /* Gold glow */
+        }
+
+        [data-theme="light"] {
+            /* 
+                LIGHT THEME (Friendly & Clear)
+                Aesthetic: Clean, Approachable, High Contrast
+            */
+            --bg-color: #f1f5f9;
+            /* Lighter Slate background */
+            --glass-bg: rgba(255, 255, 255, 0.9);
+            --glass-border: rgba(0, 0, 0, 0.1);
+            --text-main: #0f172a;
+            /* Deep Slate 900 */
+            --text-muted: #475569;
+            /* Slate 600 - More readable */
+            --card-bg: #ffffff;
+            --card-hover: #f8fafc;
+            --nav-bg: rgba(255, 255, 255, 0.95);
+            --input-bg: #ffffff;
+            --gold-accent: #b45309;
+            /* Amber 700 - Better visibility */
+            --blue-accent: #1d4ed8;
+            /* Blue 700 */
+
+            /* Glow effects (subtle) */
+            --glow-primary: rgba(37, 99, 235, 0.08);
+            --glow-secondary: rgba(180, 83, 9, 0.08);
+        }
+
+        body {
+            font-family: 'Outfit', 'Segoe UI', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s ease;
+            overflow-x: hidden;
+            min-height: 100vh;
+            background-image:
+                radial-gradient(at 0% 0%, var(--glow-primary) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, var(--glow-secondary) 0px, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        /* --- GLASSMORPHISM & CARDS --- */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.5rem;
+            /* More rounded/friendly */
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card:hover {
+            background: var(--card-hover);
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border-color: var(--blue-accent);
+        }
+
+        /* Smooth visual indicator on hover */
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--gold-accent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .glass-card:hover::before {
+            opacity: 1;
+        }
+
+        /* --- TEXT & ACCENTS --- */
+        /* --- THEME-BASED UTILITIES --- */
+        .text-theme-main {
+            color: var(--text-main);
+        }
+
+        .text-theme-muted {
+            color: var(--text-muted);
+        }
+
+        .bg-theme-card {
+            background-color: var(--card-bg);
+        }
+
+        .border-theme {
+            border-color: var(--glass-border);
+        }
+
+        .bg-theme-input {
+            background-color: var(--input-bg);
+        }
+
+        .text-gold {
+            color: var(--gold-accent);
+            font-weight: 700;
+        }
+
+        .text-blue {
+            color: var(--blue-accent);
+        }
+
+        /* --- BUTTONS --- */
+        .btn-gold {
+            background: linear-gradient(135deg, var(--gold-accent) 0%, #fbbf24 100%);
+            color: #0f172a;
+            /* Dark text for contrast */
+            font-weight: 600;
+            border: none;
+            border-radius: 9999px;
+            /* Pill shape - friendly */
+            padding: 0.75rem 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(251, 191, 36, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .btn-gold:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(251, 191, 36, 0.4);
+            filter: brightness(1.05);
+        }
+
+        /* --- FORM ELEMENTS (Friendly & Accessible) --- */
+        input,
+        select,
+        textarea {
+            background: var(--input-bg) !important;
+            border: 2px solid var(--glass-border) !important;
+            /* Thicker border for clarity */
+            color: var(--text-main) !important;
+            border-radius: 1rem !important;
+            /* Rounded inputs */
+            padding: 0.75rem 1rem !important;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            /* Larger text for adults/readability */
+        }
+
+        input::placeholder {
+            color: var(--text-muted);
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--blue-accent) !important;
+            outline: none;
+            box-shadow: 0 0 0 4px var(--glow-primary);
+        }
+
+        /* Fix for Dropdown Options */
+        select option {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 10px;
+        }
+
+        /* --- ICONS --- */
+        .material-icons-round {
+            vertical-align: middle;
+        }
+
+        /* --- ANIMATIONS --- */
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* --- CUSTOM PREMIUM LOADER --- */
+        .loader-ring {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 4px solid transparent;
+            border-top-color: var(--gold-accent);
+            animation: spin 1.5s linear infinite;
+            position: relative;
+        }
+
+        .loader-ring::before,
+        .loader-ring::after {
+            content: '';
+            position: absolute;
+            inset: 8px;
+            border-radius: 50%;
+            border: 4px solid transparent;
+            border-top-color: var(--blue-accent);
+            animation: spin 2s linear infinite reverse;
+        }
+
+        .loader-ring::after {
+            inset: 20px;
+            border-top-color: var(--gold-accent);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loader-pulse {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.8;
+                filter: drop-shadow(0 0 5px var(--gold-accent));
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 1;
+                filter: drop-shadow(0 0 15px var(--gold-accent));
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body class="antialiased">
+    <div class="ambient-glow"></div>
+
+    <!-- Navigation -->
+    <nav class="glass sticky top-0 z-50 border-b-0" style="background: var(--nav-bg);">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="SchoolSync Logo"
+                        class="w-10 h-10 object-contain drop-shadow-lg">
+                    <div>
+                        <span class="text-xl font-bold tracking-tight text-theme-main">SchoolSync <span
+                                class="text-gold">Pro</span></span>
+                    </div>
+                </div>
+
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex items-center space-x-2">
+                    <a href="/"
+                        class="px-4 py-2 rounded-lg text-theme-muted hover:text-theme-main hover:bg-white/10 transition flex items-center">
+                        <i class="material-icons-round mr-2 text-gold">dashboard</i> Dashboard
+                    </a>
+                    <a href="/students"
+                        class="px-4 py-2 rounded-lg text-theme-muted hover:text-theme-main hover:bg-white/10 transition flex items-center">
+                        <i class="material-icons-round mr-2 text-gold">people</i> Students
+                    </a>
+                    <a href="/import"
+                        class="px-4 py-2 rounded-lg text-theme-muted hover:text-theme-main hover:bg-white/10 transition flex items-center">
+                        <i class="material-icons-round mr-2 text-gold">cloud_upload</i> Import
+                    </a>
+                    <a href="/blacklist"
+                        class="px-4 py-2 rounded-lg text-theme-muted hover:text-theme-main hover:bg-white/10 transition flex items-center">
+                        <i class="material-icons-round mr-2 text-gold">report_problem</i> Blacklist
+                    </a>
+                </div>
+
+                <!-- Right Side Actions -->
+                <div class="hidden md:flex items-center space-x-4 pl-4 border-l border-white/10">
+                    <!-- Theme Toggle -->
+                    <button onclick="toggleTheme()"
+                        class="p-2 rounded-full hover:bg-white/10 text-theme-muted hover:text-gold transition focus:outline-none"
+                        title="Toggle Theme">
+                        <i class="material-icons-round" id="theme-icon">light_mode</i>
+                    </button>
+
+                    {% if current_user.is_authenticated %}
+                    <span class="text-sm font-medium text-theme-main">{{ current_user.full_name }}</span>
+                    <a href="/settings"
+                        class="p-2 rounded-full hover:bg-white/10 text-theme-muted hover:text-gold transition">
+                        <i class="material-icons-round">settings</i>
+                    </a>
+                    <a href="/logout"
+                        class="p-2 rounded-full hover:bg-red-500/20 text-theme-muted hover:text-red-400 transition">
+                        <i class="material-icons-round">logout</i>
+                    </a>
+                    {% endif %}
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-button" class="md:hidden text-theme-main p-2">
+                    <i class="material-icons-round text-3xl">menu</i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="md:hidden glass border-t border-white/10 hidden absolute w-full">
+            <div class="px-4 py-4 space-y-2">
+                <a href="/" class="block px-4 py-3 rounded-lg hover:bg-white/10 text-theme-main">Dashboard</a>
+                <a href="/students" class="block px-4 py-3 rounded-lg hover:bg-white/10 text-theme-main">Students</a>
+                <a href="/import" class="block px-4 py-3 rounded-lg hover:bg-white/10 text-theme-main">Import</a>
+                <a href="/blacklist" class="block px-4 py-3 rounded-lg hover:bg-white/10 text-theme-main">Blacklist</a>
+                <a href="/settings" class="block px-4 py-3 rounded-lg hover:bg-white/10 text-theme-main">Settings</a>
+                <!-- Mobile Theme Toggle -->
+                <button onclick="toggleTheme()"
+                    class="w-full text-left px-4 py-3 rounded-lg hover:bg-white/10 text-theme-main flex items-center">
+                    <i class="material-icons-round mr-2 text-gold">brightness_6</i> Toggle Theme
+                </button>
+                <a href="/logout" class="block px-4 py-3 rounded-lg hover:bg-red-500/20 text-red-400">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-3"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay"
+        class="fixed inset-0 bg-black/80 z-[100] hidden items-center justify-center backdrop-blur-md">
+        <div class="flex flex-col items-center">
+            <div class="relative flex items-center justify-center mb-6">
+                <!-- Inner Pulse Icon -->
+                <div class="absolute loader-pulse text-gold">
+                    <i class="material-icons-round text-4xl">school</i>
+                </div>
+                <!-- Outer Rotating Rings -->
+                <div class="loader-ring"></div>
+            </div>
+            <div class="text-center">
+                <p
+                    class="text-xl font-bold bg-gradient-to-r from-gold to-yellow-300 bg-clip-text text-transparent tracking-widest uppercase mb-1">
+                    SchoolSync</p>
+                <p
+                    class="text-xs text-theme-muted font-medium tracking-[0.2em] uppercase transition-opacity animate-pulse">
+                    Syncing Intelligence...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- THEME LOGIC ---
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon();
+        }
+
+        function updateThemeIcon() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const icon = document.getElementById('theme-icon');
+            if (icon) {
+                icon.textContent = currentTheme === 'light' ? 'dark_mode' : 'light_mode';
+            }
+        }
+
+        // Initialize icon on load
+        document.addEventListener('DOMContentLoaded', updateThemeIcon);
+
+        // --- MOBILE MENU ---
+        const mobileMenuBtn = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+        }
+
+        // --- TOAST & API ---
+        window.showToast = function (message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            // Simplified Toast Colors
+            const bgClass = type === 'error' ? 'bg-red-600' : 'bg-green-600';
+            const icon = type === 'error' ? 'error' : 'check_circle';
+
+            toast.className = `${bgClass} text-white p-4 rounded-xl shadow-lg flex items-center justify-between animate-fade-in backdrop-blur-md bg-opacity-90`;
+            toast.innerHTML = `
+                <div class="flex items-center">
+                    <i class="material-icons-round mr-3">${icon}</i>
+                    <span>${message}</span>
+                </div>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        };
+
+        window.loading = {
+            show: (msg) => {
+                const el = document.getElementById('loading-overlay');
+                el.classList.remove('hidden');
+                el.classList.add('flex');
+            },
+            hide: () => {
+                const el = document.getElementById('loading-overlay');
+                el.classList.add('hidden');
+                el.classList.remove('flex');
+            }
+        };
+
+        window.apiRequest = async function (url, options = {}) {
+            loading.show();
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+
+            const isFormData = options.body instanceof FormData;
+            const defaultHeaders = { 'X-CSRFToken': csrfToken };
+            if (!isFormData) {
+                defaultHeaders['Content-Type'] = 'application/json';
+            }
+
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers: { ...defaultHeaders, ...options.headers }
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    const errorMsg = data.message || data.error || data.msg || 'An unexpected error occurred';
+                    throw new Error(errorMsg);
+                }
+                loading.hide();
+                return data;
+            } catch (error) {
+                loading.hide();
+                showToast(error.message, 'error');
+                throw error;
+            }
+        };
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>
