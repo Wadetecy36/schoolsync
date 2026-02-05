@@ -364,7 +364,7 @@
                         class="p-2 rounded-full hover:bg-white/10 text-theme-muted hover:text-gold transition">
                         <i class="material-icons-round">settings</i>
                     </a>
-                    <a href="/logout"
+                    <a href="{{ url_for('auth.logout') }}"
                         class="p-2 rounded-full hover:bg-red-500/20 text-theme-muted hover:text-red-400 transition">
                         <i class="material-icons-round">logout</i>
                     </a>
@@ -393,7 +393,8 @@
                     class="w-full text-left px-4 py-3 rounded-lg hover:bg-white/10 text-theme-main flex items-center">
                     <i class="material-icons-round mr-2 text-gold">brightness_6</i> Toggle Theme
                 </button>
-                <a href="/logout" class="block px-4 py-3 rounded-lg hover:bg-red-500/20 text-red-400">Logout</a>
+                <a href="{{ url_for('auth.logout') }}"
+                    class="block px-4 py-3 rounded-lg hover:bg-red-500/20 text-red-400">Logout</a>
             </div>
         </div>
     </nav>
