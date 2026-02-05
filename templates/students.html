@@ -261,13 +261,21 @@
                         id="pagination-end" class="text-white font-bold">0</span> of <span id="pagination-total"
                         class="text-white font-bold">0</span>
                 </span>
-                <div class="flex space-x-2">
-                    <button id="prev-page"
-                        class="p-2 rounded-lg border border-white/10 hover:bg-white/10 text-theme-muted disabled:opacity-30"><i
-                            class="material-icons-round">chevron_left</i></button>
-                    <button id="next-page"
-                        class="p-2 rounded-lg border border-white/10 hover:bg-white/10 text-theme-muted disabled:opacity-30"><i
-                            class="material-icons-round">chevron_right</i></button>
+                <div class="flex items-center space-x-4">
+                    <select id="items-per-page" class="bg-black/20 border-white/10 rounded-lg text-xs text-theme-muted focus:ring-0">
+                        <option value="12">12 per page</option>
+                        <option value="24">24 per page</option>
+                        <option value="48">48 per page</option>
+                        <option value="all">Show All</option>
+                    </select>
+                    <div class="flex space-x-2">
+                        <button id="prev-page"
+                            class="p-2 rounded-lg border border-white/10 hover:bg-white/10 text-theme-muted disabled:opacity-30"><i
+                                class="material-icons-round">chevron_left</i></button>
+                        <button id="next-page"
+                            class="p-2 rounded-lg border border-white/10 hover:bg-white/10 text-theme-muted disabled:opacity-30"><i
+                                class="material-icons-round">chevron_right</i></button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -639,7 +647,6 @@
     window.currentPage = 1;
     window.itemsPerPage = 12;
     window.currentViewMode = 'grid';
-    window.currentViewMode = 'grid';
     window.deleteStudentId = null;
     window.moveFormStudentId = null; // Track single student for move
 
@@ -750,12 +757,11 @@
     window.renderStudents = function () {
         const grid = document.getElementById('students-grid-view');
         const table = document.getElementById('students-table-view');
-        const list = document.getElementById('students-list-view');
         const pagination = document.getElementById('pagination');
         const empty = document.getElementById('empty-state');
 
         // Reset visibility
-        [grid, table, list, empty, pagination].forEach(el => el && el.classList.add('hidden'));
+        [grid, table, empty, pagination].forEach(el => el && el.classList.add('hidden'));
 
         if (window.filteredStudents.length === 0) {
             if (empty) empty.classList.remove('hidden');
