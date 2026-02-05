@@ -123,10 +123,3 @@ tzdata>=2023.3
 
 # NOTE: Cloudinary removed - switched to Base64 image storage
 # If you need external image hosting, add: cloudinary>=1.36.0
-
-# ========================================
-# Computer Vision & AI
-# ========================================
-numpy>=2.4.0
-opencv-python>=4.13.0
-
