@@ -508,15 +508,25 @@
                     ...options,
                     headers: { ...defaultHeaders, ...options.headers }
                 });
-                const data = await response.json();
+
+                let data;
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.includes("application/json")) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text || `HTTP Error ${response.status}` };
+                }
+
                 if (!response.ok) {
-                    const errorMsg = data.message || data.error || data.msg || 'An unexpected error occurred';
+                    const errorMsg = data.message || data.error || data.msg || `Server Error (${response.status})`;
                     throw new Error(errorMsg);
                 }
                 loading.hide();
                 return data;
             } catch (error) {
                 loading.hide();
+                console.error("API Request Error:", error);
                 showToast(error.message, 'error');
                 throw error;
             }
