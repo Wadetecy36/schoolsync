@@ -198,7 +198,8 @@ class Student(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False, index=True)
     gender = db.Column(db.String(20))
-    date_of_birth = db.Column(db.Date)
+    # Using String for date_of_birth to be lenient with SQLite's dynamic typing
+    date_of_birth = db.Column(db.String(20))
     
     # Academic Information
     program = db.Column(db.String(100), index=True)
@@ -262,60 +263,108 @@ class Student(db.Model):
     def age(self):
         """
         Calculate current age from date of birth.
+        Safe against non-date types in database.
         
         Returns:
-            int: Age in years, or None if DOB not set
+            int: Age in years, or None if DOB not set or invalid
         """
-        if self.date_of_birth:
-            today = datetime.now().date()
-            return today.year - self.date_of_birth.year - (
-                (today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day)
-            )
+        try:
+            dob = self.date_of_birth
+            if dob:
+                # Handle string format if SQLite returned it as such
+                if isinstance(dob, str):
+                    from datetime import date
+                    dob = date.fromisoformat(dob.split(' ')[0])
+
+                if hasattr(dob, 'year'):
+                    today = datetime.now().date()
+                    return today.year - dob.year - (
+                        (today.month, today.day) < (dob.month, dob.day)
+                    )
+        except (ValueError, TypeError, AttributeError):
+            pass
         return None
     
     def to_dict(self):
         """
         Convert student model to dictionary for JSON serialization.
+        Includes extensive error handling for data consistency.
         
         Returns:
             dict: Student data with calculated fields
         """
-        # Calculate age
+        # 1. Safe Date Handling
+        dob_iso = None
         current_age = None
-        if self.date_of_birth:
-            today = datetime.now().date()
-            current_age = today.year - self.date_of_birth.year - (
-                (today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day)
-            )
 
-        # Photo URL logic
+        try:
+            dob = self.date_of_birth
+            if dob:
+                # Normalization if it's a string
+                if isinstance(dob, str):
+                    from datetime import date
+                    # SQLite sometimes stores "YYYY-MM-DD HH:MM:SS" even for Date columns
+                    dob = date.fromisoformat(dob.split(' ')[0])
+
+                if hasattr(dob, 'year'):
+                    dob_iso = dob.isoformat()
+                    today = datetime.now().date()
+                    current_age = today.year - dob.year - (
+                        (today.month, today.day) < (dob.month, dob.day)
+                    )
+                else:
+                    dob_iso = str(dob)
+        except (ValueError, TypeError, AttributeError):
+            # Attempt to get raw value if attribute access failed
+            try:
+                dob_iso = str(self.__dict__.get('date_of_birth'))
+            except:
+                dob_iso = None
+
+        # 2. Photo URL logic (Safe)
         photo_url = None
-        if self.photo_file:
-            if self.photo_file.startswith('http') or self.photo_file.startswith('data:'):
-                # External URL or Base64
-                photo_url = self.photo_file
-            else:
-                # Local file path
-                photo_url = f"/static/uploads/{self.photo_file}"
+        try:
+            if self.photo_file:
+                if self.photo_file.startswith('http') or self.photo_file.startswith('data:'):
+                    photo_url = self.photo_file
+                else:
+                    photo_url = f"/static/uploads/{self.photo_file}"
+        except Exception:
+            photo_url = None
+
+        # 3. Blacklist Status (Safe)
+        is_blacklisted = False
+        try:
+            if self.blacklist_entry:
+                is_blacklisted = getattr(self.blacklist_entry, 'is_active', False)
+        except Exception:
+            pass
+
+        # 4. Form Calculation (Safe)
+        curr_form = "Unknown"
+        try:
+            curr_form = self.current_form
+        except Exception:
+            pass
 
         return {
             'id': self.id,
             'name': self.name,
             'gender': self.gender,
-            'date_of_birth': self.date_of_birth.isoformat() if self.date_of_birth else None,
+            'date_of_birth': dob_iso,
             'age': current_age,
             'program': self.program,
             'hall': self.hall,
             'class_room': self.class_room,
             'enrollment_year': self.enrollment_year,
-            'current_form': self.current_form,
+            'current_form': curr_form,
             'photo_url': photo_url,
             'email': self.email,
             'phone': self.phone,
             'guardian_name': self.guardian_name,
             'guardian_phone': self.guardian_phone,
             'created_by': self.created_by,
-            'is_blacklisted': self.blacklist_entry.is_active if self.blacklist_entry else False
+            'is_blacklisted': is_blacklisted
         }
 
     def has_permission(self, user):

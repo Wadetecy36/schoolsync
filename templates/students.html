@@ -728,9 +728,15 @@
 
     // --- 6. FILTERING & RENDERING ---
     window.applyFilters = function () {
-        const term = document.getElementById('name-search').value.toLowerCase();
-        const hall = document.getElementById('filter-hall').value;
-        const prog = document.getElementById('filter-program').value;
+        const termEl = document.getElementById('name-search');
+        const hallEl = document.getElementById('filter-hall');
+        const progEl = document.getElementById('filter-program');
+        const yearEl = document.getElementById('filter-year');
+
+        const term = termEl ? termEl.value.toLowerCase() : '';
+        const hall = hallEl ? hallEl.value : '';
+        const prog = progEl ? progEl.value : '';
+        const year = yearEl ? yearEl.value : '';
 
         window.filteredStudents = window.allStudents.filter(s => {
             if (term) {
@@ -740,8 +746,6 @@
             }
             if (hall && s.hall !== hall) return false;
             if (prog && s.program !== prog) return false;
-
-            const year = document.getElementById('filter-year').value;
             if (year && s.enrollment_year != year) return false;
 
             return true;
@@ -1105,12 +1109,15 @@
     }
 
     // --- 9. HELPERS (Search/Toggle/Etc) ---
-    document.getElementById('name-search').addEventListener('input', (e) => {
-        clearTimeout(window.searchDebounce);
-        window.searchDebounce = setTimeout(() => {
-            window.applyFilters();
-        }, 300);
-    });
+    const nameSearchEl = document.getElementById('name-search');
+    if (nameSearchEl) {
+        nameSearchEl.addEventListener('input', (e) => {
+            clearTimeout(window.searchDebounce);
+            window.searchDebounce = setTimeout(() => {
+                window.applyFilters();
+            }, 300);
+        });
+    }
 
     window.toggleQuickAdd = function () {
         const form = document.getElementById('quick-add-form');
@@ -1121,10 +1128,11 @@
     window.setViewMode = (m) => { window.currentViewMode = m; renderStudents(); }
 
     window.resetAllFilters = () => {
-        document.getElementById('name-search').value = '';
-        document.getElementById('filter-hall').value = '';
-        document.getElementById('filter-program').value = '';
-        document.getElementById('filter-year').value = '';
+        const ids = ['name-search', 'filter-hall', 'filter-program', 'filter-year'];
+        ids.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
         window.loadStudents();
     }
 
@@ -1135,13 +1143,30 @@
     }
 
     function setupEventListeners() {
-        document.getElementById('items-per-page').addEventListener('change', (e) => {
-            window.itemsPerPage = e.target.value === 'all' ? 10000 : parseInt(e.target.value);
-            window.currentPage = 1;
-            renderStudents();
-        });
-        document.getElementById('next-page').addEventListener('click', () => { window.currentPage++; renderStudents(); });
-        document.getElementById('prev-page').addEventListener('click', () => { window.currentPage--; renderStudents(); });
+        const itemsPerPageEl = document.getElementById('items-per-page');
+        if (itemsPerPageEl) {
+            itemsPerPageEl.addEventListener('change', (e) => {
+                window.itemsPerPage = e.target.value === 'all' ? 10000 : parseInt(e.target.value);
+                window.currentPage = 1;
+                renderStudents();
+            });
+        }
+
+        const nextPageEl = document.getElementById('next-page');
+        if (nextPageEl) {
+            nextPageEl.addEventListener('click', () => {
+                window.currentPage++;
+                renderStudents();
+            });
+        }
+
+        const prevPageEl = document.getElementById('prev-page');
+        if (prevPageEl) {
+            prevPageEl.addEventListener('click', () => {
+                window.currentPage--;
+                renderStudents();
+            });
+        }
     }
 
     // Single Delete
