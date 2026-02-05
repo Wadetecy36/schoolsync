@@ -1136,10 +1136,45 @@
         window.loadStudents();
     }
 
-    // Stats (Short version)
+    // Stats (Calculated from loaded data)
     function updateStats() {
-        if (document.getElementById('total-count')) document.getElementById('total-count').innerText = window.allStudents.length;
-        // ... (other stats code if needed)
+        try {
+            const students = window.allStudents || [];
+
+            const totalEl = document.getElementById('total-count');
+            if (totalEl) totalEl.innerText = students.length;
+
+            // Average Age
+            const ages = students.map(s => s.age).filter(a => a !== null && a !== undefined);
+            const avgAge = ages.length > 0 ? Math.round(ages.reduce((a, b) => a + b, 0) / ages.length) : 0;
+            const avgEl = document.getElementById('avg-age');
+            if (avgEl) avgEl.innerText = avgAge;
+
+            // Top Program
+            const programs = {};
+            students.forEach(s => {
+                if (s.program) programs[s.program] = (programs[s.program] || 0) + 1;
+            });
+            let topProg = "-";
+            let max = 0;
+            for (let p in programs) {
+                if (programs[p] > max) {
+                    max = programs[p];
+                    topProg = p;
+                }
+            }
+            const topEl = document.getElementById('top-program');
+            if (topEl) topEl.innerText = topProg;
+
+            // New This Month (Approximated if created_at not in to_dict, otherwise 0)
+            // Note: to_dict doesn't currently include created_at.
+            // We'll leave it at 0 or update it if we add created_at.
+            const newEl = document.getElementById('new-this-month');
+            if (newEl) newEl.innerText = students.filter(s => s.is_new).length || 0;
+
+        } catch (e) {
+            console.error("Error updating stats:", e);
+        }
     }
 
     function setupEventListeners() {

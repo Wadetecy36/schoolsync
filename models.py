@@ -9,14 +9,13 @@ Last Updated: 2026-01-16
 """
 
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, date
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 import re
 import hashlib
 
 from extensions import db
-from datetime import datetime
 
 # ============================================
 # VALIDATION CONSTANTS
@@ -170,15 +169,44 @@ class Blacklist(db.Model):
         return f'<Blacklist {self.student.name if self.student else "Unknown"}>'
     
     def to_dict(self):
-        return {
-            'id': self.id,
-            'student_id': self.student_id,
-            'student_name': self.student.name if self.student else None,
-            'reason': self.reason,
-            'added_by': self.added_by_user.username if self.added_by_user else None,
-            'date_added': self.date_added.strftime('%Y-%m-%d %H:%M:%S'),
-            'is_active': self.is_active
-        }
+        try:
+            student_name = "Unknown"
+            try:
+                if self.student:
+                    student_name = self.student.name
+            except Exception:
+                pass
+
+            added_by = "Unknown"
+            try:
+                if self.added_by_user:
+                    added_by = self.added_by_user.username
+            except Exception:
+                pass
+
+            date_str = None
+            try:
+                if self.date_added:
+                    date_str = self.date_added.strftime('%Y-%m-%d %H:%M:%S')
+            except Exception:
+                pass
+
+            return {
+                'id': self.id,
+                'student_id': self.student_id,
+                'student_name': student_name,
+                'reason': self.reason,
+                'added_by': added_by,
+                'date_added': date_str,
+                'is_active': self.is_active
+            }
+        except Exception:
+            # Absolute fallback
+            return {
+                'id': getattr(self, 'id', None),
+                'student_id': getattr(self, 'student_id', None),
+                'error': 'Serialization error'
+            }
 
 
 # ============================================
@@ -273,7 +301,6 @@ class Student(db.Model):
             if dob:
                 # Handle string format if SQLite returned it as such
                 if isinstance(dob, str):
-                    from datetime import date
                     dob = date.fromisoformat(dob.split(' ')[0])
 
                 if hasattr(dob, 'year'):
@@ -302,7 +329,6 @@ class Student(db.Model):
             if dob:
                 # Normalization if it's a string
                 if isinstance(dob, str):
-                    from datetime import date
                     # SQLite sometimes stores "YYYY-MM-DD HH:MM:SS" even for Date columns
                     dob = date.fromisoformat(dob.split(' ')[0])
 
@@ -347,6 +373,15 @@ class Student(db.Model):
         except Exception:
             pass
 
+        # 5. New Status (Safe)
+        is_new = False
+        try:
+            if self.created_at:
+                month_ago = datetime.utcnow().replace(day=1)
+                is_new = self.created_at >= month_ago
+        except Exception:
+            pass
+
         return {
             'id': self.id,
             'name': self.name,
@@ -364,7 +399,9 @@ class Student(db.Model):
             'guardian_name': self.guardian_name,
             'guardian_phone': self.guardian_phone,
             'created_by': self.created_by,
-            'is_blacklisted': is_blacklisted
+            'is_blacklisted': is_blacklisted,
+            'is_new': is_new,
+            'created_at': self.created_at.isoformat() if self.created_at else None
         }
 
     def has_permission(self, user):

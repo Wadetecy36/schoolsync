@@ -11,8 +11,6 @@ from flask import (
     Blueprint, render_template, request, jsonify, send_file, 
     redirect, url_for, flash, current_app
 )
-from threading import Thread
-from sqlalchemy.orm import joinedload
 from extensions import db
 from models import Student, AcademicRecord, User, Blacklist, VALID_HALLS, VALID_PROGRAMS
 from datetime import datetime
@@ -73,60 +71,72 @@ def get_stats():
             }
         }
     """
-    total = Student.query.count()
-    current_year = datetime.now().year
+    try:
+        total = Student.query.count()
+        current_year = datetime.now().year
 
-    # Calculate new students this month
-    first_day_of_month = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    new_this_month = Student.query.filter(Student.created_at >= first_day_of_month).count()
+        # Calculate new students this month
+        first_day_of_month = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        new_this_month = Student.query.filter(Student.created_at >= first_day_of_month).count()
 
-    # Calculate form distribution
-    form_counts = {
-        'First Form': 0,
-        'Second Form': 0,
-        'Third Form': 0,
-        'Completed': 0
-    }
-    
-    # Optimized SQL aggregation for forms (by enrollment year)
-    form_rows = db.session.query(
-        Student.enrollment_year, 
-        func.count(Student.id)
-    ).group_by(Student.enrollment_year).all()
-    
-    for year, count in form_rows:
-        if year is None:
-            form_counts['First Form'] += count
-            continue
-        diff = current_year - year
-        if diff >= 3:
-            form_counts['Completed'] += count
-        elif diff == 2:
-            form_counts['Third Form'] += count
-        elif diff == 1:
-            form_counts['Second Form'] += count
-        else:
-            form_counts['First Form'] += count
-
-    # Calculate program distribution
-    program_rows = db.session.query(
-        Student.program,
-        func.count(Student.id)
-    ).group_by(Student.program).all()
-    by_program = { (row[0] or 'Unassigned'): row[1] for row in program_rows }
-    
-    return jsonify({
-        'success': True,
-        'stats': {
-            'total': total,
-            'total_students': total,
-            'new_this_month': new_this_month,
-            'newThisMonth': new_this_month,
-            'avgAge': 16, # Placeholder if not explicitly needed
-            'by_form': form_counts,
-            'by_program': by_program
+        # Calculate form distribution
+        form_counts = {
+            'First Form': 0,
+            'Second Form': 0,
+            'Third Form': 0,
+            'Completed': 0
         }
-    })
+
+        # Optimized SQL aggregation for forms (by enrollment year)
+        form_rows = db.session.query(
+            Student.enrollment_year,
+            func.count(Student.id)
+        ).group_by(Student.enrollment_year).all()
+
+        for year, count in form_rows:
+            if year is None:
+                form_counts['First Form'] += count
+                continue
+            try:
+                diff = current_year - int(year)
+                if diff >= 3:
+                    form_counts['Completed'] += count
+                elif diff == 2:
+                    form_counts['Third Form'] += count
+                elif diff == 1:
+                    form_counts['Second Form'] += count
+                else:
+                    form_counts['First Form'] += count
+            except (ValueError, TypeError):
+                form_counts['First Form'] += count
+
+        # Calculate program distribution
+        program_rows = db.session.query(
+            Student.program,
+            func.count(Student.id)
+        ).group_by(Student.program).all()
+        by_program = { (row[0] or 'Unassigned'): row[1] for row in program_rows }
+
+        return jsonify({
+            'success': True,
+            'stats': {
+                'total': total,
+                'total_students': total,
+                'new_this_month': new_this_month,
+                'newThisMonth': new_this_month,
+                'avgAge': 16, # Placeholder if not explicitly needed
+                'by_form': form_counts,
+                'by_program': by_program
+            }
+        })
+    except Exception as e:
+        import traceback
+        current_app.logger.error(f"Error in get_stats: {e}")
+        current_app.logger.error(traceback.format_exc())
+        return jsonify({
+            'success': False,
+            'error': f'Failed to fetch statistics: {str(e)}'
+        }), 500
 
 @main.route('/api/students/stats/dashboard', methods=['GET'])
 @login_required
@@ -437,42 +447,63 @@ def update_blacklist_reason(blacklist_id):
 @login_required
 def check_blacklist_status(student_id):
     """Check if a student is blacklisted"""
-    blacklist_entry = Blacklist.query.filter_by(student_id=student_id, is_active=True).first()
-    
-    return jsonify({
-        'is_blacklisted': blacklist_entry is not None,
-        'data': blacklist_entry.to_dict() if blacklist_entry else None
-    }), 200
+    try:
+        blacklist_entry = Blacklist.query.filter_by(student_id=student_id, is_active=True).first()
+
+        return jsonify({
+            'is_blacklisted': blacklist_entry is not None,
+            'data': blacklist_entry.to_dict() if blacklist_entry else None
+        }), 200
+    except Exception as e:
+        import traceback
+        current_app.logger.error(f"Error in check_blacklist_status: {e}")
+        current_app.logger.error(traceback.format_exc())
+        return jsonify({
+            'success': False,
+            'error': f'Check failed: {str(e)}'
+        }), 500
 
 @main.route('/api/students/search')
 @login_required
 def search_students():
     """Search students by name for autocomplete"""
-    query = request.args.get('q', '').strip()
-    
-    if len(query) < 2:
-        return jsonify([]), 200
-    
-    students = Student.query.filter(
-        Student.name.ilike(f'%{query}%')
-    ).limit(10).all()
-    
-    results = []
-    for student in students:
-        # Check if blacklisted
-        is_blacklisted = Blacklist.query.filter_by(
-            student_id=student.id, 
-            is_active=True
-        ).first() is not None
-        
-        results.append({
-            'id': student.id,
-            'name': student.name,
-            'program': student.program,
-            'is_blacklisted': is_blacklisted
-        })
-    
-    return jsonify(results), 200
+    try:
+        query = request.args.get('q', '').strip()
+
+        if len(query) < 2:
+            return jsonify([]), 200
+
+        students = Student.query.filter(
+            Student.name.ilike(f'%{query}%')
+        ).limit(10).all()
+
+        results = []
+        for student in students:
+            # Check if blacklisted
+            try:
+                is_blacklisted = Blacklist.query.filter_by(
+                    student_id=student.id,
+                    is_active=True
+                ).first() is not None
+            except Exception:
+                is_blacklisted = False
+
+            results.append({
+                'id': student.id,
+                'name': student.name,
+                'program': student.program,
+                'is_blacklisted': is_blacklisted
+            })
+
+        return jsonify(results), 200
+    except Exception as e:
+        import traceback
+        current_app.logger.error(f"Error in search_students: {e}")
+        current_app.logger.error(traceback.format_exc())
+        return jsonify({
+            'success': False,
+            'error': f'Search failed: {str(e)}'
+        }), 500
     
 # ============================================
 # STUDENT API ENDPOINTS
@@ -504,11 +535,16 @@ def get_students():
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 20, type=int)
         
+        # Cap per_page to prevent memory issues
+        if per_page > 2000:
+            per_page = 2000
+
         # Get and sanitize search query
-        search = sanitize_search_query(request.args.get('search', '').strip())
+        search_arg = request.args.get('search', '')
+        search = sanitize_search_query(search_arg.strip()) if search_arg else ""
         
-        # Start with base query - use joinedload to prevent N+1 queries for blacklist status
-        query = Student.query.options(joinedload(Student.blacklist_entry))
+        # Start with base query
+        query = Student.query
         
         # Apply search filter (if provided)
         if search:
@@ -534,6 +570,7 @@ def get_students():
             query = query.filter(Student.hall == hall)
         
         # Order by enrollment year (descending) then name (ascending)
+        # Use nulls_last for better ordering if some years are missing
         query = query.order_by(
             Student.enrollment_year.desc(), 
             Student.name.asc()
@@ -542,18 +579,36 @@ def get_students():
         # Paginate results
         pagination = query.paginate(page=page, per_page=per_page, error_out=False)
         
+        if not pagination:
+            return jsonify({
+                'success': True,
+                'students': [],
+                'total': 0,
+                'pages': 0
+            })
+
+        # Safe serialization
+        students_list = []
+        for s in pagination.items:
+            try:
+                students_list.append(s.to_dict())
+            except Exception as e:
+                current_app.logger.warning(f"Failed to serialize student {getattr(s, 'id', 'unknown')}: {e}")
+
         return jsonify({
             'success': True,
-            'students': [s.to_dict() for s in pagination.items],
-            'total': pagination.total,
-            'pages': pagination.pages
+            'students': students_list,
+            'total': getattr(pagination, 'total', 0),
+            'pages': getattr(pagination, 'pages', 0)
         })
         
     except Exception as e:
+        import traceback
         current_app.logger.error(f"Error fetching students: {e}")
+        current_app.logger.error(traceback.format_exc())
         return jsonify({
             'success': False,
-            'error': 'An error occurred while fetching students'
+            'error': f'An error occurred while fetching students: {str(e)}'
         }), 500
 
 
