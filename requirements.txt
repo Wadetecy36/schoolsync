@@ -127,6 +127,6 @@ tzdata>=2023.3
 # ========================================
 # Computer Vision & AI
 # ========================================
-numpy>=2.4.0
-opencv-python>=4.13.0
+numpy
+opencv-python
 
