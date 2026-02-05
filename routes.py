@@ -12,6 +12,7 @@ from flask import (
     redirect, url_for, flash, current_app
 )
 from threading import Thread
+from sqlalchemy.orm import joinedload
 from extensions import db
 from models import Student, AcademicRecord, User, Blacklist, VALID_HALLS, VALID_PROGRAMS
 from datetime import datetime
@@ -74,6 +75,12 @@ def get_stats():
     """
     total = Student.query.count()
     current_year = datetime.now().year
+
+    # Calculate new students this month
+    first_day_of_month = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    new_this_month = Student.query.filter(Student.created_at >= first_day_of_month).count()
+
+    # Calculate form distribution
     form_counts = {
         'First Form': 0,
         'Second Form': 0,
@@ -81,13 +88,16 @@ def get_stats():
         'Completed': 0
     }
     
-    # Optimized SQL aggregation (group by enrollment year)
-    rows = db.session.query(
+    # Optimized SQL aggregation for forms (by enrollment year)
+    form_rows = db.session.query(
         Student.enrollment_year, 
         func.count(Student.id)
     ).group_by(Student.enrollment_year).all()
     
-    for year, count in rows:
+    for year, count in form_rows:
+        if year is None:
+            form_counts['First Form'] += count
+            continue
         diff = current_year - year
         if diff >= 3:
             form_counts['Completed'] += count
@@ -97,16 +107,24 @@ def get_stats():
             form_counts['Second Form'] += count
         else:
             form_counts['First Form'] += count
+
+    # Calculate program distribution
+    program_rows = db.session.query(
+        Student.program,
+        func.count(Student.id)
+    ).group_by(Student.program).all()
+    by_program = { (row[0] or 'Unassigned'): row[1] for row in program_rows }
     
     return jsonify({
         'success': True,
         'stats': {
             'total': total,
             'total_students': total,
-            'new_this_month': 0,
-            'newThisMonth': 0,
-            'avgAge': 16,
-            'by_form': form_counts
+            'new_this_month': new_this_month,
+            'newThisMonth': new_this_month,
+            'avgAge': 16, # Placeholder if not explicitly needed
+            'by_form': form_counts,
+            'by_program': by_program
         }
     })
 
@@ -239,12 +257,6 @@ def settings():
     
     return render_template('settings.html', qr_code=qr_code, new_secret=secret)
 
-from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
-from flask_login import login_required, current_user
-from models import Student, Blacklist, db
-from datetime import datetime
-
-# Add these routes to your existing routes.py or create a new blueprint
 
 @main.route('/blacklist')
 @login_required
@@ -495,8 +507,8 @@ def get_students():
         # Get and sanitize search query
         search = sanitize_search_query(request.args.get('search', '').strip())
         
-        # Start with base query
-        query = Student.query
+        # Start with base query - use joinedload to prevent N+1 queries for blacklist status
+        query = Student.query.options(joinedload(Student.blacklist_entry))
         
         # Apply search filter (if provided)
         if search:

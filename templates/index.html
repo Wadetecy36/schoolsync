@@ -199,17 +199,20 @@
                 // Update form distribution
                 const formContainer = document.getElementById('form-distribution');
                 if (stats && stats.by_form && Object.keys(stats.by_form).length > 0) {
-                    formContainer.innerHTML = Object.entries(stats.by_form).map(([form, count]) => `
+                    const total = stats.total_students || 0;
+                    formContainer.innerHTML = Object.entries(stats.by_form).map(([form, count]) => {
+                        const percentage = total > 0 ? (count / total) * 100 : 0;
+                        return `
                         <div class="space-y-2">
                             <div class="flex justify-between text-sm">
                                 <span class="font-medium text-theme-muted">${form}</span>
                                 <span class="font-bold text-theme-main">${count}</span>
                             </div>
                             <div class="h-2 bg-black/30 rounded-full overflow-hidden">
-                                <div class="h-full ${getFormColor(form)} rounded-full" style="width: ${(count / stats.total_students) * 100}%"></div>
+                                <div class="h-full ${getFormColor(form)} rounded-full" style="width: ${percentage}%"></div>
                             </div>
                         </div>
-                    `).join('');
+                    `}).join('');
                     document.getElementById('distribution-empty').classList.add('hidden');
                 } else {
                     document.getElementById('distribution-empty').classList.remove('hidden');
