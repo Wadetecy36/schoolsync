@@ -216,6 +216,7 @@ class Student(db.Model):
     
     # Photo (Base64 encoded)
     photo_file = db.Column(db.Text)
+    face_encoding = db.Column(db.Text)  # JSON encoded list of 128-dimensional face encoding vectors
     
     # Metadata
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

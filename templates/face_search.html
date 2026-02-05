@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block title %}Face Search - SchoolSync Pro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .camera-container {
+        position: relative;
+        width: 100%;
+        max-width: 640px;
+        margin: 0 auto;
+        border-radius: 2rem;
+        overflow: hidden;
+        border: 4px solid var(--glass-border);
+        box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);
+    }
+    #video {
+        width: 100%;
+        height: auto;
+        display: block;
+        transform: scaleX(-1); /* Mirror effect */
+    }
+    .scanner-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: 2px solid var(--gold-accent);
+        background: linear-gradient(rgba(251, 191, 36, 0.1) 0%, transparent 10%, transparent 90%, rgba(251, 191, 36, 0.1) 100%);
+        box-sizing: border-box;
+        pointer-events: none;
+        display: none;
+    }
+    .scanner-line {
+        position: absolute;
+        width: 100%;
+        height: 2px;
+        background: var(--gold-accent);
+        top: 0;
+        box-shadow: 0 0 15px var(--gold-accent);
+        animation: scan 2s linear infinite;
+        display: none;
+    }
+    @keyframes scan {
+        0% { top: 0% }
+        100% { top: 100% }
+    }
+    .match-glow {
+        animation: success-glow 1s ease-out;
+    }
+    @keyframes success-glow {
+        0% { box-shadow: 0 0 0px var(--gold-accent) }
+        50% { box-shadow: 0 0 50px var(--gold-accent) }
+        100% { box-shadow: 0 0 0px var(--gold-accent) }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8">
+    <div class="text-center">
+        <h1 class="text-4xl font-bold text-theme-main h-glow">Face Recognition Search</h1>
+        <p class="text-theme-muted mt-2">Identify students instantly using the secure IRS engine</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        <!-- Camera Section -->
+        <div class="glass-card p-6">
+            <div class="camera-container mb-6">
+                <video id="video" autoplay playsinline muted></video>
+                <div id="scanner-overlay" class="scanner-overlay">
+                    <div class="scanner-line"></div>
+                </div>
+                <div id="no-camera" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/90 text-center p-6">
+                    <i class="material-icons-round text-6xl text-theme-muted mb-4">videocam_off</i>
+                    <p class="text-theme-main font-bold">Camera Inactive</p>
+                    <p class="text-theme-muted text-sm mt-2">Click below to start identifying</p>
+                </div>
+            </div>
+
+            <div class="flex flex-col space-y-3">
+                <button id="start-camera" class="btn-gold w-full flex items-center justify-center">
+                    <i class="material-icons-round mr-2">videocam</i> Start Identification
+                </button>
+                <button id="capture-image" class="hidden btn-gold w-full flex items-center justify-center bg-blue-600 shadow-blue-500/20">
+                    <i class="material-icons-round mr-2">face</i> Search Face
+                </button>
+                <button id="stop-camera" class="hidden text-theme-muted hover:text-red-400 text-sm font-medium transition">
+                    Stop Camera
+                </button>
+            </div>
+            
+            <input type="file" id="file-input" accept="image/*" class="hidden">
+            <button onclick="document.getElementById('file-input').click()" class="mt-4 w-full py-3 rounded-xl border-2 border-dashed border-white/10 text-theme-muted hover:text-theme-main hover:border-blue-500/40 transition-all flex items-center justify-center hover:bg-white/5">
+                <i class="material-icons-round mr-2">upload_file</i> Or Upload Photo
+            </button>
+        </div>
+
+        <!-- Result Section -->
+        <div class="glass-card p-8 min-h-[400px]">
+            <h2 class="text-xl font-bold text-theme-main mb-6 flex items-center">
+                <i class="material-icons-round mr-3 text-gold">identity_platform</i> Search Results
+            </h2>
+
+            <div id="result-placeholder" class="flex flex-col items-center justify-center h-[300px] text-center text-theme-muted">
+                <i class="material-icons-round text-5xl mb-4 opacity-20">search</i>
+                <p>Waiting for face input...</p>
+                <p class="text-xs mt-2">Point the camera at a student's face or upload an image</p>
+            </div>
+
+            <div id="result-match" class="hidden space-y-6">
+                <div class="flex justify-center mb-6">
+                    <div id="result-photo" class="w-40 h-40 rounded-full border-4 border-gold bg-slate-800 overflow-hidden shadow-xl">
+                        <img src="" alt="Student Profile" class="w-full h-full object-cover">
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <h3 id="result-name" class="text-2xl font-bold text-theme-main">Student Name</h3>
+                    <p id="result-id-tag" class="text-gold font-bold text-sm">ID: #0000</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="p-4 bg-white/5 rounded-2xl border border-white/5">
+                        <p class="text-theme-muted text-xs mb-1 uppercase tracking-wider">Program</p>
+                        <p id="result-program" class="text-theme-main font-bold text-sm">General Science</p>
+                    </div>
+                    <div class="p-4 bg-white/5 rounded-2xl border border-white/5">
+                        <p class="text-theme-muted text-xs mb-1 uppercase tracking-wider">Form/Grade</p>
+                        <p id="result-form" class="text-theme-main font-bold text-sm">3rd Form</p>
+                    </div>
+                    <div class="p-4 bg-white/5 rounded-2xl border border-white/5">
+                        <p class="text-theme-muted text-xs mb-1 uppercase tracking-wider">Hall</p>
+                        <p id="result-hall" class="text-theme-main font-bold text-sm">Wilson Hall</p>
+                    </div>
+                    <div id="result-blacklist" class="p-4 bg-red-500/10 rounded-2xl border border-red-500/20 hidden">
+                        <p class="text-red-400 text-xs mb-1 uppercase tracking-wider">Status</p>
+                        <p class="text-red-500 font-bold text-sm">Blacklisted</p>
+                    </div>
+                    <div id="result-active" class="p-4 bg-green-500/10 rounded-2xl border border-green-500/20">
+                        <p class="text-green-400 text-xs mb-1 uppercase tracking-wider">Status</p>
+                        <p class="text-green-500 font-bold text-sm">Permitted</p>
+                    </div>
+                </div>
+
+                <a id="view-profile-link" href="#" class="btn-gold w-full flex items-center justify-center mt-4 bg-white/10 hover:bg-white/20 text-theme-main border border-white/10 shadow-none">
+                    View Full Profile
+                </a>
+            </div>
+
+            <div id="result-none" class="hidden flex flex-col items-center justify-center h-[300px] text-center text-red-400">
+                <i class="material-icons-round text-5xl mb-4 opacity-50">person_off</i>
+                <p class="font-bold">No Match Found</p>
+                <p class="text-xs mt-2 text-theme-muted">The face was not recognized in the database</p>
+                <button onclick="resetSearch()" class="mt-4 text-theme-muted hover:text-white underline text-sm">Try Again</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<canvas id="canvas" class="hidden" width="640" height="480"></canvas>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const captureBtn = document.getElementById('capture-image');
+    const startBtn = document.getElementById('start-camera');
+    const stopBtn = document.getElementById('stop-camera');
+    const noCameraOverlay = document.getElementById('no-camera');
+    const scannerOverlay = document.getElementById('scanner-overlay');
+    const fileInput = document.getElementById('file-input');
+
+    let stream = null;
+
+    async function startCamera() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "user" } 
+            });
+            video.srcObject = stream;
+            noCameraOverlay.classList.add('hidden');
+            startBtn.classList.add('hidden');
+            captureBtn.classList.remove('hidden');
+            stopBtn.classList.remove('hidden');
+            scannerOverlay.style.display = 'block';
+        } catch (err) {
+            console.error("Camera error:", err);
+            showToast("Could not access camera", "error");
+        }
+    }
+
+    function stopCamera() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            video.srcObject = null;
+            stream = null;
+        }
+        noCameraOverlay.classList.remove('hidden');
+        startBtn.classList.remove('hidden');
+        captureBtn.classList.add('hidden');
+        stopBtn.classList.add('hidden');
+        scannerOverlay.style.display = 'none';
+    }
+
+    async function searchFace(imageData) {
+        try {
+            loading.show();
+            const data = await apiRequest('/api/face-search', {
+                method: 'POST',
+                body: JSON.stringify({ image: imageData })
+            });
+
+            if (data.success && data.match) {
+                showMatch(data.student);
+            } else {
+                showNoMatch();
+            }
+        } catch (err) {
+            console.error("Search error:", err);
+            showNoMatch();
+        } finally {
+            loading.hide();
+        }
+    }
+
+    function capture() {
+        const context = canvas.getContext('2d');
+        // Handle mirror effect
+        context.translate(640, 0);
+        context.scale(-1, 1);
+        context.drawImage(video, 0, 0, 640, 480);
+        context.setTransform(1, 0, 0, 1, 0, 0); // reset
+        
+        const imageData = canvas.toDataURL('image/jpeg', 0.8);
+        searchFace(imageData);
+    }
+
+    function showMatch(student) {
+        document.getElementById('result-placeholder').classList.add('hidden');
+        document.getElementById('result-none').classList.add('hidden');
+        const matchSection = document.getElementById('result-match');
+        matchSection.classList.remove('hidden');
+        
+        document.querySelector('.camera-container').classList.add('match-glow');
+        setTimeout(() => document.querySelector('.camera-container').classList.remove('match-glow'), 1000);
+
+        document.getElementById('result-name').textContent = student.name;
+        document.getElementById('result-id-tag').textContent = `ID: #${student.id.toString().padStart(4, '0')}`;
+        document.getElementById('result-program').textContent = student.program || 'N/A';
+        document.getElementById('result-form').textContent = student.current_form;
+        document.getElementById('result-hall').textContent = student.hall || 'N/A';
+        
+        const photoImg = document.querySelector('#result-photo img');
+        photoImg.src = student.photo_url || '/static/images/default-avatar.png';
+
+        const blacklistStatus = document.getElementById('result-blacklist');
+        const activeStatus = document.getElementById('result-active');
+        
+        if (student.is_blacklisted) {
+            blacklistStatus.classList.remove('hidden');
+            activeStatus.classList.add('hidden');
+            showToast(`${student.name} is on the Blacklist!`, 'error');
+        } else {
+            blacklistStatus.classList.add('hidden');
+            activeStatus.classList.remove('hidden');
+            showToast(`Welcome back, ${student.name}!`, 'success');
+        }
+
+        document.getElementById('view-profile-link').href = `/students?id=${student.id}`;
+    }
+
+    function showNoMatch() {
+        document.getElementById('result-placeholder').classList.add('hidden');
+        document.getElementById('result-match').classList.add('hidden');
+        document.getElementById('result-none').classList.remove('hidden');
+        showToast("No matching student found", "error");
+    }
+
+    function resetSearch() {
+        document.getElementById('result-placeholder').classList.remove('hidden');
+        document.getElementById('result-match').classList.add('hidden');
+        document.getElementById('result-none').classList.add('hidden');
+    }
+
+    startBtn.addEventListener('click', startCamera);
+    stopBtn.addEventListener('click', stopCamera);
+    captureBtn.addEventListener('click', capture);
+
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                searchFace(event.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Cleanup on page leave
+    window.addEventListener('beforeunload', stopCamera);
+</script>
+{% endblock %}

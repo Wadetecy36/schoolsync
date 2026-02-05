@@ -28,6 +28,8 @@ import re
 from utils import generate_qr_code, get_totp_uri
 from PIL import Image
 import base64
+import json
+from face_handler import FaceHandler
 
 # Import validators
 from validators import (
@@ -640,6 +642,16 @@ def create_student():
             if not is_valid:
                 return jsonify({'error': error}), 400
         
+        # Generate face encoding if photo is provided
+        face_encoding = None
+        if photo_url:
+            try:
+                encoding = FaceHandler.get_encoding(photo_url)
+                if encoding:
+                    face_encoding = json.dumps(encoding)
+            except Exception as e:
+                current_app.logger.warning(f"Could not generate face encoding: {e}")
+
         # Create new student record
         new_student = Student(
             name=name,
@@ -654,6 +666,7 @@ def create_student():
             date_of_birth=dob,
             enrollment_year=int(data.get('enrollment_year', datetime.now().year)),
             photo_file=photo_url,
+            face_encoding=face_encoding,
             created_by=getattr(current_user, 'id', 1) # Fallback for internal secret auth
         )
         
@@ -715,6 +728,12 @@ def update_student(id):
                 try:
                     photo_url = process_image(file)
                     student.photo_file = photo_url
+                    # Update face encoding
+                    encoding = FaceHandler.get_encoding(photo_url)
+                    if encoding:
+                        student.face_encoding = json.dumps(encoding)
+                    else:
+                        student.face_encoding = None
                 except Exception as e:
                     return jsonify({'error': str(e)}), 400
         
@@ -1423,3 +1442,110 @@ def download_template(file_type):
         as_attachment=True,
         download_name=download_name
     )
+
+# ============================================
+# FACE RECOGNITION ROUTES
+# ============================================
+
+@main.route('/face-search')
+@login_required
+def face_search_page():
+    """Display face search/recognition page."""
+    return render_template('face_search.html')
+
+
+@main.route('/api/face-search', methods=['POST'])
+@login_required
+def api_face_search():
+    """
+    Search for a student using face recognition.
+    
+    Request JSON:
+        image: base64 encoded image string (data:image/jpeg;base64,...)
+        
+    Returns:
+        JSON: {success: bool, match: bool, student: dict}
+    """
+    try:
+        data = request.get_json()
+        image_data = data.get('image')
+        
+        if not image_data:
+            return jsonify({'success': False, 'error': 'No image data provided'}), 400
+            
+        # 1. Get encoding for the target image
+        target_encoding = FaceHandler.get_encoding(image_data)
+        
+        if target_encoding is None:
+            return jsonify({
+                'success': True, 
+                'match': False, 
+                'message': 'No face detected in the image'
+            })
+            
+        # 2. Get all students with face encodings
+        students_with_faces = Student.query.filter(Student.face_encoding.isnot(None)).all()
+        
+        if not students_with_faces:
+            return jsonify({
+                'success': True, 
+                'match': False, 
+                'message': 'No students in database have face records'
+            })
+            
+        # 3. Prepare known encodings
+        known_encodings = []
+        for s in students_with_faces:
+            try:
+                enc = json.loads(s.face_encoding)
+                known_encodings.append({'id': s.id, 'encoding': enc})
+            except:
+                continue
+                
+        # 4. Find best match
+        match_result = FaceHandler.find_match(known_encodings, target_encoding)
+        
+        if match_result:
+            student = Student.query.get(match_result['id'])
+            return jsonify({
+                'success': True,
+                'match': True,
+                'student': student.to_dict(),
+                'confidence': 1 - match_result['distance']
+            })
+            
+        return jsonify({
+            'success': True,
+            'match': False,
+            'message': 'No matching student found'
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Face search error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@main.route('/api/students/<int:id>/update-face', methods=['POST'])
+@login_required
+def update_student_face(id):
+    """
+    Manually trigger face encoding update for a student.
+    Uses the student's existing photo_file.
+    """
+    try:
+        student = Student.query.get_or_404(id)
+        
+        if not student.photo_file:
+            return jsonify({'success': False, 'error': 'Student has no photo'}), 400
+            
+        encoding = FaceHandler.get_encoding(student.photo_file)
+        
+        if encoding:
+            student.face_encoding = json.dumps(encoding)
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Face encoding updated'})
+        else:
+            return jsonify({'success': False, 'error': 'No face detected in profile photo'}), 400
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500

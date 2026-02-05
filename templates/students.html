@@ -141,6 +141,7 @@
                     <option value="move-hall">Move Hall</option>
                     <option value="update-program">Update Program</option>
                     <option value="email">Send Email</option>
+                    <option value="sync-face">Sync Face ID</option>
                     <option value="blacklist">Blacklist Selected</option>
                     <option value="delete">Delete Permanently</option>
                 </select>
@@ -840,6 +841,7 @@
                      <div class="border-t border-white/10 pt-3 flex justify-between items-center opacity-80 hover:opacity-100 transition">
                          <span class="text-xs text-theme-muted uppercase font-mono">${safe(s.hall)}</span>
                          <div class="flex gap-2">
+                             <button onclick="resyncFace(${s.id})" class="p-1 rounded hover:bg-white/10 text-cyan-400 transition" title="Sync Face ID"><i class="material-icons-round text-lg">face</i></button>
                              <button onclick="openMoveFormModal(${s.id})" class="p-1 rounded hover:bg-white/10 text-blue-400 transition" title="Move Form"><i class="material-icons-round text-lg">school</i></button>
                              <button onclick="window.editStudent('${s.id}')" class="p-1 rounded hover:bg-white/10 text-yellow-400 transition" title="Edit"><i class="material-icons-round text-lg">edit</i></button>
                              <button onclick="openDeleteModal(${s.id}, '${safe(s.name)}')" class="p-1 rounded hover:bg-white/10 text-red-400 transition" title="Delete"><i class="material-icons-round text-lg">delete</i></button>
@@ -878,6 +880,7 @@
                     <td class="px-6 py-4 text-white font-mono text-xs">${safe(s.class_room)}</td>
                     <td class="px-6 py-4 text-theme-muted text-sm">${safe(s.hall)}</td>
                     <td class="px-6 py-4">
+                        <button onclick="resyncFace(${s.id})" class="text-cyan-400 mr-3 hover:scale-110 transition" title="Sync Face ID"><i class="material-icons-round">face</i></button>
                         <button onclick="openMoveFormModal(${s.id})" class="text-blue-400 mr-3 hover:scale-110 transition" title="Move Form"><i class="material-icons-round">school</i></button>
                         <button onclick="window.editStudent('${s.id}')" class="text-gold mr-3 hover:scale-110 transition"><i class="material-icons-round">edit</i></button>
                         <button onclick="openDeleteModal(${s.id}, '${safe(s.name)}')" class="text-red-400 hover:scale-110 transition"><i class="material-icons-round">delete</i></button>
@@ -1209,6 +1212,11 @@
             case 'email':
                 window.toggleModal('bulk-email-modal', true);
                 break;
+            case 'sync-face':
+                if (confirm(`Attempt to sync Face ID encodings for ${ids.length} students?`)) {
+                    await performBulkFaceSync(ids);
+                }
+                break;
             case 'blacklist':
                 document.getElementById('bulk-blacklist-count').innerText = ids.length;
                 window.toggleModal('bulk-blacklist-modal', true);
@@ -1347,6 +1355,40 @@
             updateBulkActionsUI();
             renderStudents();
         });
+    }
+
+    // FACE RECOGNITION TOOLS
+    window.resyncFace = async function (id) {
+        showToast('Processing face encoding...', 'info');
+        try {
+            const res = await apiRequest(`/api/students/${id}/update-face`, {
+                method: 'POST'
+            });
+            showToast(res.message, 'success');
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    async function performBulkFaceSync(ids) {
+        showToast(`Syncing ${ids.length} faces...`, 'info');
+        let successCount = 0;
+        let failCount = 0;
+
+        for (const id of ids) {
+            try {
+                const res = await apiRequest(`/api/students/${id}/update-face`, {
+                    method: 'POST'
+                });
+                if (res.success) successCount++;
+                else failCount++;
+            } catch (e) {
+                failCount++;
+            }
+        }
+
+        showToast(`Sync complete. Success: ${successCount}, Failed: ${failCount}`, successCount > 0 ? 'success' : 'error');
+        clearSelections();
     }
 
 </script>
