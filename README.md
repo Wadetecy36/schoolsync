@@ -29,6 +29,11 @@ A modern, secure, and feature-rich **Student Management System** built with Flas
 *   **Advanced Filters:** Filter by Program, Hall, Gender, Enrollment Year, and more.
 *   **Live Analytics:** Real-time stats on enrollment, active students, and demographics.
 
+### 🤖 AI & Computer Vision
+*   **Face Recognition Search (IRS):** Identify students instantly using the built-in Identify & Recognition System.
+*   **Lightweight Engine:** Powered by OpenCV YuNet & SFace models for near-instant detection and matching.
+*   **Automatic Sync:** Face encodings are automatically generated from student profile photos.
+
 ### 🎨 UI / UX
 *   **Glassmorphism Theme:** Premium Dark Blue & Gold aesthetic with glass effects.
 *   **Theme Switcher:** Toggle between Dark Mode and Light Mode.
@@ -41,6 +46,7 @@ A modern, secure, and feature-rich **Student Management System** built with Flas
 *   **Backend:** Python, Flask, Gunicorn
 *   **Database:** PostgreSQL (Production via Neon.tech) / SQLite (Local Dev)
 *   **ORM:** SQLAlchemy
+*   **AI/CV:** OpenCV, YuNet (Face Detection), SFace (Face Recognition)
 *   **Frontend:** HTML5, Tailwind CSS, JavaScript, Material Icons
 *   **Deployment:** Render.com
 
@@ -143,10 +149,11 @@ schoolsync/
 ├── config.py           # Configuration (Dev/Prod/DB)
 ├── models.py           # SQLAlchemy Database Models
 ├── routes.py           # Core application routes
+├── face_handler.py     # AI Face Recognition processing engine
 ├── utils.py            # Helper functions (OTP generation)
 ├── requirements.txt    # Python dependencies
 ├── .env                # Environment variables (Ignored by Git)
-├── static/             # CSS, Images, Favicon, Uploads
+├── static/             # CSS, Models (AI), Images, Uploads
 └── templates/          # HTML Templates (Base, Login, Dashboard)
 ```
 
