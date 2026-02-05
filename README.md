@@ -1,9 +1,3 @@
-﻿Here is a professional **README.md** file tailored specifically for **SchoolSync Pro**.
-
-It includes setup instructions, the tech stack, environment variable configuration, and deployment steps for Render.
-
-***
-
 # 🎓 SchoolSync Pro
 
 ![Flask](https://img.shields.io/badge/Flask-2.3-black?style=flat&logo=flask)
