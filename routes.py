@@ -11,6 +11,7 @@ from flask import (
     Blueprint, render_template, request, jsonify, send_file, 
     redirect, url_for, flash, current_app
 )
+from threading import Thread
 from extensions import db
 from models import Student, AcademicRecord, User, Blacklist, VALID_HALLS, VALID_PROGRAMS
 from datetime import datetime
@@ -101,8 +102,11 @@ def get_stats():
         'success': True,
         'stats': {
             'total': total,
-            'newThisMonth': 0, # Simplified
-            'avgAge': 16 # Placeholder
+            'total_students': total,
+            'new_this_month': 0,
+            'newThisMonth': 0,
+            'avgAge': 16,
+            'by_form': form_counts
         }
     })
 
