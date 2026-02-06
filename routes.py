@@ -798,6 +798,13 @@ def update_student(id):
                 value = data[field].strip() if data[field] else None
                 setattr(student, field, value)
         
+        # Update enrollment year (requires integer conversion)
+        if 'enrollment_year' in data and data['enrollment_year']:
+            try:
+                student.enrollment_year = int(data['enrollment_year'])
+            except (ValueError, TypeError):
+                return jsonify({'error': 'Invalid enrollment year format'}), 400
+
         # Validate and update email
         if 'email' in data:
             email = data['email'].strip()
