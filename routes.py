@@ -516,21 +516,6 @@ def search_students():
 def get_students():
     """
     Get paginated list of students with search and filters.
-    
-    Query Parameters:
-        page (int): Page number (default: 1)
-        per_page (int): Items per page (default: 20)
-        search (str): Search query (name, email, phone, classroom, hall, ID)
-        program (str): Filter by program
-        hall (str): Filter by hall
-        
-    Returns:
-        JSON: {
-            success: bool,
-            students: list,
-            total: int,
-            pages: int
-        }
     """
     try:
         # Get pagination parameters
@@ -546,14 +531,7 @@ def get_students():
         search = sanitize_search_query(search_arg.strip()) if search_arg else ""
         
         # Start with base query
-        try:
-            query = Student.query
-        except Exception as e:
-            current_app.logger.error(f"Database query failed: {e}")
-            return jsonify({
-                'success': False,
-                'error': 'Database connection error'
-            }), 500
+        query = Student.query
         
         # Apply search filter (if provided)
         if search:
@@ -579,21 +557,13 @@ def get_students():
             query = query.filter(Student.hall == hall)
         
         # Order by enrollment year (descending) then name (ascending)
-        # Use nulls_last for better ordering if some years are missing
         query = query.order_by(
             Student.enrollment_year.desc(), 
             Student.name.asc()
         )
         
         # Paginate results
-        try:
-            pagination = query.paginate(page=page, per_page=per_page, error_out=False)
-        except Exception as e:
-            current_app.logger.error(f"Pagination failed: {e}")
-            return jsonify({
-                'success': False,
-                'error': 'Failed to paginate results'
-            }), 500
+        pagination = query.paginate(page=page, per_page=per_page, error_out=False)
 
         if not pagination:
             return jsonify({
@@ -603,13 +573,8 @@ def get_students():
                 'pages': 0
             })
 
-        # Safe serialization
-        students_list = []
-        for s in pagination.items:
-            try:
-                students_list.append(s.to_dict())
-            except Exception as e:
-                current_app.logger.warning(f"Failed to serialize student {getattr(s, 'id', 'unknown')}: {e}")
+        # Safe serialization (Models have their own try-except in to_dict)
+        students_list = [s.to_dict() for s in pagination.items]
 
         return jsonify({
             'success': True,
@@ -620,11 +585,11 @@ def get_students():
         
     except Exception as e:
         import traceback
-        current_app.logger.error(f"Error fetching students: {e}")
+        current_app.logger.error(f"Critical error in get_students: {e}")
         current_app.logger.error(traceback.format_exc())
         return jsonify({
             'success': False,
-            'error': f'An error occurred while fetching students: {str(e)}'
+            'error': f'Failed to load student list: {str(e)}'
         }), 500
 
 
@@ -633,21 +598,19 @@ def get_students():
 def get_single_student(id):
     """
     Get single student by ID.
-    
-    Required for View/Edit modals in frontend.
-    
-    Args:
-        id (int): Student ID
-        
-    Returns:
-        JSON: {success: bool, student: dict}
     """
     try:
-        student = Student.query.get_or_404(id)
+        student = Student.query.get(id)
+
+        if not student:
+            return jsonify({
+                'success': False,
+                'error': f'Student with ID {id} not found'
+            }), 404
         
         # Check permissions
         if not student.has_permission(current_user):
-            return jsonify({'error': 'Unauthorized'}), 403
+            return jsonify({'success': False, 'error': 'Unauthorized'}), 403
         
         return jsonify({
             'success': True,
@@ -658,8 +621,8 @@ def get_single_student(id):
         current_app.logger.error(f"Error fetching student {id}: {e}")
         return jsonify({
             'success': False,
-            'error': 'Student not found'
-        }), 404
+            'error': f'Server error: {str(e)}'
+        }), 500
 
 
 @main.route('/api/students', methods=['POST'])

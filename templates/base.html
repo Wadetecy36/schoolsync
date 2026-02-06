@@ -509,6 +509,14 @@
                     headers: { ...defaultHeaders, ...options.headers }
                 });
 
+                // Handle session expiry / redirects
+                if (response.redirected && response.url.includes('/login')) {
+                    loading.hide();
+                    showToast("Session expired. Redirecting to login...", "error");
+                    setTimeout(() => window.location.href = '/login', 2000);
+                    throw new Error("Session expired");
+                }
+
                 let data;
                 const contentType = response.headers.get("content-type");
                 if (contentType && contentType.includes("application/json")) {
@@ -520,7 +528,12 @@
                 } else {
                     try {
                         const text = await response.text();
-                        data = { error: text || `HTTP Error ${response.status}` };
+                        // If it's HTML but we expected JSON, it's likely a server error page
+                        if (text.includes('<!DOCTYPE html>') || text.includes('<html')) {
+                            data = { error: `Server Error (${response.status})` };
+                        } else {
+                            data = { error: text || `HTTP Error ${response.status}` };
+                        }
                     } catch (e) {
                         data = { error: `HTTP Error ${response.status}` };
                     }
@@ -534,7 +547,6 @@
                         errorMsg = data;
                     }
 
-                    // Handle case where errorMsg might still be an object
                     if (typeof errorMsg === 'object') {
                         errorMsg = JSON.stringify(errorMsg);
                     }
@@ -547,10 +559,11 @@
                 loading.hide();
                 console.error("API Request Error:", error);
 
-                let displayMsg = error.message || "Connection failed";
-                if (typeof displayMsg === 'object') displayMsg = JSON.stringify(displayMsg);
-
-                showToast(displayMsg, 'error');
+                if (error.message !== "Session expired") {
+                    let displayMsg = error.message || "Connection failed";
+                    if (typeof displayMsg === 'object') displayMsg = JSON.stringify(displayMsg);
+                    showToast(displayMsg, 'error');
+                }
                 throw error;
             }
         };

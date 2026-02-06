@@ -261,6 +261,10 @@
             }
         } catch (error) {
             console.error('Error loading dashboard:', error);
+            const distEmpty = document.getElementById('distribution-empty');
+            if (distEmpty) distEmpty.classList.remove('hidden');
+            const recentEmpty = document.getElementById('recent-empty');
+            if (recentEmpty) recentEmpty.classList.remove('hidden');
         }
     }
 

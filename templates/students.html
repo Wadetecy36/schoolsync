@@ -711,7 +711,14 @@
     // --- 5. DATA LOADING ---
     async function loadStudents() {
         const loader = document.getElementById('loading-state');
+        const grid = document.getElementById('students-grid-view');
+        const table = document.getElementById('students-table-view');
+        const empty = document.getElementById('empty-state');
+
         if (loader) loader.classList.remove('hidden');
+        if (grid) grid.classList.add('hidden');
+        if (table) table.classList.add('hidden');
+        if (empty) empty.classList.add('hidden');
 
         try {
             // Timestamp prevents caching
@@ -720,7 +727,6 @@
                 window.allStudents = res.students || [];
             } else {
                 window.allStudents = [];
-                showToast(res ? res.error : "Failed to load students", "error");
             }
             updateStats();
             applyFilters();
