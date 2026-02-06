@@ -128,5 +128,5 @@ tzdata>=2023.3
 # Computer Vision & AI
 # ========================================
 numpy
-opencv-python
+opencv-python-headless
 
