@@ -716,11 +716,19 @@
         try {
             // Timestamp prevents caching
             const res = await apiRequest(`/api/students?per_page=2000&_t=${Date.now()}`);
-            window.allStudents = res.students || [];
+            if (res && res.success) {
+                window.allStudents = res.students || [];
+            } else {
+                window.allStudents = [];
+                showToast(res ? res.error : "Failed to load students", "error");
+            }
             updateStats();
             applyFilters();
         } catch (e) {
-            console.error(e);
+            console.error("Load students failed:", e);
+            window.allStudents = [];
+            updateStats();
+            applyFilters();
         } finally {
             if (loader) loader.classList.add('hidden');
         }

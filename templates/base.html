@@ -512,14 +512,33 @@
                 let data;
                 const contentType = response.headers.get("content-type");
                 if (contentType && contentType.includes("application/json")) {
-                    data = await response.json();
+                    try {
+                        data = await response.json();
+                    } catch (e) {
+                        data = { error: 'Malformed JSON response' };
+                    }
                 } else {
-                    const text = await response.text();
-                    data = { error: text || `HTTP Error ${response.status}` };
+                    try {
+                        const text = await response.text();
+                        data = { error: text || `HTTP Error ${response.status}` };
+                    } catch (e) {
+                        data = { error: `HTTP Error ${response.status}` };
+                    }
                 }
 
                 if (!response.ok) {
-                    const errorMsg = data.message || data.error || data.msg || `Server Error (${response.status})`;
+                    let errorMsg = 'An unknown error occurred';
+                    if (data && typeof data === 'object') {
+                        errorMsg = data.message || data.error || data.msg || `Server Error (${response.status})`;
+                    } else if (typeof data === 'string') {
+                        errorMsg = data;
+                    }
+
+                    // Handle case where errorMsg might still be an object
+                    if (typeof errorMsg === 'object') {
+                        errorMsg = JSON.stringify(errorMsg);
+                    }
+
                     throw new Error(errorMsg);
                 }
                 loading.hide();
@@ -527,7 +546,11 @@
             } catch (error) {
                 loading.hide();
                 console.error("API Request Error:", error);
-                showToast(error.message, 'error');
+
+                let displayMsg = error.message || "Connection failed";
+                if (typeof displayMsg === 'object') displayMsg = JSON.stringify(displayMsg);
+
+                showToast(displayMsg, 'error');
                 throw error;
             }
         };
