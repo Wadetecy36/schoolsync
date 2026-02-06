@@ -1445,11 +1445,26 @@
     }
 
     async function performBulkFaceSync(ids) {
-        showToast(`Syncing ${ids.length} faces...`, 'info');
+        // Only attempt encoding for students that actually have a photo
+        const photoMap = new Map(window.allStudents.map(s => [s.id, s]));
+        const validIds = ids.filter(id => {
+            const s = photoMap.get(id);
+            return s && s.photo_url;
+        });
+        const skipped = ids.length - validIds.length;
+
+        if (skipped > 0) {
+            showToast(`${skipped} student(s) skipped (no photo on file)`, 'warning');
+        }
+        if (validIds.length === 0) {
+            return showToast('No selected students have a photo to encode', 'warning');
+        }
+
+        showToast(`Syncing ${validIds.length} faces...`, 'info');
         let successCount = 0;
         let failCount = 0;
 
-        for (const id of ids) {
+        for (const id of validIds) {
             try {
                 const res = await apiRequest(`/api/students/${id}/update-face`, {
                     method: 'POST'
