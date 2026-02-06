@@ -23,9 +23,11 @@ import os
 from werkzeug.utils import secure_filename
 import pyotp 
 import re
+from threading import Thread
 
 # Import utilities
-from utils import generate_qr_code, get_totp_uri
+from utils import generate_qr_code, get_totp_uri, send_async_email
+from flask_mail import Message
 from PIL import Image
 import base64
 import json
@@ -544,7 +546,14 @@ def get_students():
         search = sanitize_search_query(search_arg.strip()) if search_arg else ""
         
         # Start with base query
-        query = Student.query
+        try:
+            query = Student.query
+        except Exception as e:
+            current_app.logger.error(f"Database query failed: {e}")
+            return jsonify({
+                'success': False,
+                'error': 'Database connection error'
+            }), 500
         
         # Apply search filter (if provided)
         if search:
@@ -577,8 +586,15 @@ def get_students():
         )
         
         # Paginate results
-        pagination = query.paginate(page=page, per_page=per_page, error_out=False)
-        
+        try:
+            pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+        except Exception as e:
+            current_app.logger.error(f"Pagination failed: {e}")
+            return jsonify({
+                'success': False,
+                'error': 'Failed to paginate results'
+            }), 500
+
         if not pagination:
             return jsonify({
                 'success': True,
@@ -906,7 +922,6 @@ def bulk_move_form():
             return jsonify({'error': 'Invalid target form'}), 400
         
         # Fetch and update students individually to handle classroom prefix logic and history
-        from models import AcademicRecord
         students = Student.query.filter(Student.id.in_(ids)).all()
         
         for s in students:
@@ -969,7 +984,6 @@ def bulk_action():
             return jsonify({'error': 'Missing required data'}), 400
 
         if action == 'delete':
-            from models import AcademicRecord
             AcademicRecord.query.filter(AcademicRecord.student_id.in_(ids)).delete(synchronize_session=False)
             Student.query.filter(Student.id.in_(ids)).delete(synchronize_session=False)
             msg = f"Deleted {len(ids)} students"
@@ -1090,9 +1104,6 @@ def bulk_email():
             return jsonify({'error': 'None of the selected students have email addresses'}), 400
             
         # Send emails asynchronously
-        from utils import send_async_email
-        from flask_mail import Message
-        
         app = current_app._get_current_object()
         
         # In a real app, we might want to send one email with BCC or individual emails

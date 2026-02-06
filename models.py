@@ -10,6 +10,7 @@ Last Updated: 2026-01-16
 
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, date
+from dateutil import parser
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 import re
@@ -329,8 +330,12 @@ class Student(db.Model):
             if dob:
                 # Normalization if it's a string
                 if isinstance(dob, str):
-                    # SQLite sometimes stores "YYYY-MM-DD HH:MM:SS" even for Date columns
-                    dob = date.fromisoformat(dob.split(' ')[0])
+                    try:
+                        # SQLite sometimes stores "YYYY-MM-DD HH:MM:SS" even for Date columns
+                        dob = date.fromisoformat(dob.split(' ')[0])
+                    except ValueError:
+                        # Not an ISO date, use as is
+                        pass
 
                 if hasattr(dob, 'year'):
                     dob_iso = dob.isoformat()
@@ -340,10 +345,10 @@ class Student(db.Model):
                     )
                 else:
                     dob_iso = str(dob)
-        except (ValueError, TypeError, AttributeError):
-            # Attempt to get raw value if attribute access failed
+        except Exception:
+            # Absolute fallback for DOB
             try:
-                dob_iso = str(self.__dict__.get('date_of_birth'))
+                dob_iso = str(self.date_of_birth) if self.date_of_birth else None
             except:
                 dob_iso = None
 
@@ -361,7 +366,7 @@ class Student(db.Model):
         # 3. Blacklist Status (Safe)
         is_blacklisted = False
         try:
-            if self.blacklist_entry:
+            if hasattr(self, 'blacklist_entry') and self.blacklist_entry:
                 is_blacklisted = getattr(self.blacklist_entry, 'is_active', False)
         except Exception:
             pass
@@ -377,8 +382,13 @@ class Student(db.Model):
         is_new = False
         try:
             if self.created_at:
-                month_ago = datetime.utcnow().replace(day=1)
-                is_new = self.created_at >= month_ago
+                # Ensure created_at is a datetime object if it came back as a string
+                created_dt = self.created_at
+                if isinstance(created_dt, str):
+                    created_dt = parser.parse(created_dt)
+
+                month_ago = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+                is_new = created_dt >= month_ago
         except Exception:
             pass
 
@@ -401,7 +411,8 @@ class Student(db.Model):
             'created_by': self.created_by,
             'is_blacklisted': is_blacklisted,
             'is_new': is_new,
-            'created_at': self.created_at.isoformat() if self.created_at else None
+            'created_at': self.created_at.isoformat() if hasattr(self.created_at, 'isoformat') else str(self.created_at) if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if hasattr(self.updated_at, 'isoformat') else str(self.updated_at) if self.updated_at else None
         }
 
     def has_permission(self, user):

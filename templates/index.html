@@ -194,35 +194,37 @@
                 const stats = statsData.stats;
                 const setEl = (id, val) => {
                     const el = document.getElementById(id);
-                    if (el) el.textContent = val;
+                    if (el) el.textContent = val !== undefined && val !== null ? val : '0';
                 };
 
-                setEl('total-students', stats.total_students);
-                setEl('active-today', Math.floor(stats.total_students * 0.92));
-                setEl('new-this-month', stats.new_this_month);
+                if (stats) {
+                    setEl('total-students', stats.total_students);
+                    setEl('active-today', stats.total_students ? Math.floor(stats.total_students * 0.92) : '0');
+                    setEl('new-this-month', stats.new_this_month);
 
-                // Update form distribution
-                const formContainer = document.getElementById('form-distribution');
-                if (formContainer && stats && stats.by_form && Object.keys(stats.by_form).length > 0) {
-                    const total = stats.total_students || 0;
-                    formContainer.innerHTML = Object.entries(stats.by_form).map(([form, count]) => {
-                        const percentage = total > 0 ? (count / total) * 100 : 0;
-                        return `
-                        <div class="space-y-2">
-                            <div class="flex justify-between text-sm">
-                                <span class="font-medium text-theme-muted">${form}</span>
-                                <span class="font-bold text-theme-main">${count}</span>
+                    // Update form distribution
+                    const formContainer = document.getElementById('form-distribution');
+                    if (formContainer && stats.by_form && Object.keys(stats.by_form).length > 0) {
+                        const total = stats.total_students || 0;
+                        formContainer.innerHTML = Object.entries(stats.by_form).map(([form, count]) => {
+                            const percentage = total > 0 ? (count / total) * 100 : 0;
+                            return `
+                            <div class="space-y-2">
+                                <div class="flex justify-between text-sm">
+                                    <span class="font-medium text-theme-muted">${form}</span>
+                                    <span class="font-bold text-theme-main">${count}</span>
+                                </div>
+                                <div class="h-2 bg-black/30 rounded-full overflow-hidden">
+                                    <div class="h-full ${getFormColor(form)} rounded-full" style="width: ${percentage}%"></div>
+                                </div>
                             </div>
-                            <div class="h-2 bg-black/30 rounded-full overflow-hidden">
-                                <div class="h-full ${getFormColor(form)} rounded-full" style="width: ${percentage}%"></div>
-                            </div>
-                        </div>
-                    `}).join('');
-                    const distEmpty = document.getElementById('distribution-empty');
-                    if (distEmpty) distEmpty.classList.add('hidden');
-                } else {
-                    const distEmpty = document.getElementById('distribution-empty');
-                    if (distEmpty) distEmpty.classList.remove('hidden');
+                        `}).join('');
+                        const distEmpty = document.getElementById('distribution-empty');
+                        if (distEmpty) distEmpty.classList.add('hidden');
+                    } else {
+                        const distEmpty = document.getElementById('distribution-empty');
+                        if (distEmpty) distEmpty.classList.remove('hidden');
+                    }
                 }
             }
 
