@@ -387,33 +387,53 @@ class Student(db.Model):
                 if isinstance(created_dt, str):
                     created_dt = parser.parse(created_dt)
 
+                # Naive UTC comparison
                 month_ago = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+                if created_dt.tzinfo is not None:
+                    created_dt = created_dt.replace(tzinfo=None)
                 is_new = created_dt >= month_ago
         except Exception:
             pass
 
-        return {
-            'id': self.id,
-            'name': self.name,
-            'gender': self.gender,
-            'date_of_birth': dob_iso,
-            'age': current_age,
-            'program': self.program,
-            'hall': self.hall,
-            'class_room': self.class_room,
-            'enrollment_year': self.enrollment_year,
-            'current_form': curr_form,
-            'photo_url': photo_url,
-            'email': self.email,
-            'phone': self.phone,
-            'guardian_name': self.guardian_name,
-            'guardian_phone': self.guardian_phone,
-            'created_by': self.created_by,
-            'is_blacklisted': is_blacklisted,
-            'is_new': is_new,
-            'created_at': self.created_at.isoformat() if hasattr(self.created_at, 'isoformat') else str(self.created_at) if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if hasattr(self.updated_at, 'isoformat') else str(self.updated_at) if self.updated_at else None
-        }
+        # 6. Academic History (Safe)
+        history = []
+        try:
+            history = [r.to_dict() for r in self.academic_history]
+        except Exception:
+            pass
+
+        # 7. Final Safe Serialization
+        try:
+            return {
+                'id': getattr(self, 'id', None),
+                'name': getattr(self, 'name', 'Unknown'),
+                'gender': getattr(self, 'gender', None),
+                'date_of_birth': dob_iso,
+                'age': current_age,
+                'program': getattr(self, 'program', None),
+                'hall': getattr(self, 'hall', None),
+                'class_room': getattr(self, 'class_room', None),
+                'enrollment_year': getattr(self, 'enrollment_year', None),
+                'current_form': curr_form,
+                'photo_url': photo_url,
+                'email': getattr(self, 'email', None),
+                'phone': getattr(self, 'phone', None),
+                'guardian_name': getattr(self, 'guardian_name', None),
+                'guardian_phone': getattr(self, 'guardian_phone', None),
+                'created_by': getattr(self, 'created_by', None),
+                'is_blacklisted': is_blacklisted,
+                'is_new': is_new,
+                'academic_history': history,
+                'created_at': self.created_at.isoformat() if hasattr(self.created_at, 'isoformat') else str(self.created_at) if self.created_at else None,
+                'updated_at': self.updated_at.isoformat() if hasattr(self.updated_at, 'isoformat') else str(self.updated_at) if self.updated_at else None
+            }
+        except Exception as e:
+            # Last resort fallback to ensure we don't crash the loop
+            return {
+                'id': getattr(self, 'id', None),
+                'name': getattr(self, 'name', 'Serialization Error'),
+                'error': str(e)
+            }
 
     def has_permission(self, user):
         """
@@ -465,6 +485,21 @@ class AcademicRecord(db.Model):
 
     def __repr__(self):
         return f'<AcademicRecord Student:{self.student_id} Year:{self.year}>'
+
+    def to_dict(self):
+        """Safe serialization of academic records."""
+        try:
+            return {
+                'id': getattr(self, 'id', None),
+                'student_id': getattr(self, 'student_id', None),
+                'form': getattr(self, 'form', 'Unknown'),
+                'year': getattr(self, 'year', None),
+                'gpa': getattr(self, 'gpa', None),
+                'remarks': getattr(self, 'remarks', None),
+                'created_at': self.created_at.isoformat() if hasattr(self.created_at, 'isoformat') else str(self.created_at) if self.created_at else None
+            }
+        except Exception:
+            return {'id': getattr(self, 'id', None), 'error': 'Serialization error'}
 
 
 # ============================================
