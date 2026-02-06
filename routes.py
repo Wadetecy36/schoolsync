@@ -1627,7 +1627,11 @@ def update_student_face(id):
             db.session.commit()
             return jsonify({'success': True, 'message': 'Face encoding updated'})
         else:
-            return jsonify({'success': False, 'error': 'No face detected in profile photo'}), 400
+            current_app.logger.warning(f"Face encoding failed for student {id}. No face detected.")
+            return jsonify({
+                'success': False,
+                'error': 'No face detected in profile photo. Please try a clearer photo or a different angle.'
+            }), 400
             
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
