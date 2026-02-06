@@ -22,8 +22,8 @@ class FaceHandler:
                 return None, None
 
             # Initialize detector with a dummy input size, will be updated per image
-            # Lowered score threshold to 0.6 for better detection in various lighting
-            cls._detector = cv2.FaceDetectorYN.create(det_model_path, "", (320, 320), 0.6)
+            # Lowered score threshold to 0.4 for better detection in various lighting/quality
+            cls._detector = cv2.FaceDetectorYN.create(det_model_path, "", (320, 320), 0.4)
             cls._recognizer = cv2.FaceRecognizerSF.create(rec_model_path, "")
             
         return cls._detector, cls._recognizer
@@ -80,7 +80,18 @@ class FaceHandler:
             # Detect faces
             _, faces = detector.detect(img)
             
-            if faces is not None:
+            if faces is None or len(faces) == 0:
+                # Try with a smaller input size if the image is large, sometimes helps YuNet
+                if w > 640 or h > 640:
+                    scale = 640.0 / max(w, h)
+                    img_small = cv2.resize(img, (0,0), fx=scale, fy=scale)
+                    detector.setInputSize((img_small.shape[1], img_small.shape[0]))
+                    _, faces = detector.detect(img_small)
+                    if faces is not None and len(faces) > 0:
+                        # If found on small image, we need to use the small image for alignment
+                        img = img_small
+
+            if faces is not None and len(faces) > 0:
                 # Use the first face found
                 # Align and crop the face
                 aligned_face = recognizer.alignCrop(img, faces[0])
