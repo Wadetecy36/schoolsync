@@ -1,4 +1,4 @@
-# ============================================
+﻿# ============================================
 # Core Framework
 # ============================================
 Flask>=2.3.0,<3.0.0
@@ -129,5 +129,4 @@ tzdata>=2023.3
 # ========================================
 numpy
 opencv-python-headless
-opencv-python-headless  # Headless build: no libxcb/X11 deps (for Railway/server)
 

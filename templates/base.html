@@ -106,17 +106,30 @@
             -webkit-backdrop-filter: blur(16px);
             border: 1px solid var(--glass-border);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            /* Hardware Acceleration */
+            transform: translateZ(0);
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
         }
 
         .glass-card {
-            background: var(--card-bg);
-            backdrop-filter: blur(12px);
+            /*
+               Optimization: Using a slightly more opaque background for cards
+               instead of backdrop-filter significantly improves scrolling
+               performance on desktop/high-res screens.
+            */
+            background: var(--glass-bg);
             border: 1px solid var(--glass-border);
             border-radius: 1.5rem;
             /* More rounded/friendly */
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                        box-shadow 0.3s ease,
+                        background-color 0.3s ease,
+                        border-color 0.3s ease;
             position: relative;
             overflow: hidden;
+            /* Performance Isolations */
+            contain: content;
         }
 
         .glass-card:hover {
@@ -124,6 +137,7 @@
             transform: translateY(-4px) scale(1.01);
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
             border-color: var(--blue-accent);
+            will-change: transform;
         }
 
         /* Smooth visual indicator on hover */
@@ -400,7 +414,7 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in" style="transform: translateZ(0);">
         {% block content %}{% endblock %}
     </main>
 
@@ -409,7 +423,7 @@
 
     <!-- Loading Overlay -->
     <div id="loading-overlay"
-        class="fixed inset-0 bg-black/80 z-[100] hidden items-center justify-center backdrop-blur-md">
+        class="fixed inset-0 bg-black/80 z-[100] hidden items-center justify-center backdrop-blur-md" style="transform: translateZ(0);">
         <div class="flex flex-col items-center">
             <div class="relative flex items-center justify-center mb-6">
                 <!-- Inner Pulse Icon -->
