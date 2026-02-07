@@ -112,19 +112,14 @@ class FaceHandler:
     def find_match(known_encodings, target_encoding, threshold=None):
         """
         Find the best match for target_encoding among known_encodings.
-        SFace usually works well with a cosine distance threshold around 0.36,
-        but in practice this can be tuned based on how strict/lenient matching
-        should be for your dataset and lighting conditions.
+        SFace usually works well with a cosine distance threshold around 0.36.
         """
         if not known_encodings or not target_encoding:
             return None
 
-        # Threshold for SFace (Cosine Distance).
-        # Higher values are more lenient (accept more matches).
-        # Default is slightly relaxed from the paper value to better handle
-        # real-world school photos and camera differences.
+        # Threshold for SFace (Cosine Distance) - 0.363 is recommended for SFace
         if threshold is None:
-            threshold = 0.55
+            threshold = 0.363
 
         best_match = None
         min_dist = float('inf')
