@@ -78,21 +78,21 @@
             </div>
         </div>
 
-        <!-- Graduation Rate -->
+        <!-- Blacklisted Students -->
         <div class="glass-card p-6 relative overflow-hidden group">
             <div
-                class="absolute -right-6 -top-6 w-24 h-24 bg-purple-500/10 rounded-full group-hover:bg-purple-500/20 transition-all duration-500">
+                class="absolute -right-6 -top-6 w-24 h-24 bg-red-500/10 rounded-full group-hover:bg-red-500/20 transition-all duration-500">
             </div>
             <div class="relative z-10">
                 <div class="flex items-center justify-between mb-4">
-                    <p class="text-theme-muted font-medium">Graduation Rate</p>
-                    <div class="p-2 bg-purple-500/10 rounded-lg text-purple-500">
-                        <i class="material-icons-round">workspace_premium</i>
+                    <p class="text-theme-muted font-medium">Blacklisted</p>
+                    <div class="p-2 bg-red-500/10 rounded-lg text-red-500">
+                        <i class="material-icons-round">block</i>
                     </div>
                 </div>
-                <h3 class="text-4xl font-bold text-theme-main mb-1" id="graduation-rate">98%</h3>
-                <div class="flex items-center text-sm text-theme-muted">
-                    <span>Target: 98%</span>
+                <h3 class="text-4xl font-bold text-theme-main mb-1" id="blacklisted-count">0</h3>
+                <div class="flex items-center text-sm text-red-500 font-medium">
+                    <span>Active Restrictions</span>
                 </div>
             </div>
         </div>
@@ -201,6 +201,7 @@
                     setEl('total-students', stats.total_students);
                     setEl('active-today', stats.total_students ? Math.floor(stats.total_students * 0.92) : '0');
                     setEl('new-this-month', stats.new_this_month);
+                    setEl('blacklisted-count', stats.blacklisted_count);
 
                     // Update form distribution
                     const formContainer = document.getElementById('form-distribution');
