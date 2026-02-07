@@ -1,5 +1,5 @@
-# Use official Python runtime as a parent image
-FROM python:3.9-slim
+# Use official Python runtime as a parent image (Bookworm for stability)
+FROM python:3.9-slim-bookworm
 
 # Set working directory
 WORKDIR /app
