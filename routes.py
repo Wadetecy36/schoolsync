@@ -81,6 +81,9 @@ def get_stats():
         first_day_of_month = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         new_this_month = Student.query.filter(Student.created_at >= first_day_of_month).count()
 
+        # Calculate blacklisted students
+        blacklisted_count = Blacklist.query.filter_by(is_active=True).count()
+
         # Calculate form distribution
         form_counts = {
             'First Form': 0,
@@ -126,6 +129,7 @@ def get_stats():
                 'total_students': total,
                 'new_this_month': new_this_month,
                 'newThisMonth': new_this_month,
+                'blacklisted_count': blacklisted_count,
                 'avgAge': 16, # Placeholder if not explicitly needed
                 'by_form': form_counts,
                 'by_program': by_program
