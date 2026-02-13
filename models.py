@@ -4,13 +4,20 @@ Database Models for SchoolSync Pro
 Defines all database models including User, Student, AcademicRecord,
 SecurityLog, and UsedPasswordResetToken.
 
+Table of Contents
+-----------------
+1. Constants & Configuration
+2. Auth Models (User, Blacklist)
+3. Reference Data Models (Program, Hall)
+4. Core Student Models (Student, AcademicRecord)
+5. Security Models (SecurityLog, Token)
+
 Author: SchoolSync Team
-Last Updated: 2026-01-16
+Last Updated: 2026-02-13
 """
 
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime, date
-from dateutil import parser
+from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 import re
@@ -18,10 +25,12 @@ import hashlib
 
 from extensions import db
 
+
 # ============================================
-# VALIDATION CONSTANTS
+# 1. CONSTANTS & CONFIGURATION
 # ============================================
 
+# Default values for fallback/seeding (moved to DB in v2.0)
 VALID_HALLS = [
     "Alema Hall", "Ellen Hall", "Halm Addo Hall", "Nana Wereko Ampem II Hall",
     "Wilson Q .Tei Hall", "Awuletey Hall", "Peter Ala Adjetey Hall",
@@ -35,7 +44,7 @@ VALID_PROGRAMS = [
 
 
 # ============================================
-# USER MODEL
+# 2. AUTH MODELS
 # ============================================
 
 class User(UserMixin, db.Model):
@@ -170,48 +179,52 @@ class Blacklist(db.Model):
         return f'<Blacklist {self.student.name if self.student else "Unknown"}>'
     
     def to_dict(self):
-        try:
-            student_name = "Unknown"
-            try:
-                if self.student:
-                    student_name = self.student.name
-            except Exception:
-                pass
-
-            added_by = "Unknown"
-            try:
-                if self.added_by_user:
-                    added_by = self.added_by_user.username
-            except Exception:
-                pass
-
-            date_str = None
-            try:
-                if self.date_added:
-                    date_str = self.date_added.strftime('%Y-%m-%d %H:%M:%S')
-            except Exception:
-                pass
-
-            return {
-                'id': self.id,
-                'student_id': self.student_id,
-                'student_name': student_name,
-                'reason': self.reason,
-                'added_by': added_by,
-                'date_added': date_str,
-                'is_active': self.is_active
-            }
-        except Exception:
-            # Absolute fallback
-            return {
-                'id': getattr(self, 'id', None),
-                'student_id': getattr(self, 'student_id', None),
-                'error': 'Serialization error'
-            }
+        return {
+            'id': self.id,
+            'student_id': self.student_id,
+            'student_name': self.student.name if self.student else None,
+            'reason': self.reason,
+            'added_by': self.added_by_user.username if self.added_by_user else None,
+            'date_added': self.date_added.strftime('%Y-%m-%d %H:%M:%S'),
+            'is_active': self.is_active
+        }
 
 
 # ============================================
-# STUDENT MODEL
+# 3. REFERENCE DATA MODELS (New for Scalability)
+# ============================================
+
+class Program(db.Model):
+    """
+    Dynamic Program/Course management.
+    Allows admins to add new programs without code changes.
+    """
+    __tablename__ = 'programs'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<Program {self.name}>'
+
+class Hall(db.Model):
+    """
+    Dynamic Hall/House management.
+    Allows admins to add new halls without code changes.
+    """
+    __tablename__ = 'halls'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<Hall {self.name}>'
+
+
+# ============================================
+# 4. CORE STUDENT MODELS
 # ============================================
 
 class Student(db.Model):
@@ -227,8 +240,7 @@ class Student(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False, index=True)
     gender = db.Column(db.String(20))
-    # Using String for date_of_birth to be lenient with SQLite's dynamic typing
-    date_of_birth = db.Column(db.String(20))
+    date_of_birth = db.Column(db.Date)
     
     # Academic Information
     program = db.Column(db.String(100), index=True)
@@ -246,7 +258,6 @@ class Student(db.Model):
     
     # Photo (Base64 encoded)
     photo_file = db.Column(db.Text)
-    face_encoding = db.Column(db.Text)  # JSON encoded list of 128-dimensional face encoding vectors
     
     # Metadata
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -292,148 +303,61 @@ class Student(db.Model):
     def age(self):
         """
         Calculate current age from date of birth.
-        Safe against non-date types in database.
         
         Returns:
-            int: Age in years, or None if DOB not set or invalid
+            int: Age in years, or None if DOB not set
         """
-        try:
-            dob = self.date_of_birth
-            if dob:
-                # Handle string format if SQLite returned it as such
-                if isinstance(dob, str):
-                    dob = date.fromisoformat(dob.split(' ')[0])
-
-                if hasattr(dob, 'year'):
-                    today = datetime.now().date()
-                    return today.year - dob.year - (
-                        (today.month, today.day) < (dob.month, dob.day)
-                    )
-        except (ValueError, TypeError, AttributeError):
-            pass
+        if self.date_of_birth:
+            today = datetime.now().date()
+            return today.year - self.date_of_birth.year - (
+                (today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day)
+            )
         return None
     
     def to_dict(self):
         """
         Convert student model to dictionary for JSON serialization.
-        Includes extensive error handling for data consistency.
         
         Returns:
             dict: Student data with calculated fields
         """
-        # 1. Safe Date Handling
-        dob_iso = None
+        # Calculate age
         current_age = None
+        if self.date_of_birth:
+            today = datetime.now().date()
+            current_age = today.year - self.date_of_birth.year - (
+                (today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day)
+            )
 
-        try:
-            dob = self.date_of_birth
-            if dob:
-                # Normalization if it's a string
-                if isinstance(dob, str):
-                    try:
-                        # SQLite sometimes stores "YYYY-MM-DD HH:MM:SS" even for Date columns
-                        dob = date.fromisoformat(dob.split(' ')[0])
-                    except ValueError:
-                        # Not an ISO date, use as is
-                        pass
-
-                if hasattr(dob, 'year'):
-                    dob_iso = dob.isoformat()
-                    today = datetime.now().date()
-                    current_age = today.year - dob.year - (
-                        (today.month, today.day) < (dob.month, dob.day)
-                    )
-                else:
-                    dob_iso = str(dob)
-        except Exception:
-            # Absolute fallback for DOB
-            try:
-                dob_iso = str(self.date_of_birth) if self.date_of_birth else None
-            except:
-                dob_iso = None
-
-        # 2. Photo URL logic (Safe)
+        # Photo URL logic
         photo_url = None
-        try:
-            if self.photo_file:
-                if self.photo_file.startswith('http') or self.photo_file.startswith('data:'):
-                    photo_url = self.photo_file
-                else:
-                    photo_url = f"/static/uploads/{self.photo_file}"
-        except Exception:
-            photo_url = None
+        if self.photo_file:
+            if self.photo_file.startswith('http') or self.photo_file.startswith('data:'):
+                # External URL or Base64
+                photo_url = self.photo_file
+            else:
+                # Local file path
+                photo_url = f"/static/uploads/{self.photo_file}"
 
-        # 3. Blacklist Status (Safe)
-        is_blacklisted = False
-        try:
-            if hasattr(self, 'blacklist_entry') and self.blacklist_entry:
-                is_blacklisted = getattr(self.blacklist_entry, 'is_active', False)
-        except Exception:
-            pass
-
-        # 4. Form Calculation (Safe)
-        curr_form = "Unknown"
-        try:
-            curr_form = self.current_form
-        except Exception:
-            pass
-
-        # 5. New Status (Safe)
-        is_new = False
-        try:
-            if self.created_at:
-                # Ensure created_at is a datetime object if it came back as a string
-                created_dt = self.created_at
-                if isinstance(created_dt, str):
-                    created_dt = parser.parse(created_dt)
-
-                # Naive UTC comparison
-                month_ago = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-                if created_dt.tzinfo is not None:
-                    created_dt = created_dt.replace(tzinfo=None)
-                is_new = created_dt >= month_ago
-        except Exception:
-            pass
-
-        # 6. Academic History (Safe)
-        history = []
-        try:
-            history = [r.to_dict() for r in self.academic_history]
-        except Exception:
-            pass
-
-        # 7. Final Safe Serialization
-        try:
-            return {
-                'id': getattr(self, 'id', None),
-                'name': getattr(self, 'name', 'Unknown'),
-                'gender': getattr(self, 'gender', None),
-                'date_of_birth': dob_iso,
-                'age': current_age,
-                'program': getattr(self, 'program', None),
-                'hall': getattr(self, 'hall', None),
-                'class_room': getattr(self, 'class_room', None),
-                'enrollment_year': getattr(self, 'enrollment_year', None),
-                'current_form': curr_form,
-                'photo_url': photo_url,
-                'email': getattr(self, 'email', None),
-                'phone': getattr(self, 'phone', None),
-                'guardian_name': getattr(self, 'guardian_name', None),
-                'guardian_phone': getattr(self, 'guardian_phone', None),
-                'created_by': getattr(self, 'created_by', None),
-                'is_blacklisted': is_blacklisted,
-                'is_new': is_new,
-                'academic_history': history,
-                'created_at': self.created_at.isoformat() if hasattr(self.created_at, 'isoformat') else str(self.created_at) if self.created_at else None,
-                'updated_at': self.updated_at.isoformat() if hasattr(self.updated_at, 'isoformat') else str(self.updated_at) if self.updated_at else None
-            }
-        except Exception as e:
-            # Last resort fallback to ensure we don't crash the loop
-            return {
-                'id': getattr(self, 'id', None),
-                'name': getattr(self, 'name', 'Serialization Error'),
-                'error': str(e)
-            }
+        return {
+            'id': self.id,
+            'name': self.name,
+            'gender': self.gender,
+            'date_of_birth': self.date_of_birth.isoformat() if self.date_of_birth else None,
+            'age': current_age,
+            'program': self.program,
+            'hall': self.hall,
+            'class_room': self.class_room,
+            'enrollment_year': self.enrollment_year,
+            'current_form': self.current_form,
+            'photo_url': photo_url,
+            'email': self.email,
+            'phone': self.phone,
+            'guardian_name': self.guardian_name,
+            'guardian_phone': self.guardian_phone,
+            'created_by': self.created_by,
+            'is_blacklisted': self.blacklist_entry.is_active if self.blacklist_entry else False
+        }
 
     def has_permission(self, user):
         """
@@ -445,9 +369,7 @@ class Student(db.Model):
         Returns:
             bool: True if user can modify, False otherwise
         """
-        # Allow super_admins OR any user with 'admin' role to manage students
-        # This prevents "orphan" students if an admin leaves
-        return user.is_super_admin or user.role == 'admin'
+        return user.is_super_admin or self.created_by == user.id
 
     def __repr__(self):
         return f'<Student {self.name}>'
@@ -486,24 +408,9 @@ class AcademicRecord(db.Model):
     def __repr__(self):
         return f'<AcademicRecord Student:{self.student_id} Year:{self.year}>'
 
-    def to_dict(self):
-        """Safe serialization of academic records."""
-        try:
-            return {
-                'id': getattr(self, 'id', None),
-                'student_id': getattr(self, 'student_id', None),
-                'form': getattr(self, 'form', 'Unknown'),
-                'year': getattr(self, 'year', None),
-                'gpa': getattr(self, 'gpa', None),
-                'remarks': getattr(self, 'remarks', None),
-                'created_at': self.created_at.isoformat() if hasattr(self.created_at, 'isoformat') else str(self.created_at) if self.created_at else None
-            }
-        except Exception:
-            return {'id': getattr(self, 'id', None), 'error': 'Serialization error'}
-
 
 # ============================================
-# SECURITY LOG MODEL
+# 5. SECURITY MODELS
 # ============================================
 
 class SecurityLog(db.Model):

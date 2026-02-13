@@ -1,10 +1,22 @@
 """
 Configuration Module for SchoolSync Pro
 ========================================
+Table of Contents
+-----------------
+1.  Imports & Setup
+2.  Config Class
+    2.1 Security Settings
+    2.2 Database Config
+    2.3 File Uploads
+    2.4 Email & SMS
+    2.5 Rate Limiting
+3.  Environment Validation
+4.  Config Exports
+
 Handles environment-based configuration for development and production.
 
 Author: SchoolSync Team
-Last Updated: 2026-01-16
+Last Updated: 2026-02-13
 """
 
 import os

@@ -1,10 +1,19 @@
 """
 Application Factory for SchoolSync Pro
 =======================================
+Table of Contents
+-----------------
+1.  Imports & Setup
+2.  Application Factory
+3.  Extension Init
+4.  Logging Setup
+5.  CLI Commands (init-db, seed-data, etc.)
+6.  Entry Point
+
 Main application entry point using the factory pattern.
 
 Author: SchoolSync Team
-Last Updated: 2026-01-16
+Last Updated: 2026-02-13
 """
 
 from flask import Flask
@@ -63,10 +72,15 @@ def create_app(config_name=None):
     
     # Rate Limiter
     try:
-        # Flask-Limiter will automatically load storage URI from RATELIMIT_STORAGE_URL in app.config
         limiter.init_app(app)
+        limiter.storage_uri = app.config.get('RATELIMIT_STORAGE_URL', 'memory://')
         
-        app.logger.info(f"Rate limiter initialized with storage: {app.config.get('RATELIMIT_STORAGE_URL', 'memory://')}")
+        # Override default limits if specified in config
+        if app.config.get('RATELIMIT_DEFAULT'):
+            limits = app.config.get('RATELIMIT_DEFAULT').split(';')
+            limiter.default_limits = [limit.strip() for limit in limits]
+            
+        app.logger.info(f"Rate limiter initialized with {limiter.storage_uri}")
     except Exception as e:
         app.logger.warning(f"Rate limiter initialization failed: {e}")
     
@@ -228,7 +242,7 @@ def register_cli_commands(app):
         
         print("Creating database tables...")
         db.create_all()
-        print("✓ Database tables created")
+        print("[OK] Database tables created")
         
         # Check if default admin exists
         admin = User.query.filter_by(username='admin').first()
@@ -247,12 +261,12 @@ def register_cli_commands(app):
             db.session.add(admin_user)
             db.session.commit()
             
-            print("\n✓ Default admin user created:")
+            print("\n[OK] Default admin user created:")
             print("  Username: admin")
             print("  Password: Admin@123")
-            print("  ⚠️  IMPORTANT: Change this password immediately!\n")
+            print("  [!]  IMPORTANT: Change this password immediately!\n")
         else:
-            print("✓ Admin user already exists")
+            print("[OK] Admin user already exists")
     
     @app.cli.command()
     def create_admin():
@@ -325,7 +339,7 @@ def register_cli_commands(app):
             db.session.add(user)
             db.session.commit()
             
-            print(f"\n✓ Admin user '{username}' created successfully!\n")
+            print(f"\n[OK] Admin user '{username}' created successfully!\n")
             
         except Exception as e:
             db.session.rollback()
@@ -349,7 +363,7 @@ def register_cli_commands(app):
         
         db.session.commit()
         
-        print(f"✓ Cleaned up {deleted} expired password reset tokens")
+        print(f"[OK] Cleaned up {deleted} expired password reset tokens")
     
     @app.cli.command()
     def show_config():
@@ -361,6 +375,43 @@ def register_cli_commands(app):
         print("\n=== SchoolSync Pro Configuration ===\n")
         for key, value in config_info.items():
             print(f"  {key.replace('_', ' ').title()}: {value}")
+        print()
+
+    @app.cli.command()
+    def seed_data():
+        """
+        Seed database with initial Programs and Halls.
+        
+        Populates the database with default values from constants.
+        Safe to run multiple times (skips existing entries).
+        """
+        from models import Program, Hall, VALID_PROGRAMS, VALID_HALLS
+        
+        print("\n=== Seeding Reference Data ===\n")
+        
+        # Seed Programs
+        print("Checking Programs...")
+        added_programs = 0
+        for p_name in VALID_PROGRAMS:
+            if not Program.query.filter_by(name=p_name).first():
+                db.session.add(Program(name=p_name))
+                print(f"  + Added: {p_name}")
+                added_programs += 1
+        
+        # Seed Halls
+        print("Checking Halls...")
+        added_halls = 0
+        for h_name in VALID_HALLS:
+            if not Hall.query.filter_by(name=h_name).first():
+                db.session.add(Hall(name=h_name))
+                print(f"  + Added: {h_name}")
+                added_halls += 1
+                
+        if added_programs or added_halls:
+            db.session.commit()
+            print(f"\n[OK] Added {added_programs} programs and {added_halls} halls.")
+        else:
+            print("\n[OK] All reference data already exists.")
         print()
 
 

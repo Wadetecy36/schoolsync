@@ -11,14 +11,12 @@ from flask_mail import Message
 from flask import current_app, url_for
 import random
 import string
-from twilio.rest import Client
 import sys
 from threading import Thread
-import pyotp
-import qrcode
 import io
 import base64
 from itsdangerous import URLSafeTimedSerializer
+
 
 
 # ============================================
@@ -183,6 +181,8 @@ def send_sms_otp(phone, otp):
             return True
 
         # Send real SMS via Twilio
+        from twilio.rest import Client
+        
         client = Client(account_sid, auth_token)
         message = client.messages.create(
             body=f"Your SchoolSync verification code is: {otp}\n\nExpires in 10 minutes.",
@@ -250,6 +250,7 @@ def generate_qr_code(uri):
         str: Base64-encoded PNG image as data URI
     """
     try:
+        import qrcode
         # Create QR code
         qr = qrcode.QRCode(
             version=1,

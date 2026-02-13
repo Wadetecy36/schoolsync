@@ -106,30 +106,17 @@
             -webkit-backdrop-filter: blur(16px);
             border: 1px solid var(--glass-border);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            /* Hardware Acceleration */
-            transform: translateZ(0);
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
         }
 
         .glass-card {
-            /*
-               Optimization: Using a slightly more opaque background for cards
-               instead of backdrop-filter significantly improves scrolling
-               performance on desktop/high-res screens.
-            */
-            background: var(--glass-bg);
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
             border: 1px solid var(--glass-border);
             border-radius: 1.5rem;
             /* More rounded/friendly */
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                        box-shadow 0.3s ease,
-                        background-color 0.3s ease,
-                        border-color 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
-            /* Performance Isolations */
-            contain: content;
         }
 
         .glass-card:hover {
@@ -137,7 +124,6 @@
             transform: translateY(-4px) scale(1.01);
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
             border-color: var(--blue-accent);
-            will-change: transform;
         }
 
         /* Smooth visual indicator on hover */
@@ -357,10 +343,6 @@
                         class="px-4 py-2 rounded-lg text-theme-muted hover:text-theme-main hover:bg-white/10 transition flex items-center">
                         <i class="material-icons-round mr-2 text-gold">report_problem</i> Blacklist
                     </a>
-                    <a href="/face-search"
-                        class="px-4 py-2 rounded-lg text-theme-muted hover:text-theme-main hover:bg-white/10 transition flex items-center">
-                        <i class="material-icons-round mr-2 text-gold">face</i> Face ID
-                    </a>
                 </div>
 
                 <!-- Right Side Actions -->
@@ -378,7 +360,7 @@
                         class="p-2 rounded-full hover:bg-white/10 text-theme-muted hover:text-gold transition">
                         <i class="material-icons-round">settings</i>
                     </a>
-                    <a href="{{ url_for('auth.logout') }}"
+                    <a href="/logout"
                         class="p-2 rounded-full hover:bg-red-500/20 text-theme-muted hover:text-red-400 transition">
                         <i class="material-icons-round">logout</i>
                     </a>
@@ -399,22 +381,19 @@
                 <a href="/students" class="block px-4 py-3 rounded-lg hover:bg-white/10 text-theme-main">Students</a>
                 <a href="/import" class="block px-4 py-3 rounded-lg hover:bg-white/10 text-theme-main">Import</a>
                 <a href="/blacklist" class="block px-4 py-3 rounded-lg hover:bg-white/10 text-theme-main">Blacklist</a>
-                <a href="/face-search" class="block px-4 py-3 rounded-lg hover:bg-white/10 text-theme-main">Face ID
-                    Search</a>
                 <a href="/settings" class="block px-4 py-3 rounded-lg hover:bg-white/10 text-theme-main">Settings</a>
                 <!-- Mobile Theme Toggle -->
                 <button onclick="toggleTheme()"
                     class="w-full text-left px-4 py-3 rounded-lg hover:bg-white/10 text-theme-main flex items-center">
                     <i class="material-icons-round mr-2 text-gold">brightness_6</i> Toggle Theme
                 </button>
-                <a href="{{ url_for('auth.logout') }}"
-                    class="block px-4 py-3 rounded-lg hover:bg-red-500/20 text-red-400">Logout</a>
+                <a href="/logout" class="block px-4 py-3 rounded-lg hover:bg-red-500/20 text-red-400">Logout</a>
             </div>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in" style="transform: translateZ(0);">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
         {% block content %}{% endblock %}
     </main>
 
@@ -423,7 +402,7 @@
 
     <!-- Loading Overlay -->
     <div id="loading-overlay"
-        class="fixed inset-0 bg-black/80 z-[100] hidden items-center justify-center backdrop-blur-md" style="transform: translateZ(0);">
+        class="fixed inset-0 bg-black/80 z-[100] hidden items-center justify-center backdrop-blur-md">
         <div class="flex flex-col items-center">
             <div class="relative flex items-center justify-center mb-6">
                 <!-- Inner Pulse Icon -->
@@ -522,62 +501,16 @@
                     ...options,
                     headers: { ...defaultHeaders, ...options.headers }
                 });
-
-                // Handle session expiry / redirects
-                if (response.redirected && response.url.includes('/login')) {
-                    loading.hide();
-                    showToast("Session expired. Redirecting to login...", "error");
-                    setTimeout(() => window.location.href = '/login', 2000);
-                    throw new Error("Session expired");
-                }
-
-                let data;
-                const contentType = response.headers.get("content-type");
-                if (contentType && contentType.includes("application/json")) {
-                    try {
-                        data = await response.json();
-                    } catch (e) {
-                        data = { error: 'Malformed JSON response' };
-                    }
-                } else {
-                    try {
-                        const text = await response.text();
-                        // If it's HTML but we expected JSON, it's likely a server error page
-                        if (text.includes('<!DOCTYPE html>') || text.includes('<html')) {
-                            data = { error: `Server Error (${response.status})` };
-                        } else {
-                            data = { error: text || `HTTP Error ${response.status}` };
-                        }
-                    } catch (e) {
-                        data = { error: `HTTP Error ${response.status}` };
-                    }
-                }
-
+                const data = await response.json();
                 if (!response.ok) {
-                    let errorMsg = 'An unknown error occurred';
-                    if (data && typeof data === 'object') {
-                        errorMsg = data.message || data.error || data.msg || `Server Error (${response.status})`;
-                    } else if (typeof data === 'string') {
-                        errorMsg = data;
-                    }
-
-                    if (typeof errorMsg === 'object') {
-                        errorMsg = JSON.stringify(errorMsg);
-                    }
-
+                    const errorMsg = data.message || data.error || data.msg || 'An unexpected error occurred';
                     throw new Error(errorMsg);
                 }
                 loading.hide();
                 return data;
             } catch (error) {
                 loading.hide();
-                console.error("API Request Error:", error);
-
-                if (error.message !== "Session expired") {
-                    let displayMsg = error.message || "Connection failed";
-                    if (typeof displayMsg === 'object') displayMsg = JSON.stringify(displayMsg);
-                    showToast(displayMsg, 'error');
-                }
+                showToast(error.message, 'error');
                 throw error;
             }
         };

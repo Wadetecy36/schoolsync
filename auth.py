@@ -1,10 +1,19 @@
 """
 Authentication Module for SchoolSync Pro
 =========================================
+Table of Contents
+-----------------
+1.  Imports & Setup
+2.  Session Management
+3.  Login & 2FA Logic
+4.  Logout
+5.  Registration (Disabled)
+6.  Password Reset Flow
+
 Handles user authentication, 2FA, password reset, and security logging.
 
 Author:SchoolSync Team
-Last Updated: 2026-01-16
+Last Updated: 2026-02-13
 """
 
 from flask import (
@@ -239,37 +248,30 @@ def verify_2fa():
     
     return render_template('verify_2fa.html', method=user.two_factor_method)
 
-from flask import Blueprint, redirect, url_for, flash, session
-from flask_login import login_required, logout_user, current_user
-# Make sure log_logout is imported if you use it!
-# from utils import log_logout 
 
 @auth.route('/logout')
 @login_required
 def logout():
     """
     User logout endpoint.
+    
+    Clears session and logs the logout event.
     """
-    try:
-        # Capture info before logging out
-        user_id = current_user.id
-        username = current_user.username
-        
-        # Try to log the event, but don't stop logout if it fails
-        # Ensure log_logout is actually imported!
-        if 'log_logout' in globals(): 
-            log_logout(user_id, username)
-            
-    except Exception as e:
-        print(f"Error logging logout event: {e}")
-
-    # Perform logout regardless of logging success
+    user_id = current_user.id
+    username = current_user.username
+    
+    # Log logout event
+    log_logout(user_id, username)
+    
+    # Perform logout
     logout_user()
     session.clear()
     
     flash('You have been logged out successfully.', 'success')
     return redirect(url_for('auth.login'))
-    
+
+
+# ============================================
 # REGISTRATION (Currently Disabled)
 # ============================================
 

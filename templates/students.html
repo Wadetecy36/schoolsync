@@ -141,7 +141,6 @@
                     <option value="move-hall">Move Hall</option>
                     <option value="update-program">Update Program</option>
                     <option value="email">Send Email</option>
-                    <option value="sync-face">Sync Face ID</option>
                     <option value="blacklist">Blacklist Selected</option>
                     <option value="delete">Delete Permanently</option>
                 </select>
@@ -163,10 +162,10 @@
     </div>
 
     <!-- Main Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6" style="contain: layout;">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <!-- Sidebar Filters -->
         <div class="lg:col-span-1 space-y-6">
-            <div class="glass-card p-6 sticky top-24" style="contain: content;">
+            <div class="glass-card p-6 sticky top-24">
                 <h3 class="font-bold text-theme-main mb-4 flex items-center"><i
                         class="material-icons-round text-gold mr-2">filter_list</i> Filters</h3>
                 <div class="mb-6 p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
@@ -217,9 +216,9 @@
         </div>
 
         <!-- Results Area -->
-        <div class="lg:col-span-3" style="contain: layout;">
+        <div class="lg:col-span-3">
             <!-- Results Grid -->
-            <div id="students-grid-view" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" style="contain: layout;"></div>
+            <div id="students-grid-view" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             <div id="students-table-view" class="hidden glass-card overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-left">
@@ -261,21 +260,13 @@
                         id="pagination-end" class="text-white font-bold">0</span> of <span id="pagination-total"
                         class="text-white font-bold">0</span>
                 </span>
-                <div class="flex items-center space-x-4">
-                    <select id="items-per-page" class="bg-black/20 border-white/10 rounded-lg text-xs text-theme-muted focus:ring-0">
-                        <option value="12">12 per page</option>
-                        <option value="24">24 per page</option>
-                        <option value="48">48 per page</option>
-                        <option value="all">Show All</option>
-                    </select>
-                    <div class="flex space-x-2">
-                        <button id="prev-page"
-                            class="p-2 rounded-lg border border-white/10 hover:bg-white/10 text-theme-muted disabled:opacity-30"><i
-                                class="material-icons-round">chevron_left</i></button>
-                        <button id="next-page"
-                            class="p-2 rounded-lg border border-white/10 hover:bg-white/10 text-theme-muted disabled:opacity-30"><i
-                                class="material-icons-round">chevron_right</i></button>
-                    </div>
+                <div class="flex space-x-2">
+                    <button id="prev-page"
+                        class="p-2 rounded-lg border border-white/10 hover:bg-white/10 text-theme-muted disabled:opacity-30"><i
+                            class="material-icons-round">chevron_left</i></button>
+                    <button id="next-page"
+                        class="p-2 rounded-lg border border-white/10 hover:bg-white/10 text-theme-muted disabled:opacity-30"><i
+                            class="material-icons-round">chevron_right</i></button>
                 </div>
             </div>
         </div>
@@ -647,6 +638,7 @@
     window.currentPage = 1;
     window.itemsPerPage = 12;
     window.currentViewMode = 'grid';
+    window.currentViewMode = 'grid';
     window.deleteStudentId = null;
     window.moveFormStudentId = null; // Track single student for move
 
@@ -711,30 +703,16 @@
     // --- 5. DATA LOADING ---
     async function loadStudents() {
         const loader = document.getElementById('loading-state');
-        const grid = document.getElementById('students-grid-view');
-        const table = document.getElementById('students-table-view');
-        const empty = document.getElementById('empty-state');
-
         if (loader) loader.classList.remove('hidden');
-        if (grid) grid.classList.add('hidden');
-        if (table) table.classList.add('hidden');
-        if (empty) empty.classList.add('hidden');
 
         try {
             // Timestamp prevents caching
             const res = await apiRequest(`/api/students?per_page=2000&_t=${Date.now()}`);
-            if (res && res.success) {
-                window.allStudents = res.students || [];
-            } else {
-                window.allStudents = [];
-            }
+            window.allStudents = res.students || [];
             updateStats();
             applyFilters();
         } catch (e) {
-            console.error("Load students failed:", e);
-            window.allStudents = [];
-            updateStats();
-            applyFilters();
+            console.error(e);
         } finally {
             if (loader) loader.classList.add('hidden');
         }
@@ -742,15 +720,9 @@
 
     // --- 6. FILTERING & RENDERING ---
     window.applyFilters = function () {
-        const termEl = document.getElementById('name-search');
-        const hallEl = document.getElementById('filter-hall');
-        const progEl = document.getElementById('filter-program');
-        const yearEl = document.getElementById('filter-year');
-
-        const term = termEl ? termEl.value.toLowerCase() : '';
-        const hall = hallEl ? hallEl.value : '';
-        const prog = progEl ? progEl.value : '';
-        const year = yearEl ? yearEl.value : '';
+        const term = document.getElementById('name-search').value.toLowerCase();
+        const hall = document.getElementById('filter-hall').value;
+        const prog = document.getElementById('filter-program').value;
 
         window.filteredStudents = window.allStudents.filter(s => {
             if (term) {
@@ -760,6 +732,8 @@
             }
             if (hall && s.hall !== hall) return false;
             if (prog && s.program !== prog) return false;
+
+            const year = document.getElementById('filter-year').value;
             if (year && s.enrollment_year != year) return false;
 
             return true;
@@ -775,11 +749,12 @@
     window.renderStudents = function () {
         const grid = document.getElementById('students-grid-view');
         const table = document.getElementById('students-table-view');
+        const list = document.getElementById('students-list-view');
         const pagination = document.getElementById('pagination');
         const empty = document.getElementById('empty-state');
 
         // Reset visibility
-        [grid, table, empty, pagination].forEach(el => el && el.classList.add('hidden'));
+        [grid, table, list, empty, pagination].forEach(el => el && el.classList.add('hidden'));
 
         if (window.filteredStudents.length === 0) {
             if (empty) empty.classList.remove('hidden');
@@ -865,7 +840,6 @@
                      <div class="border-t border-white/10 pt-3 flex justify-between items-center opacity-80 hover:opacity-100 transition">
                          <span class="text-xs text-theme-muted uppercase font-mono">${safe(s.hall)}</span>
                          <div class="flex gap-2">
-                             <button onclick="resyncFace(${s.id})" class="p-1 rounded hover:bg-white/10 text-cyan-400 transition" title="Sync Face ID"><i class="material-icons-round text-lg">face</i></button>
                              <button onclick="openMoveFormModal(${s.id})" class="p-1 rounded hover:bg-white/10 text-blue-400 transition" title="Move Form"><i class="material-icons-round text-lg">school</i></button>
                              <button onclick="window.editStudent('${s.id}')" class="p-1 rounded hover:bg-white/10 text-yellow-400 transition" title="Edit"><i class="material-icons-round text-lg">edit</i></button>
                              <button onclick="openDeleteModal(${s.id}, '${safe(s.name)}')" class="p-1 rounded hover:bg-white/10 text-red-400 transition" title="Delete"><i class="material-icons-round text-lg">delete</i></button>
@@ -904,7 +878,6 @@
                     <td class="px-6 py-4 text-white font-mono text-xs">${safe(s.class_room)}</td>
                     <td class="px-6 py-4 text-theme-muted text-sm">${safe(s.hall)}</td>
                     <td class="px-6 py-4">
-                        <button onclick="resyncFace(${s.id})" class="text-cyan-400 mr-3 hover:scale-110 transition" title="Sync Face ID"><i class="material-icons-round">face</i></button>
                         <button onclick="openMoveFormModal(${s.id})" class="text-blue-400 mr-3 hover:scale-110 transition" title="Move Form"><i class="material-icons-round">school</i></button>
                         <button onclick="window.editStudent('${s.id}')" class="text-gold mr-3 hover:scale-110 transition"><i class="material-icons-round">edit</i></button>
                         <button onclick="openDeleteModal(${s.id}, '${safe(s.name)}')" class="text-red-400 hover:scale-110 transition"><i class="material-icons-round">delete</i></button>
@@ -1123,15 +1096,12 @@
     }
 
     // --- 9. HELPERS (Search/Toggle/Etc) ---
-    const nameSearchEl = document.getElementById('name-search');
-    if (nameSearchEl) {
-        nameSearchEl.addEventListener('input', (e) => {
-            clearTimeout(window.searchDebounce);
-            window.searchDebounce = setTimeout(() => {
-                window.applyFilters();
-            }, 300);
-        });
-    }
+    document.getElementById('name-search').addEventListener('input', (e) => {
+        clearTimeout(window.searchDebounce);
+        window.searchDebounce = setTimeout(() => {
+            window.applyFilters();
+        }, 300);
+    });
 
     window.toggleQuickAdd = function () {
         const form = document.getElementById('quick-add-form');
@@ -1142,80 +1112,27 @@
     window.setViewMode = (m) => { window.currentViewMode = m; renderStudents(); }
 
     window.resetAllFilters = () => {
-        const ids = ['name-search', 'filter-hall', 'filter-program', 'filter-year'];
-        ids.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.value = '';
-        });
+        document.getElementById('name-search').value = '';
+        document.getElementById('filter-hall').value = '';
+        document.getElementById('filter-program').value = '';
+        document.getElementById('filter-year').value = '';
         window.loadStudents();
     }
 
-    // Stats (Calculated from loaded data)
+    // Stats (Short version)
     function updateStats() {
-        try {
-            const students = window.allStudents || [];
-
-            const totalEl = document.getElementById('total-count');
-            if (totalEl) totalEl.innerText = students.length;
-
-            // Average Age
-            const ages = students.map(s => s.age).filter(a => a !== null && a !== undefined);
-            const avgAge = ages.length > 0 ? Math.round(ages.reduce((a, b) => a + b, 0) / ages.length) : 0;
-            const avgEl = document.getElementById('avg-age');
-            if (avgEl) avgEl.innerText = avgAge;
-
-            // Top Program
-            const programs = {};
-            students.forEach(s => {
-                if (s.program) programs[s.program] = (programs[s.program] || 0) + 1;
-            });
-            let topProg = "-";
-            let max = 0;
-            for (let p in programs) {
-                if (programs[p] > max) {
-                    max = programs[p];
-                    topProg = p;
-                }
-            }
-            const topEl = document.getElementById('top-program');
-            if (topEl) topEl.innerText = topProg;
-
-            // New This Month (Approximated if created_at not in to_dict, otherwise 0)
-            // Note: to_dict doesn't currently include created_at.
-            // We'll leave it at 0 or update it if we add created_at.
-            const newEl = document.getElementById('new-this-month');
-            if (newEl) newEl.innerText = students.filter(s => s.is_new).length || 0;
-
-        } catch (e) {
-            console.error("Error updating stats:", e);
-        }
+        if (document.getElementById('total-count')) document.getElementById('total-count').innerText = window.allStudents.length;
+        // ... (other stats code if needed)
     }
 
     function setupEventListeners() {
-        const itemsPerPageEl = document.getElementById('items-per-page');
-        if (itemsPerPageEl) {
-            itemsPerPageEl.addEventListener('change', (e) => {
-                window.itemsPerPage = e.target.value === 'all' ? 10000 : parseInt(e.target.value);
-                window.currentPage = 1;
-                renderStudents();
-            });
-        }
-
-        const nextPageEl = document.getElementById('next-page');
-        if (nextPageEl) {
-            nextPageEl.addEventListener('click', () => {
-                window.currentPage++;
-                renderStudents();
-            });
-        }
-
-        const prevPageEl = document.getElementById('prev-page');
-        if (prevPageEl) {
-            prevPageEl.addEventListener('click', () => {
-                window.currentPage--;
-                renderStudents();
-            });
-        }
+        document.getElementById('items-per-page').addEventListener('change', (e) => {
+            window.itemsPerPage = e.target.value === 'all' ? 10000 : parseInt(e.target.value);
+            window.currentPage = 1;
+            renderStudents();
+        });
+        document.getElementById('next-page').addEventListener('click', () => { window.currentPage++; renderStudents(); });
+        document.getElementById('prev-page').addEventListener('click', () => { window.currentPage--; renderStudents(); });
     }
 
     // Single Delete
@@ -1291,11 +1208,6 @@
                 break;
             case 'email':
                 window.toggleModal('bulk-email-modal', true);
-                break;
-            case 'sync-face':
-                if (confirm(`Attempt to sync Face ID encodings for ${ids.length} students?`)) {
-                    await performBulkFaceSync(ids);
-                }
                 break;
             case 'blacklist':
                 document.getElementById('bulk-blacklist-count').innerText = ids.length;
@@ -1435,40 +1347,6 @@
             updateBulkActionsUI();
             renderStudents();
         });
-    }
-
-    // FACE RECOGNITION TOOLS
-    window.resyncFace = async function (id) {
-        showToast('Processing face encoding...', 'info');
-        try {
-            const res = await apiRequest(`/api/students/${id}/update-face`, {
-                method: 'POST'
-            });
-            showToast(res.message, 'success');
-        } catch (e) {
-            console.error(e);
-        }
-    }
-
-    async function performBulkFaceSync(ids) {
-        showToast(`Syncing ${ids.length} faces...`, 'info');
-        let successCount = 0;
-        let failCount = 0;
-
-        for (const id of ids) {
-            try {
-                const res = await apiRequest(`/api/students/${id}/update-face`, {
-                    method: 'POST'
-                });
-                if (res.success) successCount++;
-                else failCount++;
-            } catch (e) {
-                failCount++;
-            }
-        }
-
-        showToast(`Sync complete. Success: ${successCount}, Failed: ${failCount}`, successCount > 0 ? 'success' : 'error');
-        clearSelections();
     }
 
 </script>

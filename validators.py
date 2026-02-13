@@ -10,11 +10,7 @@ Last Updated: 2026-01-16
 import re
 from datetime import datetime
 from werkzeug.utils import secure_filename
-from PIL import Image
 import io
-
-# Security: Protect against Decompression Bomb
-Image.MAX_IMAGE_PIXELS = 100000000  # 100M pixels (approx 10000x10000)
 
 
 
@@ -199,6 +195,7 @@ def validate_image_file(file):
     
     # Validate image can be opened and check dimensions
     try:
+        from PIL import Image
         img = Image.open(file)
         width, height = img.size
         file.seek(0)  # Reset for later use

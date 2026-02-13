@@ -1,10 +1,22 @@
 """
 Main Routes Module for SchoolSync Pro
 ======================================
+Table of Contents
+-----------------
+1.  Imports & Setup
+2.  Stats API
+3.  Helper Functions
+4.  View Routes (Pages)
+5.  Blacklist Management
+6.  Student API (CRUD)
+7.  Data Management (Bulk Actions)
+8.  Import/Export
+9.  Settings & Profile
+
 Handles student management, data import/export, settings, and dashboard.
 
 Author: SchoolSync Team
-Last Updated: 2026-01-16
+Last Updated: 2026-02-13
 """
 
 from flask import (
@@ -12,26 +24,20 @@ from flask import (
     redirect, url_for, flash, current_app
 )
 from extensions import db
-from models import Student, AcademicRecord, User, Blacklist, VALID_HALLS, VALID_PROGRAMS
+from models import (
+    Student, AcademicRecord, User, Blacklist, 
+    Program, Hall, # New dynamic models
+    VALID_HALLS, VALID_PROGRAMS # Fallbacks
+)
 from datetime import datetime
 from sqlalchemy import or_, and_, func
 from flask_login import login_required, current_user
 from functools import wraps
-import pandas as pd
-import io
-import os
-from werkzeug.utils import secure_filename
-import pyotp 
-import re
-from threading import Thread
-
 # Import utilities
-from utils import generate_qr_code, get_totp_uri, send_async_email
-from flask_mail import Message
-from PIL import Image
+from utils import generate_qr_code, get_totp_uri
+# PIL and pandas moved to function scope for performance
 import base64
-import json
-from face_handler import FaceHandler
+
 
 # Import validators
 from validators import (
@@ -73,76 +79,40 @@ def get_stats():
             }
         }
     """
-    try:
-        total = Student.query.count()
-        current_year = datetime.now().year
-
-        # Calculate new students this month
-        first_day_of_month = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        new_this_month = Student.query.filter(Student.created_at >= first_day_of_month).count()
-
-        # Calculate blacklisted students
-        blacklisted_count = Blacklist.query.filter_by(is_active=True).count()
-
-        # Calculate form distribution
-        form_counts = {
-            'First Form': 0,
-            'Second Form': 0,
-            'Third Form': 0,
-            'Completed': 0
+    total = Student.query.count()
+    current_year = datetime.now().year
+    form_counts = {
+        'First Form': 0,
+        'Second Form': 0,
+        'Third Form': 0,
+        'Completed': 0
+    }
+    
+    # Optimized SQL aggregation (group by enrollment year)
+    rows = db.session.query(
+        Student.enrollment_year, 
+        func.count(Student.id)
+    ).group_by(Student.enrollment_year).all()
+    
+    for year, count in rows:
+        diff = current_year - year
+        if diff >= 3:
+            form_counts['Completed'] += count
+        elif diff == 2:
+            form_counts['Third Form'] += count
+        elif diff == 1:
+            form_counts['Second Form'] += count
+        else:
+            form_counts['First Form'] += count
+    
+    return jsonify({
+        'success': True,
+        'stats': {
+            'total': total,
+            'newThisMonth': 0, # Simplified
+            'avgAge': 16 # Placeholder
         }
-
-        # Optimized SQL aggregation for forms (by enrollment year)
-        form_rows = db.session.query(
-            Student.enrollment_year,
-            func.count(Student.id)
-        ).group_by(Student.enrollment_year).all()
-
-        for year, count in form_rows:
-            if year is None:
-                form_counts['First Form'] += count
-                continue
-            try:
-                diff = current_year - int(year)
-                if diff >= 3:
-                    form_counts['Completed'] += count
-                elif diff == 2:
-                    form_counts['Third Form'] += count
-                elif diff == 1:
-                    form_counts['Second Form'] += count
-                else:
-                    form_counts['First Form'] += count
-            except (ValueError, TypeError):
-                form_counts['First Form'] += count
-
-        # Calculate program distribution
-        program_rows = db.session.query(
-            Student.program,
-            func.count(Student.id)
-        ).group_by(Student.program).all()
-        by_program = { (row[0] or 'Unassigned'): row[1] for row in program_rows }
-
-        return jsonify({
-            'success': True,
-            'stats': {
-                'total': total,
-                'total_students': total,
-                'new_this_month': new_this_month,
-                'newThisMonth': new_this_month,
-                'blacklisted_count': blacklisted_count,
-                'avgAge': 16, # Placeholder if not explicitly needed
-                'by_form': form_counts,
-                'by_program': by_program
-            }
-        })
-    except Exception as e:
-        import traceback
-        current_app.logger.error(f"Error in get_stats: {e}")
-        current_app.logger.error(traceback.format_exc())
-        return jsonify({
-            'success': False,
-            'error': f'Failed to fetch statistics: {str(e)}'
-        }), 500
+    })
 
 @main.route('/api/students/stats/dashboard', methods=['GET'])
 @login_required
@@ -154,6 +124,26 @@ def get_dashboard_stats_standard():
 # ============================================
 # HELPER FUNCTIONS
 # ============================================
+
+# ============================================
+# 3. HELPER FUNCTIONS
+# ============================================
+
+def get_valid_halls():
+    """Fetch halls from DB or fallback to constants."""
+    try:
+        halls = [h.name for h in Hall.query.all()]
+        return halls if halls else VALID_HALLS
+    except:
+        return VALID_HALLS
+
+def get_valid_programs():
+    """Fetch programs from DB or fallback to constants."""
+    try:
+        programs = [p.name for p in Program.query.all()]
+        return programs if programs else VALID_PROGRAMS
+    except:
+        return VALID_PROGRAMS
 
 def allowed_file(filename):
     """
@@ -198,6 +188,9 @@ def process_image(file):
             raise Exception(error_msg)
         
         # Open image using Pillow
+        from PIL import Image
+        import io
+        
         img = Image.open(file)
         
         # Convert to RGB (in case of PNG with transparency or palette mode)
@@ -257,7 +250,8 @@ def settings():
     """
     qr_code = None
     secret = None
-    
+    import pyotp
+
     # Check if user already has TOTP secret
     current_secret = getattr(current_user, 'totp_secret', None)
     
@@ -273,6 +267,12 @@ def settings():
     
     return render_template('settings.html', qr_code=qr_code, new_secret=secret)
 
+from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
+from flask_login import login_required, current_user
+from models import Student, Blacklist, db
+from datetime import datetime
+
+# Add these routes to your existing routes.py or create a new blueprint
 
 @main.route('/blacklist')
 @login_required
@@ -301,25 +301,10 @@ def add_to_blacklist():
         if not student:
             return jsonify({'success': False, 'message': 'Student not found'}), 404
         
-        # Check if already blacklisted (active or inactive)
-        existing = Blacklist.query.filter_by(student_id=student_id).first()
-        
+        # Check if already blacklisted
+        existing = Blacklist.query.filter_by(student_id=student_id, is_active=True).first()
         if existing:
-            if existing.is_active:
-                return jsonify({'success': False, 'message': 'Student is already blacklisted'}), 400
-            else:
-                # Re-activate existing entry
-                existing.is_active = True
-                existing.reason = reason
-                existing.added_by = current_user.id
-                existing.date_added = datetime.utcnow()
-                db.session.commit()
-                
-                return jsonify({
-                    'success': True, 
-                    'message': f'{student.name} has been added to the blacklist (re-activated)',
-                    'data': existing.to_dict()
-                }), 200
+            return jsonify({'success': False, 'message': 'Student is already blacklisted'}), 400
         
         # Add to blacklist
         blacklist_entry = Blacklist(
@@ -361,18 +346,9 @@ def bulk_blacklist():
             if not student:
                 continue
                 
-            # Check if already blacklisted (active or inactive)
-            existing = Blacklist.query.filter_by(student_id=sid).first()
-            
+            # Check if already blacklisted
+            existing = Blacklist.query.filter_by(student_id=sid, is_active=True).first()
             if existing:
-                if not existing.is_active:
-                    # Re-activate
-                    existing.is_active = True
-                    existing.reason = reason
-                    existing.added_by = current_user.id
-                    existing.date_added = datetime.utcnow()
-                    count += 1
-                # If active, skip
                 continue
                 
             # Add to blacklist
@@ -453,63 +429,42 @@ def update_blacklist_reason(blacklist_id):
 @login_required
 def check_blacklist_status(student_id):
     """Check if a student is blacklisted"""
-    try:
-        blacklist_entry = Blacklist.query.filter_by(student_id=student_id, is_active=True).first()
-
-        return jsonify({
-            'is_blacklisted': blacklist_entry is not None,
-            'data': blacklist_entry.to_dict() if blacklist_entry else None
-        }), 200
-    except Exception as e:
-        import traceback
-        current_app.logger.error(f"Error in check_blacklist_status: {e}")
-        current_app.logger.error(traceback.format_exc())
-        return jsonify({
-            'success': False,
-            'error': f'Check failed: {str(e)}'
-        }), 500
+    blacklist_entry = Blacklist.query.filter_by(student_id=student_id, is_active=True).first()
+    
+    return jsonify({
+        'is_blacklisted': blacklist_entry is not None,
+        'data': blacklist_entry.to_dict() if blacklist_entry else None
+    }), 200
 
 @main.route('/api/students/search')
 @login_required
 def search_students():
     """Search students by name for autocomplete"""
-    try:
-        query = request.args.get('q', '').strip()
-
-        if len(query) < 2:
-            return jsonify([]), 200
-
-        students = Student.query.filter(
-            Student.name.ilike(f'%{query}%')
-        ).limit(10).all()
-
-        results = []
-        for student in students:
-            # Check if blacklisted
-            try:
-                is_blacklisted = Blacklist.query.filter_by(
-                    student_id=student.id,
-                    is_active=True
-                ).first() is not None
-            except Exception:
-                is_blacklisted = False
-
-            results.append({
-                'id': student.id,
-                'name': student.name,
-                'program': student.program,
-                'is_blacklisted': is_blacklisted
-            })
-
-        return jsonify(results), 200
-    except Exception as e:
-        import traceback
-        current_app.logger.error(f"Error in search_students: {e}")
-        current_app.logger.error(traceback.format_exc())
-        return jsonify({
-            'success': False,
-            'error': f'Search failed: {str(e)}'
-        }), 500
+    query = request.args.get('q', '').strip()
+    
+    if len(query) < 2:
+        return jsonify([]), 200
+    
+    students = Student.query.filter(
+        Student.name.ilike(f'%{query}%')
+    ).limit(10).all()
+    
+    results = []
+    for student in students:
+        # Check if blacklisted
+        is_blacklisted = Blacklist.query.filter_by(
+            student_id=student.id, 
+            is_active=True
+        ).first() is not None
+        
+        results.append({
+            'id': student.id,
+            'name': student.name,
+            'program': student.program,
+            'is_blacklisted': is_blacklisted
+        })
+    
+    return jsonify(results), 200
     
 # ============================================
 # STUDENT API ENDPOINTS
@@ -520,19 +475,29 @@ def search_students():
 def get_students():
     """
     Get paginated list of students with search and filters.
+    
+    Query Parameters:
+        page (int): Page number (default: 1)
+        per_page (int): Items per page (default: 20)
+        search (str): Search query (name, email, phone, classroom, hall, ID)
+        program (str): Filter by program
+        hall (str): Filter by hall
+        
+    Returns:
+        JSON: {
+            success: bool,
+            students: list,
+            total: int,
+            pages: int
+        }
     """
     try:
         # Get pagination parameters
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 20, type=int)
         
-        # Cap per_page to prevent memory issues
-        if per_page > 2000:
-            per_page = 2000
-
         # Get and sanitize search query
-        search_arg = request.args.get('search', '')
-        search = sanitize_search_query(search_arg.strip()) if search_arg else ""
+        search = sanitize_search_query(request.args.get('search', '').strip())
         
         # Start with base query
         query = Student.query
@@ -568,32 +533,19 @@ def get_students():
         
         # Paginate results
         pagination = query.paginate(page=page, per_page=per_page, error_out=False)
-
-        if not pagination:
-            return jsonify({
-                'success': True,
-                'students': [],
-                'total': 0,
-                'pages': 0
-            })
-
-        # Safe serialization (Models have their own try-except in to_dict)
-        students_list = [s.to_dict() for s in pagination.items]
-
+        
         return jsonify({
             'success': True,
-            'students': students_list,
-            'total': getattr(pagination, 'total', 0),
-            'pages': getattr(pagination, 'pages', 0)
+            'students': [s.to_dict() for s in pagination.items],
+            'total': pagination.total,
+            'pages': pagination.pages
         })
         
     except Exception as e:
-        import traceback
-        current_app.logger.error(f"Critical error in get_students: {e}")
-        current_app.logger.error(traceback.format_exc())
+        current_app.logger.error(f"Error fetching students: {e}")
         return jsonify({
             'success': False,
-            'error': f'Failed to load student list: {str(e)}'
+            'error': 'An error occurred while fetching students'
         }), 500
 
 
@@ -602,19 +554,21 @@ def get_students():
 def get_single_student(id):
     """
     Get single student by ID.
+    
+    Required for View/Edit modals in frontend.
+    
+    Args:
+        id (int): Student ID
+        
+    Returns:
+        JSON: {success: bool, student: dict}
     """
     try:
-        student = Student.query.get(id)
-
-        if not student:
-            return jsonify({
-                'success': False,
-                'error': f'Student with ID {id} not found'
-            }), 404
+        student = Student.query.get_or_404(id)
         
         # Check permissions
         if not student.has_permission(current_user):
-            return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+            return jsonify({'error': 'Unauthorized'}), 403
         
         return jsonify({
             'success': True,
@@ -625,8 +579,8 @@ def get_single_student(id):
         current_app.logger.error(f"Error fetching student {id}: {e}")
         return jsonify({
             'success': False,
-            'error': f'Server error: {str(e)}'
-        }), 500
+            'error': 'Student not found'
+        }), 404
 
 
 @main.route('/api/students', methods=['POST'])
@@ -655,12 +609,12 @@ def create_student():
         
         # Validate and normalize hall selection
         hall = data.get('hall', '').strip()
-        if hall and hall not in VALID_HALLS:
-            hall = None  # Ignore invalid hall, don't reject entire submission
+        if hall and hall not in get_valid_halls():
+            hall = None  # Ignore invalid hall
         
         # Validate and normalize program selection
         program = data.get('program', '').strip()
-        if program and program not in VALID_PROGRAMS:
+        if program and program not in get_valid_programs():
             program = None  # Ignore invalid program
         
         # Validate optional email
@@ -696,16 +650,6 @@ def create_student():
             if not is_valid:
                 return jsonify({'error': error}), 400
         
-        # Generate face encoding if photo is provided
-        face_encoding = None
-        if photo_url:
-            try:
-                encoding = FaceHandler.get_encoding(photo_url)
-                if encoding:
-                    face_encoding = json.dumps(encoding)
-            except Exception as e:
-                current_app.logger.warning(f"Could not generate face encoding: {e}")
-
         # Create new student record
         new_student = Student(
             name=name,
@@ -720,7 +664,6 @@ def create_student():
             date_of_birth=dob,
             enrollment_year=int(data.get('enrollment_year', datetime.now().year)),
             photo_file=photo_url,
-            face_encoding=face_encoding,
             created_by=getattr(current_user, 'id', 1) # Fallback for internal secret auth
         )
         
@@ -782,12 +725,6 @@ def update_student(id):
                 try:
                     photo_url = process_image(file)
                     student.photo_file = photo_url
-                    # Update face encoding
-                    encoding = FaceHandler.get_encoding(photo_url)
-                    if encoding:
-                        student.face_encoding = json.dumps(encoding)
-                    else:
-                        student.face_encoding = None
                 except Exception as e:
                     return jsonify({'error': str(e)}), 400
         
@@ -802,13 +739,6 @@ def update_student(id):
                 value = data[field].strip() if data[field] else None
                 setattr(student, field, value)
         
-        # Update enrollment year (requires integer conversion)
-        if 'enrollment_year' in data and data['enrollment_year']:
-            try:
-                student.enrollment_year = int(data['enrollment_year'])
-            except (ValueError, TypeError):
-                return jsonify({'error': 'Invalid enrollment year format'}), 400
-
         # Validate and update email
         if 'email' in data:
             email = data['email'].strip()
@@ -896,6 +826,7 @@ def bulk_move_form():
             return jsonify({'error': 'Invalid target form'}), 400
         
         # Fetch and update students individually to handle classroom prefix logic and history
+        from models import AcademicRecord
         students = Student.query.filter(Student.id.in_(ids)).all()
         
         for s in students:
@@ -958,6 +889,7 @@ def bulk_action():
             return jsonify({'error': 'Missing required data'}), 400
 
         if action == 'delete':
+            from models import AcademicRecord
             AcademicRecord.query.filter(AcademicRecord.student_id.in_(ids)).delete(synchronize_session=False)
             Student.query.filter(Student.id.in_(ids)).delete(synchronize_session=False)
             msg = f"Deleted {len(ids)} students"
@@ -1078,6 +1010,9 @@ def bulk_email():
             return jsonify({'error': 'None of the selected students have email addresses'}), 400
             
         # Send emails asynchronously
+        from utils import send_async_email
+        from flask_mail import Message
+        
         app = current_app._get_current_object()
         
         # In a real app, we might want to send one email with BCC or individual emails
@@ -1239,6 +1174,8 @@ def import_file():
         return jsonify({'error': filename_or_error}), 400
     
     try:
+        import pandas as pd
+
         # Parse file based on extension
         if file.filename.endswith('.csv'):
             df = pd.read_csv(file)
@@ -1265,16 +1202,9 @@ def import_file():
                 # Get enrollment year
                 year_val = row.get('enrollment_year') or row.get('year')
                 try:
-                    if year_val:
-                        enrollment_year = int(float(year_val))
-                        # Basic sanity check for year (e.g., between 2000 and current_year + 1)
-                        if enrollment_year < 2000 or enrollment_year > current_year + 1:
-                            raise ValueError(f"Invalid enrollment year: {enrollment_year}")
-                    else:
-                        enrollment_year = current_year
-                except Exception as e:
-                    errors.append(f"Row {row_num}: Invalid enrollment year ({year_val})")
-                    continue
+                    enrollment_year = int(float(year_val)) if year_val else current_year
+                except:
+                    enrollment_year = current_year
                 
                 # Create student record
                 student = Student(
@@ -1465,6 +1395,9 @@ def download_template(file_type):
         File download
     """
     # Create comprehensive template with example data
+    import pandas as pd
+    import io
+
     df = pd.DataFrame({
         'name': ['John Doe'],
         'gender': ['Male'],
@@ -1498,114 +1431,3 @@ def download_template(file_type):
         as_attachment=True,
         download_name=download_name
     )
-
-# ============================================
-# FACE RECOGNITION ROUTES
-# ============================================
-
-@main.route('/face-search')
-@login_required
-def face_search_page():
-    """Display face search/recognition page."""
-    return render_template('face_search.html')
-
-
-@main.route('/api/face-search', methods=['POST'])
-@login_required
-def api_face_search():
-    """
-    Search for a student using face recognition.
-    
-    Request JSON:
-        image: base64 encoded image string (data:image/jpeg;base64,...)
-        
-    Returns:
-        JSON: {success: bool, match: bool, student: dict}
-    """
-    try:
-        data = request.get_json()
-        image_data = data.get('image')
-        
-        if not image_data:
-            return jsonify({'success': False, 'error': 'No image data provided'}), 400
-            
-        # 1. Get encoding for the target image
-        target_encoding = FaceHandler.get_encoding(image_data)
-        
-        if target_encoding is None:
-            return jsonify({
-                'success': True, 
-                'match': False, 
-                'message': 'No face detected in the image'
-            })
-            
-        # 2. Get all students with face encodings
-        students_with_faces = Student.query.filter(Student.face_encoding.isnot(None)).all()
-        
-        if not students_with_faces:
-            return jsonify({
-                'success': True, 
-                'match': False, 
-                'message': 'No students in database have face records'
-            })
-            
-        # 3. Prepare known encodings
-        known_encodings = []
-        for s in students_with_faces:
-            try:
-                enc = json.loads(s.face_encoding)
-                known_encodings.append({'id': s.id, 'encoding': enc})
-            except:
-                continue
-                
-        # 4. Find best match
-        match_result = FaceHandler.find_match(known_encodings, target_encoding)
-        
-        if match_result:
-            student = Student.query.get(match_result['id'])
-            return jsonify({
-                'success': True,
-                'match': True,
-                'student': student.to_dict(),
-                'confidence': 1 - match_result['distance']
-            })
-            
-        return jsonify({
-            'success': True,
-            'match': False,
-            'message': 'No matching student found'
-        })
-        
-    except Exception as e:
-        current_app.logger.error(f"Face search error: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-
-@main.route('/api/students/<int:id>/update-face', methods=['POST'])
-@login_required
-def update_student_face(id):
-    """
-    Manually trigger face encoding update for a student.
-    Uses the student's existing photo_file.
-    """
-    try:
-        student = Student.query.get_or_404(id)
-        
-        if not student.photo_file:
-            return jsonify({'success': False, 'error': 'Student has no photo'}), 400
-            
-        encoding = FaceHandler.get_encoding(student.photo_file)
-        
-        if encoding:
-            student.face_encoding = json.dumps(encoding)
-            db.session.commit()
-            return jsonify({'success': True, 'message': 'Face encoding updated'})
-        else:
-            current_app.logger.warning(f"Face encoding failed for student {id}. No face detected.")
-            return jsonify({
-                'success': False,
-                'error': 'No face detected in profile photo. Please try a clearer photo or a different angle.'
-            }), 400
-            
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
