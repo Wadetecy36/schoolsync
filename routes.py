@@ -34,7 +34,7 @@ from sqlalchemy import or_, and_, func
 from flask_login import login_required, current_user
 from functools import wraps
 # Import utilities
-from utils import generate_qr_code, get_totp_uri
+from utils import generate_qr_code, get_totp_uri, send_to_n8n
 # PIL and pandas moved to function scope for performance
 import base64
 
@@ -317,6 +317,14 @@ def add_to_blacklist():
         db.session.add(blacklist_entry)
         db.session.commit()
         
+        # Trigger n8n automation
+        send_to_n8n('student_blacklisted', {
+            'student_id': student.id,
+            'name': student.name,
+            'reason': reason,
+            'date_added': blacklist_entry.date_added.isoformat()
+        })
+        
         return jsonify({
             'success': True, 
             'message': f'{student.name} has been added to the blacklist',
@@ -362,6 +370,18 @@ def bulk_blacklist():
             count += 1
             
         db.session.commit()
+        
+        # Trigger n8n automation for each blacklisted student
+        for sid in student_ids:
+            s = Student.query.get(sid)
+            if s:
+                send_to_n8n('student_blacklisted', {
+                    'student_id': s.id,
+                    'name': s.name,
+                    'reason': reason,
+                    'date_added': datetime.utcnow().isoformat()
+                })
+                
         return jsonify({
             'success': True, 
             'message': f'{count} students have been blacklisted'
@@ -680,6 +700,9 @@ def create_student():
         
         db.session.commit()
         
+        # Trigger n8n automation
+        send_to_n8n('student_enrolled', new_student.to_dict())
+        
         return jsonify({
             'success': True,
             'student': new_student.to_dict()
@@ -851,8 +874,25 @@ def bulk_move_form():
                 year=datetime.now().year
             )
             db.session.add(new_record)
+            
+            # Trigger n8n automation for movement (already doing grade_update, adding student_moved)
+            send_to_n8n('student_moved', {
+                'student_id': s.id,
+                'name': s.name,
+                'target_form': target,
+                'year': datetime.now().year
+            })
         
         db.session.commit()
+        
+        # Trigger n8n automation for bulk promotion (Grade Update)
+        for s in students:
+            send_to_n8n('grade_update', {
+                'student_id': s.id,
+                'name': s.name,
+                'target_form': target,
+                'year': datetime.now().year
+            })
         
         # Log bulk operation
         log_bulk_operation(
@@ -912,6 +952,15 @@ def bulk_action():
             return jsonify({'error': 'Invalid action'}), 400
 
         db.session.commit()
+        
+        # Trigger n8n automation
+        for sid in ids:
+            send_to_n8n(f'student_{action}', {
+                'student_id': sid,
+                'action': action,
+                'payload': payload
+            })
+            
         log_bulk_operation(user_id=current_user.id, operation_type=action, count=len(ids), success_count=len(ids))
         return jsonify({'success': True, 'message': msg})
     except Exception as e:
@@ -973,6 +1022,10 @@ def bulk_delete():
         
         db.session.commit()
         
+        # Trigger n8n automation
+        for sid in ids:
+            send_to_n8n('student_deleted', {'student_id': sid})
+            
         log_bulk_operation(
             user_id=current_user.id,
             operation_type='delete',
@@ -1116,6 +1169,12 @@ def delete_student(id):
         # Check permissions
         if not student.has_permission(current_user):
             return jsonify({'error': 'Unauthorized'}), 403
+        
+        # Trigger n8n automation
+        send_to_n8n('student_deleted', {
+            'student_id': student.id,
+            'name': student.name
+        })
         
         db.session.delete(student)
         db.session.commit()

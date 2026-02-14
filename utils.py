@@ -347,3 +347,45 @@ def verify_secure_token(token, salt='default-salt', max_age=3600):
         return True, data
     except Exception as e:
         return False, str(e)
+
+
+# ============================================
+# AUTOMATION (n8n)
+# ============================================
+
+def send_to_n8n(event_type, payload):
+    """
+    Send data to n8n webhook for automated workflows.
+    
+    Args:
+        event_type (str): Type of event (e.g., 'student_enrolled', 'grade_updated')
+        payload (dict): The data to send
+    """
+    from flask import current_app
+    from datetime import datetime
+    
+    webhook_url = current_app.config.get('N8N_WEBHOOK_URL')
+    if not webhook_url:
+        return False
+
+    def trigger_webhook(url, body):
+        try:
+            import requests
+            # Standard n8n body structure
+            n8n_data = {
+                'event': event_type,
+                'data': body,
+                'timestamp': datetime.utcnow().isoformat()
+            }
+            response = requests.post(url, json=n8n_data, timeout=5)
+            if response.status_code >= 200 and response.status_code < 300:
+                print(f"🚀 n8n Webhook Triggered: {event_type}")
+            else:
+                print(f"⚠️ n8n Webhook returned status: {response.status_code}")
+        except Exception as e:
+            print(f"❌ n8n Webhook error: {str(e)}")
+
+    # Run in background to not slow down the user request
+    thread = Thread(target=trigger_webhook, args=[webhook_url, payload])
+    thread.start()
+    return True
