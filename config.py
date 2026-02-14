@@ -123,7 +123,7 @@ class Config:
     RATELIMIT_STORAGE_URL = os.environ.get('RATELIMIT_STORAGE_URL', 'memory://')
 
     # 2.6 Automation (n8n)
-    N8N_WEBHOOK_URL = os.environ.get('N8N_WEBHOOK_URL', 'https://brokentrinity.app.n8n.cloud/webhook/student-events')
+    N8N_WEBHOOK_URL = os.environ.get('N8N_WEBHOOK_URL', 'https://brokentrinity.app.n8n.cloud/webhook-test/student-events')
     RATELIMIT_DEFAULT = os.environ.get('RATELIMIT_DEFAULT', '5000 per day;1000 per hour')
     
     # ============================================
