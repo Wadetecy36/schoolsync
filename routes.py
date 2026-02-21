@@ -301,7 +301,8 @@ def api_face_search():
             
         target_encoding = FaceHandler.get_encoding(image_data)
         if not target_encoding:
-            return jsonify({'success': False, 'message': 'No face found in image'}), 400
+            # Return 200 so UI can handle it gracefully without a red error toast
+            return jsonify({'success': True, 'match': False, 'message': 'No face detected in image'}), 200
             
         students = Student.query.filter(Student.face_encoding.isnot(None)).all()
         known_encodings = [
