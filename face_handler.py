@@ -23,8 +23,8 @@ class FaceHandler:
                 return None, None
 
             # Initialize detector with a dummy input size, will be updated per image
-            # Lowered score threshold from 0.4 to 0.3 for better detection in low light/small faces
-            cls._detector = cv2.FaceDetectorYN.create(det_model_path, "", (320, 320), 0.3)
+            # Lowered score threshold from 0.3 to 0.2 for better detection in low light/small faces
+            cls._detector = cv2.FaceDetectorYN.create(det_model_path, "", (320, 320), 0.2)
             cls._recognizer = cv2.FaceRecognizerSF.create(rec_model_path, "")
             
         return cls._detector, cls._recognizer
@@ -126,10 +126,11 @@ class FaceHandler:
         if not known_encodings or not target_encoding:
             return None
 
-        # Threshold for SFace (Cosine Distance)
-        # Recommended is 0.363, setting to 0.45 for more leniency/similarity detection
+        # Threshold for SFace (Cosine Distance: 1 - Cosine Similarity)
+        # SFace match recommendation is Cosine Sim > 0.363, which is Distance < 0.637.
+        # We set to 0.6 to be lenient while maintaining some confidence.
         if threshold is None:
-            threshold = 0.45
+            threshold = 0.6
 
         best_match = None
         min_dist = float('inf')
