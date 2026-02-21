@@ -83,36 +83,42 @@ def get_stats():
     """
     total = Student.query.count()
     current_year = datetime.now().year
+    
+    # 1. Form Distribution
     form_counts = {
-        'First Form': 0,
-        'Second Form': 0,
-        'Third Form': 0,
-        'Completed': 0
+        'First Form': 0, 'Second Form': 0, 'Third Form': 0, 'Completed': 0
     }
     
-    # Optimized SQL aggregation (group by enrollment year)
     rows = db.session.query(
-        Student.enrollment_year, 
-        func.count(Student.id)
+        Student.enrollment_year, func.count(Student.id)
     ).group_by(Student.enrollment_year).all()
     
     for year, count in rows:
-        diff = current_year - year
-        if diff >= 3:
-            form_counts['Completed'] += count
-        elif diff == 2:
-            form_counts['Third Form'] += count
-        elif diff == 1:
-            form_counts['Second Form'] += count
-        else:
-            form_counts['First Form'] += count
+        diff = current_year - int(year)
+        if diff >= 3: form_counts['Completed'] += count
+        elif diff == 2: form_counts['Third Form'] += count
+        elif diff == 1: form_counts['Second Form'] += count
+        else: form_counts['First Form'] += count
+        
+    # 2. Face ID Stats
+    face_id_count = Student.query.filter(Student.face_encoding.isnot(None)).count()
+    has_photo_no_encoding = Student.query.filter(
+        and_(Student.face_encoding.is_(None), Student.photo_file.isnot(None))
+    ).count()
+    
+    # 3. New this month
+    start_of_month = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    new_this_month = Student.query.filter(Student.created_at >= start_of_month).count()
     
     return jsonify({
         'success': True,
         'stats': {
-            'total': total,
-            'newThisMonth': 0, # Simplified
-            'avgAge': 16 # Placeholder
+            'total_students': total,
+            'new_this_month': new_this_month,
+            'face_id_count': face_id_count,
+            'missing_face_ids': total - face_id_count,
+            'repairable_count': has_photo_no_encoding,
+            'by_form': form_counts
         }
     })
 

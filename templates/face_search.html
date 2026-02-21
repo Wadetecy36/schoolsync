@@ -14,12 +14,15 @@
         border: 4px solid var(--glass-border);
         box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);
     }
+
     #video {
         width: 100%;
         height: auto;
         display: block;
-        transform: scaleX(-1); /* Mirror effect */
+        transform: scaleX(-1);
+        /* Mirror effect */
     }
+
     .scanner-overlay {
         position: absolute;
         top: 0;
@@ -32,6 +35,7 @@
         pointer-events: none;
         display: none;
     }
+
     .scanner-line {
         position: absolute;
         width: 100%;
@@ -42,17 +46,33 @@
         animation: scan 2s linear infinite;
         display: none;
     }
+
     @keyframes scan {
-        0% { top: 0% }
-        100% { top: 100% }
+        0% {
+            top: 0%
+        }
+
+        100% {
+            top: 100%
+        }
     }
+
     .match-glow {
         animation: success-glow 1s ease-out;
     }
+
     @keyframes success-glow {
-        0% { box-shadow: 0 0 0px var(--gold-accent) }
-        50% { box-shadow: 0 0 50px var(--gold-accent) }
-        100% { box-shadow: 0 0 0px var(--gold-accent) }
+        0% {
+            box-shadow: 0 0 0px var(--gold-accent)
+        }
+
+        50% {
+            box-shadow: 0 0 50px var(--gold-accent)
+        }
+
+        100% {
+            box-shadow: 0 0 0px var(--gold-accent)
+        }
     }
 </style>
 {% endblock %}
@@ -72,7 +92,8 @@
                 <div id="scanner-overlay" class="scanner-overlay">
                     <div class="scanner-line"></div>
                 </div>
-                <div id="no-camera" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/90 text-center p-6">
+                <div id="no-camera"
+                    class="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/90 text-center p-6">
                     <i class="material-icons-round text-6xl text-theme-muted mb-4">videocam_off</i>
                     <p class="text-theme-main font-bold">Camera Inactive</p>
                     <p class="text-theme-muted text-sm mt-2">Click below to start identifying</p>
@@ -83,16 +104,19 @@
                 <button id="start-camera" class="btn-gold w-full flex items-center justify-center">
                     <i class="material-icons-round mr-2">videocam</i> Start Identification
                 </button>
-                <button id="capture-image" class="hidden btn-gold w-full flex items-center justify-center bg-blue-600 shadow-blue-500/20">
+                <button id="capture-image"
+                    class="hidden btn-gold w-full flex items-center justify-center bg-blue-600 shadow-blue-500/20">
                     <i class="material-icons-round mr-2">face</i> Search Face
                 </button>
-                <button id="stop-camera" class="hidden text-theme-muted hover:text-red-400 text-sm font-medium transition">
+                <button id="stop-camera"
+                    class="hidden text-theme-muted hover:text-red-400 text-sm font-medium transition">
                     Stop Camera
                 </button>
             </div>
-            
+
             <input type="file" id="file-input" accept="image/*" class="hidden">
-            <button onclick="document.getElementById('file-input').click()" class="mt-4 w-full py-3 rounded-xl border-2 border-dashed border-white/10 text-theme-muted hover:text-theme-main hover:border-blue-500/40 transition-all flex items-center justify-center hover:bg-white/5">
+            <button onclick="document.getElementById('file-input').click()"
+                class="mt-4 w-full py-3 rounded-xl border-2 border-dashed border-white/10 text-theme-muted hover:text-theme-main hover:border-blue-500/40 transition-all flex items-center justify-center hover:bg-white/5">
                 <i class="material-icons-round mr-2">upload_file</i> Or Upload Photo
             </button>
         </div>
@@ -103,7 +127,8 @@
                 <i class="material-icons-round mr-3 text-gold">identity_platform</i> Search Results
             </h2>
 
-            <div id="result-placeholder" class="flex flex-col items-center justify-center h-[300px] text-center text-theme-muted">
+            <div id="result-placeholder"
+                class="flex flex-col items-center justify-center h-[300px] text-center text-theme-muted">
                 <i class="material-icons-round text-5xl mb-4 opacity-20">search</i>
                 <p>Waiting for face input...</p>
                 <p class="text-xs mt-2">Point the camera at a student's face or upload an image</p>
@@ -111,7 +136,8 @@
 
             <div id="result-match" class="hidden space-y-6">
                 <div class="flex justify-center mb-6">
-                    <div id="result-photo" class="w-40 h-40 rounded-full border-4 border-gold bg-slate-800 overflow-hidden shadow-xl">
+                    <div id="result-photo"
+                        class="w-40 h-40 rounded-full border-4 border-gold bg-slate-800 overflow-hidden shadow-xl">
                         <img src="" alt="Student Profile" class="w-full h-full object-cover">
                     </div>
                 </div>
@@ -144,16 +170,19 @@
                     </div>
                 </div>
 
-                <a id="view-profile-link" href="#" class="btn-gold w-full flex items-center justify-center mt-4 bg-white/10 hover:bg-white/20 text-theme-main border border-white/10 shadow-none">
+                <a id="view-profile-link" href="#"
+                    class="btn-gold w-full flex items-center justify-center mt-4 bg-white/10 hover:bg-white/20 text-theme-main border border-white/10 shadow-none">
                     View Full Profile
                 </a>
             </div>
 
-            <div id="result-none" class="hidden flex flex-col items-center justify-center h-[300px] text-center text-red-400">
+            <div id="result-none"
+                class="hidden flex flex-col items-center justify-center h-[300px] text-center text-red-400">
                 <i class="material-icons-round text-5xl mb-4 opacity-50">person_off</i>
                 <p class="font-bold">No Match Found</p>
                 <p class="text-xs mt-2 text-theme-muted">The face was not recognized in the database</p>
-                <button onclick="resetSearch()" class="mt-4 text-theme-muted hover:text-white underline text-sm">Try Again</button>
+                <button onclick="resetSearch()" class="mt-4 text-theme-muted hover:text-white underline text-sm">Try
+                    Again</button>
             </div>
         </div>
     </div>
@@ -178,8 +207,8 @@
 
     async function startCamera() {
         try {
-            stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "user" } 
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: "user" }
             });
             video.srcObject = stream;
             noCameraOverlay.classList.add('hidden');
@@ -217,7 +246,7 @@
             if (data.success && data.match) {
                 showMatch(data.student);
             } else {
-                showNoMatch();
+                showNoMatch(data.message);
             }
         } catch (err) {
             console.error("Search error:", err);
@@ -234,7 +263,7 @@
         context.scale(-1, 1);
         context.drawImage(video, 0, 0, 640, 480);
         context.setTransform(1, 0, 0, 1, 0, 0); // reset
-        
+
         const imageData = canvas.toDataURL('image/jpeg', 0.8);
         searchFace(imageData);
     }
@@ -244,7 +273,7 @@
         document.getElementById('result-none').classList.add('hidden');
         const matchSection = document.getElementById('result-match');
         matchSection.classList.remove('hidden');
-        
+
         document.querySelector('.camera-container').classList.add('match-glow');
         setTimeout(() => document.querySelector('.camera-container').classList.remove('match-glow'), 1000);
 
@@ -253,13 +282,13 @@
         document.getElementById('result-program').textContent = student.program || 'N/A';
         document.getElementById('result-form').textContent = student.current_form;
         document.getElementById('result-hall').textContent = student.hall || 'N/A';
-        
+
         const photoImg = document.querySelector('#result-photo img');
         photoImg.src = student.photo_url || '/static/images/default-avatar.png';
 
         const blacklistStatus = document.getElementById('result-blacklist');
         const activeStatus = document.getElementById('result-active');
-        
+
         if (student.is_blacklisted) {
             blacklistStatus.classList.remove('hidden');
             activeStatus.classList.add('hidden');
@@ -273,11 +302,16 @@
         document.getElementById('view-profile-link').href = `/students?id=${student.id}`;
     }
 
-    function showNoMatch() {
+    function showNoMatch(message) {
         document.getElementById('result-placeholder').classList.add('hidden');
         document.getElementById('result-match').classList.add('hidden');
-        document.getElementById('result-none').classList.remove('hidden');
-        showToast("No matching student found", "error");
+        const noneEl = document.getElementById('result-none');
+        noneEl.classList.remove('hidden');
+
+        const subtext = noneEl.querySelector('.text-theme-muted');
+        if (subtext) {
+            subtext.textContent = message || "The face was not recognized in the database";
+        }
     }
 
     function resetSearch() {

@@ -149,39 +149,59 @@
                 </div>
             </a>
         </div>
-    </div>
 
-    <!-- Recent Students & Stats -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Recent Students -->
-        <div class="glass-card p-6">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-xl font-bold text-theme-main">Recent Students</h2>
-                <a href="/students" class="text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center">
-                    View all <i class="material-icons-round text-sm ml-1">arrow_forward</i>
-                </a>
+        <!-- Face ID Health Check -->
+        <div id="face-id-alert"
+            class="hidden mt-6 p-6 rounded-2xl bg-cyan-500/5 border border-cyan-500/20 flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400">
+                    <i class="material-icons-round">face</i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-theme-main">Face ID Coverage: <span id="face-percent">0%</span></h3>
+                    <p class="text-sm text-theme-muted"><span id="missing-count">0</span> students missing biometric
+                        data.</p>
+                </div>
             </div>
-            <div id="recent-students" class="space-y-4">
-                <!-- Students will be loaded here -->
-            </div>
-            <div id="recent-empty" class="hidden text-center py-8">
-                <i class="material-icons-round text-4xl text-theme-muted mb-3">people</i>
-                <p class="text-theme-muted">No students yet</p>
-            </div>
-        </div>
-
-        <!-- Form Distribution -->
-        <div class="glass-card p-6">
-            <h2 class="text-xl font-bold text-theme-main mb-6">Form Distribution</h2>
-            <div id="form-distribution" class="space-y-4">
-                <!-- Distribution will be loaded here -->
-            </div>
-            <div id="distribution-empty" class="hidden text-center py-8">
-                <i class="material-icons-round text-4xl text-theme-muted mb-3">pie_chart</i>
-                <p class="text-theme-muted">No data available</p>
-            </div>
+            <button onclick="repairFaceIDs()" id="repair-btn"
+                class="hidden btn-cyan px-6 py-2 rounded-xl text-sm font-bold flex items-center">
+                <i class="material-icons-round mr-2">auto_fix_high</i> Generate Encodings
+            </button>
         </div>
     </div>
+</div>
+
+<!-- Recent Students & Stats -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Recent Students -->
+    <div class="glass-card p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-bold text-theme-main">Recent Students</h2>
+            <a href="/students" class="text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center">
+                View all <i class="material-icons-round text-sm ml-1">arrow_forward</i>
+            </a>
+        </div>
+        <div id="recent-students" class="space-y-4">
+            <!-- Students will be loaded here -->
+        </div>
+        <div id="recent-empty" class="hidden text-center py-8">
+            <i class="material-icons-round text-4xl text-theme-muted mb-3">people</i>
+            <p class="text-theme-muted">No students yet</p>
+        </div>
+    </div>
+
+    <!-- Form Distribution -->
+    <div class="glass-card p-6">
+        <h2 class="text-xl font-bold text-theme-main mb-6">Form Distribution</h2>
+        <div id="form-distribution" class="space-y-4">
+            <!-- Distribution will be loaded here -->
+        </div>
+        <div id="distribution-empty" class="hidden text-center py-8">
+            <i class="material-icons-round text-4xl text-theme-muted mb-3">pie_chart</i>
+            <p class="text-theme-muted">No data available</p>
+        </div>
+    </div>
+</div>
 </div>
 
 <script>
@@ -195,6 +215,23 @@
                 document.getElementById('total-students').textContent = stats.total_students;
                 document.getElementById('active-today').textContent = Math.floor(stats.total_students * 0.92);
                 document.getElementById('new-this-month').textContent = stats.new_this_month;
+
+                // Face ID Health Check
+                if (stats.total_students > 0) {
+                    const alertEl = document.getElementById('face-id-alert');
+                    const repairBtn = document.getElementById('repair-btn');
+                    alertEl.classList.remove('hidden');
+
+                    const percent = Math.round((stats.face_id_count / stats.total_students) * 100);
+                    document.getElementById('face-percent').textContent = `${percent}%`;
+                    document.getElementById('missing-count').textContent = stats.missing_face_ids;
+
+                    if (stats.missing_face_ids > 0) {
+                        repairBtn.classList.remove('hidden');
+                    } else {
+                        repairBtn.classList.add('hidden');
+                    }
+                }
 
                 // Update form distribution
                 const formContainer = document.getElementById('form-distribution');
@@ -257,6 +294,29 @@
             case 'Third Form': return 'bg-purple-500';
             case 'Completed': return 'bg-yellow-500';
             default: return 'bg-gray-500';
+        }
+    }
+
+    async function repairFaceIDs() {
+        if (!confirm("This will attempt to generate biometric Face IDs for all students using their existing photos. Continue?")) return;
+
+        try {
+            loading.show();
+            // We need to get all student IDs first
+            const studentsData = await apiRequest('/api/students?per_page=5000');
+            const ids = studentsData.students.map(s => s.id);
+
+            const res = await apiRequest('/api/students/bulk-encode', {
+                method: 'POST',
+                body: JSON.stringify({ ids })
+            });
+
+            showToast(res.message, 'success');
+            loadDashboard();
+        } catch (e) {
+            console.error(e);
+        } finally {
+            loading.hide();
         }
     }
 

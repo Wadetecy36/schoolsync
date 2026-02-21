@@ -37,8 +37,7 @@ class FaceHandler:
         try:
             import cv2
             img = None
-            if not image_source:
-                print("FaceHandler: Empty image source")
+            if image_source is None:
                 return None
 
             if isinstance(image_source, str):
@@ -50,7 +49,7 @@ class FaceHandler:
                         nparr = np.frombuffer(image_data, np.uint8)
                         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
                     except Exception as e:
-                        print(f"FaceHandler: Failed to decode base64 image: {e}")
+                        current_app.logger.error(f"FaceHandler: Failed to decode base64 image: {e}")
                         return None
                 elif os.path.exists(image_source):
                     # Handle file path
@@ -61,8 +60,6 @@ class FaceHandler:
                     upload_path = os.path.join(base_path, 'static', 'uploads', image_source)
                     if os.path.exists(upload_path):
                         img = cv2.imread(upload_path)
-                    else:
-                        print(f"FaceHandler: File not found: {image_source}")
             elif isinstance(image_source, np.ndarray):
                 img = image_source
             
@@ -80,26 +77,31 @@ class FaceHandler:
             # Detect faces
             _, faces = detector.detect(img)
             
-            if faces is None or len(faces) == 0:
+            # Helper to check if faces were found safely for numpy arrays
+            def has_faces(f):
+                return f is not None and isinstance(f, np.ndarray) and f.size > 0
+
+            if not has_faces(faces):
                 # Try with a smaller input size if the image is large, sometimes helps YuNet
                 if w > 640 or h > 640:
                     scale = 640.0 / max(w, h)
                     img_small = cv2.resize(img, (0,0), fx=scale, fy=scale)
                     detector.setInputSize((img_small.shape[1], img_small.shape[0]))
-                    _, faces = detector.detect(img_small)
-                    if faces is not None and len(faces) > 0:
-                        # If found on small image, we need to use the small image for alignment
+                    _, faces_small = detector.detect(img_small)
+                    if has_faces(faces_small):
+                        faces = faces_small
                         img = img_small
-                
-                # If still no face, try grayscale
-                if faces is None or len(faces) == 0:
-                    img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                    img_gray = cv2.cvtColor(img_gray, cv2.COLOR_GRAY2BGR)
-                    _, faces = detector.detect(img_gray)
-                    if faces is not None and len(faces) > 0:
-                        img = img_gray
 
-            if faces is not None and len(faces) > 0:
+            # Grayscale fallback
+            if not has_faces(faces):
+                img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                img_gray = cv2.cvtColor(img_gray, cv2.COLOR_GRAY2BGR)
+                _, faces_gray = detector.detect(img_gray)
+                if has_faces(faces_gray):
+                    faces = faces_gray
+                    img = img_gray
+
+            if has_faces(faces):
                 # Use the first face found
                 # Align and crop the face
                 aligned_face = recognizer.alignCrop(img, faces[0])
@@ -108,12 +110,10 @@ class FaceHandler:
                 # Convert from [1, 128] numpy array to list
                 return feature[0].tolist()
 
-            print("FaceHandler: No faces detected in image")
             return None
         except Exception as e:
-            print(f"Error extracting face encoding: {e}")
-            import traceback
-            traceback.print_exc()
+            if current_app:
+                current_app.logger.error(f"Error extracting face encoding: {e}")
             return None
 
     @staticmethod
