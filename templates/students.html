@@ -143,6 +143,7 @@
                     <option value="move-hall">Move Hall</option>
                     <option value="update-program">Update Program</option>
                     <option value="email">Send Email</option>
+                    <option value="encode-faces">Generate Face IDs</option>
                     <option value="blacklist">Blacklist Selected</option>
                     <option value="delete">Delete Permanently</option>
                 </select>
@@ -844,6 +845,7 @@
                          <span class="text-xs text-theme-muted uppercase font-mono">${safe(s.hall)}</span>
                          <div class="flex gap-2">
                              <button onclick="openMoveFormModal(${s.id})" class="p-1 rounded hover:bg-white/10 text-blue-400 transition" title="Move Form"><i class="material-icons-round text-lg">school</i></button>
+                             <button onclick="window.encodeFace(${s.id})" class="p-1 rounded hover:bg-white/10 text-cyan-400 transition" title="Generate Face ID"><i class="material-icons-round text-lg">face</i></button>
                              <button onclick="window.editStudent('${s.id}')" class="p-1 rounded hover:bg-white/10 text-yellow-400 transition" title="Edit"><i class="material-icons-round text-lg">edit</i></button>
                              <button onclick="openDeleteModal(${s.id}, '${safe(s.name)}')" class="p-1 rounded hover:bg-white/10 text-red-400 transition" title="Delete"><i class="material-icons-round text-lg">delete</i></button>
                          </div>
@@ -883,8 +885,9 @@
                     <td class="px-6 py-4 text-theme-muted text-sm">${safe(s.hall)}</td>
                     <td class="px-6 py-4">
                         <button onclick="openMoveFormModal(${s.id})" class="text-blue-400 mr-3 hover:scale-110 transition" title="Move Form"><i class="material-icons-round">school</i></button>
-                        <button onclick="window.editStudent('${s.id}')" class="text-gold mr-3 hover:scale-110 transition"><i class="material-icons-round">edit</i></button>
-                        <button onclick="openDeleteModal(${s.id}, '${safe(s.name)}')" class="text-red-400 hover:scale-110 transition"><i class="material-icons-round">delete</i></button>
+                        <button onclick="window.encodeFace(${s.id})" class="text-cyan-400 mr-3 hover:scale-110 transition" title="Generate Face ID"><i class="material-icons-round">face</i></button>
+                        <button onclick="window.editStudent('${s.id}')" class="text-gold mr-3 hover:scale-110 transition" title="Edit"><i class="material-icons-round">edit</i></button>
+                        <button onclick="openDeleteModal(${s.id}, '${safe(s.name)}')" class="text-red-400 hover:scale-110 transition" title="Delete"><i class="material-icons-round">delete</i></button>
                     </td>
                 </tr>
             `;
@@ -1224,6 +1227,9 @@
             case 'email':
                 window.toggleModal('bulk-email-modal', true);
                 break;
+            case 'encode-faces':
+                await performBulkEncodeFaces(ids);
+                break;
             case 'blacklist':
                 document.getElementById('bulk-blacklist-count').innerText = ids.length;
                 window.toggleModal('bulk-blacklist-modal', true);
@@ -1285,6 +1291,25 @@
         } catch (e) {
             console.error(e);
         }
+    }
+
+    async function performBulkEncodeFaces(ids) {
+        try {
+            const res = await apiRequest('/api/students/bulk-encode', {
+                method: 'POST',
+                body: JSON.stringify({ ids })
+            });
+            showToast(res.message, 'success');
+            clearSelections();
+            loadStudents();
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    window.encodeFace = async function (id) {
+        // Trigger specific encoding for one student directly
+        await performBulkEncodeFaces([id]);
     }
 
     window.confirmMoveHall = async function () {

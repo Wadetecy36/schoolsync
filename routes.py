@@ -1093,12 +1093,63 @@ def bulk_delete():
             'message': f'Successfully deleted {len(ids)} students'
         })
         
+        
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
 
-
-@main.route('/api/students/bulk-email', methods=['POST'])
+@main.route('/api/students/bulk-encode', methods=['POST'])
+@login_required
+def bulk_encode():
+    """Attempt to generate face encodings for selected students' existing photos"""
+    try:
+        data = request.get_json()
+        ids = data.get('ids', [])
+        
+        if not ids:
+            return jsonify({'error': 'No students selected'}), 400
+            
+        students = Student.query.filter(Student.id.in_(ids)).all()
+        success_count = 0
+        skip_count = 0
+        error_count = 0
+        
+        for student in students:
+            if not student.photo_file:
+                skip_count += 1
+                continue
+                
+            try:
+                # If it's a base64 or URL, FaceHandler can handle it or if it's local
+                encoding = FaceHandler.get_encoding(student.photo_file)
+                if encoding:
+                    student.face_encoding = encoding
+                    success_count += 1
+                else:
+                    error_count += 1
+            except Exception as e:
+                current_app.logger.error(f"Failed to encode face for student {student.id}: {e}")
+                error_count += 1
+                
+        db.session.commit()
+        
+        # Log bulk operation
+        log_bulk_operation(
+            user_id=current_user.id,
+            operation_type='encode_faces',
+            count=len(ids),
+            success_count=success_count,
+            error_count=error_count
+        )
+        
+        return jsonify({
+            'success': True,
+            'message': f'Encoded {success_count} faces. ({skip_count} skipped, {error_count} failed)'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500@main.route('/api/students/bulk-email', methods=['POST'])
 @login_required
 def bulk_email():
     """Send emails to multiple students"""
