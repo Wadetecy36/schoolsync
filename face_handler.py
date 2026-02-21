@@ -2,6 +2,7 @@ import numpy as np
 import json
 import base64
 import os
+from flask import current_app
 
 class FaceHandler:
     _detector = None
