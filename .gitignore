@@ -97,6 +97,7 @@ school.db
 static/uploads/
 uploads/
 fix_csrf.py
+backup/
 
 # ============================================
 # Migrations (Keep structure, ignore local db)

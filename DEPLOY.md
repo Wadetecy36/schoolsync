@@ -10,7 +10,7 @@ Since you don't have Python locally, we'll push directly to GitHub and let Rende
 
 ```bash
 # Navigate to your project folder
-cd C:\Users\afuao\.gemini\antigravity\scratch\schoolsync
+cd F:\schoolsync-main
 
 # Stage all changes
 git add .

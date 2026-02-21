@@ -38,6 +38,8 @@ from utils import generate_qr_code, get_totp_uri, send_to_n8n
 # PIL and pandas moved to function scope for performance
 import base64
 
+from face_handler import FaceHandler
+
 
 # Import validators
 from validators import (
@@ -280,6 +282,48 @@ def blacklist_page():
     """Display blacklist management page"""
     blacklisted = Blacklist.query.filter_by(is_active=True).order_by(Blacklist.date_added.desc()).all()
     return render_template('blacklist.html', blacklisted=blacklisted)
+
+@main.route('/face-search')
+@login_required
+def face_search_page():
+    """Display face recognition search page"""
+    return render_template('face_search.html')
+
+@main.route('/api/face-search', methods=['POST'])
+@login_required
+def api_face_search():
+    try:
+        data = request.get_json()
+        image_data = data.get('image')
+        
+        if not image_data:
+            return jsonify({'success': False, 'message': 'No image provided'}), 400
+            
+        target_encoding = FaceHandler.get_encoding(image_data)
+        if not target_encoding:
+            return jsonify({'success': False, 'message': 'No face found in image'}), 400
+            
+        students = Student.query.filter(Student.face_encoding.isnot(None)).all()
+        known_encodings = [
+            {'id': s.id, 'encoding': s.face_encoding} 
+            for s in students if s.face_encoding
+        ]
+        
+        match = FaceHandler.find_match(known_encodings, target_encoding)
+        if match:
+            student = Student.query.get(match['id'])
+            return jsonify({
+                'success': True,
+                'match': True,
+                'student': student.to_dict(),
+                'distance': match['distance']
+            })
+            
+        return jsonify({'success': True, 'match': False})
+        
+    except Exception as e:
+        current_app.logger.error(f"Face search error: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @main.route('/api/blacklist/add', methods=['POST'])
 @login_required
@@ -670,6 +714,10 @@ def create_student():
             if not is_valid:
                 return jsonify({'error': error}), 400
         
+        face_encoding = None
+        if photo_url:
+            face_encoding = FaceHandler.get_encoding(photo_url)
+
         # Create new student record
         new_student = Student(
             name=name,
@@ -684,6 +732,7 @@ def create_student():
             date_of_birth=dob,
             enrollment_year=int(data.get('enrollment_year', datetime.now().year)),
             photo_file=photo_url,
+            face_encoding=face_encoding,
             created_by=getattr(current_user, 'id', 1) # Fallback for internal secret auth
         )
         
@@ -748,6 +797,12 @@ def update_student(id):
                 try:
                     photo_url = process_image(file)
                     student.photo_file = photo_url
+                    
+                    if photo_url:
+                        encoding = FaceHandler.get_encoding(photo_url)
+                        if encoding:
+                            student.face_encoding = encoding
+                            
                 except Exception as e:
                     return jsonify({'error': str(e)}), 400
         

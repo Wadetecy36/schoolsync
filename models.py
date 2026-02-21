@@ -259,6 +259,9 @@ class Student(db.Model):
     # Photo (Base64 encoded)
     photo_file = db.Column(db.Text)
     
+    # Face Encoding for Recognition Search
+    face_encoding = db.Column(db.JSON, nullable=True)
+    
     # Metadata
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
