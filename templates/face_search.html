@@ -168,6 +168,10 @@
                         <p class="text-green-400 text-xs mb-1 uppercase tracking-wider">Status</p>
                         <p class="text-green-500 font-bold text-sm">Permitted</p>
                     </div>
+                    <div id="result-score-container" class="p-4 bg-blue-500/10 rounded-2xl border border-blue-500/20">
+                        <p class="text-blue-400 text-xs mb-1 uppercase tracking-wider">Similarity</p>
+                        <p id="result-score" class="text-blue-500 font-bold text-sm">0%</p>
+                    </div>
                 </div>
 
                 <a id="view-profile-link" href="#"
@@ -244,7 +248,7 @@
             });
 
             if (data.success && data.match) {
-                showMatch(data.student);
+                showMatch(data.student, data.distance);
             } else {
                 showNoMatch(data.message);
             }
@@ -268,7 +272,7 @@
         searchFace(imageData);
     }
 
-    function showMatch(student) {
+    function showMatch(student, distance) {
         document.getElementById('result-placeholder').classList.add('hidden');
         document.getElementById('result-none').classList.add('hidden');
         const matchSection = document.getElementById('result-match');
@@ -282,6 +286,10 @@
         document.getElementById('result-program').textContent = student.program || 'N/A';
         document.getElementById('result-form').textContent = student.current_form;
         document.getElementById('result-hall').textContent = student.hall || 'N/A';
+
+        // Update similarity score
+        const similarity = Math.round((1 - distance) * 100);
+        document.getElementById('result-score').textContent = `${similarity}%`;
 
         const photoImg = document.querySelector('#result-photo img');
         photoImg.src = student.photo_url || '/static/images/default-avatar.png';

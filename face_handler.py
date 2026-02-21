@@ -128,9 +128,9 @@ class FaceHandler:
 
         # Threshold for SFace (Cosine Distance: 1 - Cosine Similarity)
         # SFace match recommendation is Cosine Sim > 0.363, which is Distance < 0.637.
-        # We set to 0.6 to be lenient while maintaining some confidence.
+        # We set to 0.75 to be very lenient for school environment conditions.
         if threshold is None:
-            threshold = 0.6
+            threshold = 0.75
 
         best_match = None
         min_dist = float('inf')
@@ -161,4 +161,9 @@ class FaceHandler:
                 print(f"Comparison error: {e}")
                 continue
 
-        return best_match
+        return {
+        'match': best_match is not None,
+        'id': best_match['id'] if best_match else None,
+        'distance': float(min_dist) if min_dist != float('inf') else 1.0,
+        'similarity': float(1 - min_dist) if min_dist != float('inf') else 0.0
+    }

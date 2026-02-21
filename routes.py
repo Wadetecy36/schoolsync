@@ -316,17 +316,22 @@ def api_face_search():
             for s in students if s.face_encoding
         ]
         
-        match = FaceHandler.find_match(known_encodings, target_encoding)
-        if match:
-            student = Student.query.get(match['id'])
+        result = FaceHandler.find_match(known_encodings, target_encoding)
+        if result['match']:
+            student = Student.query.get(result['id'])
             return jsonify({
                 'success': True,
                 'match': True,
                 'student': student.to_dict(),
-                'distance': match['distance']
+                'distance': result['distance']
             })
             
-        return jsonify({'success': True, 'match': False})
+        return jsonify({
+            'success': True, 
+            'match': False, 
+            'best_distance': result['distance'],
+            'message': f"No match found. (Closest similarity: {round(result['similarity']*100)}%)"
+        })
         
     except Exception as e:
         current_app.logger.error(f"Face search error: {e}")
