@@ -1133,13 +1133,20 @@
     }
 
     function setupEventListeners() {
-        document.getElementById('items-per-page').addEventListener('change', (e) => {
-            window.itemsPerPage = e.target.value === 'all' ? 10000 : parseInt(e.target.value);
-            window.currentPage = 1;
-            renderStudents();
-        });
-        document.getElementById('next-page').addEventListener('click', () => { window.currentPage++; renderStudents(); });
-        document.getElementById('prev-page').addEventListener('click', () => { window.currentPage--; renderStudents(); });
+        const ipp = document.getElementById('items-per-page');
+        if (ipp) {
+            ipp.addEventListener('change', (e) => {
+                window.itemsPerPage = e.target.value === 'all' ? 10000 : parseInt(e.target.value);
+                window.currentPage = 1;
+                renderStudents();
+            });
+        }
+
+        const next = document.getElementById('next-page');
+        if (next) next.addEventListener('click', () => { window.currentPage++; renderStudents(); });
+
+        const prev = document.getElementById('prev-page');
+        if (prev) prev.addEventListener('click', () => { window.currentPage--; renderStudents(); });
     }
 
     // Single Delete
@@ -1295,15 +1302,29 @@
 
     async function performBulkEncodeFaces(ids) {
         try {
-            const res = await apiRequest('/api/students/bulk-encode', {
-                method: 'POST',
-                body: JSON.stringify({ ids })
-            });
-            showToast(res.message, 'success');
+            loading.show();
+            // Process in batches of 10 to avoid 503 timeouts
+            const batchSize = 10;
+            for (let i = 0; i < ids.length; i += batchSize) {
+                const batch = ids.slice(i, i + batchSize);
+                await apiRequest('/api/students/bulk-encode', {
+                    method: 'POST',
+                    body: JSON.stringify({ ids: batch })
+                });
+
+                // Update loading text
+                const progress = Math.round(((i + batch.length) / ids.length) * 100);
+                const subtext = document.querySelector('#loading-overlay p:last-child');
+                if (subtext) subtext.textContent = `Generating Face IDs... ${progress}%`;
+            }
+            showToast('Face ID generation complete!', 'success');
             clearSelections();
             loadStudents();
         } catch (e) {
             console.error(e);
+            showToast("Operation interrupted.", "warning");
+        } finally {
+            loading.hide();
         }
     }
 

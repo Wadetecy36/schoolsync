@@ -1151,7 +1151,9 @@ def bulk_encode():
         
         return jsonify({
             'success': True,
-            'message': f'Encoded {success_count} faces. ({skip_count} skipped, {error_count} failed)'
+            'message': f'Encoded {success_count} faces. ({skip_count} skipped, {error_count} failed)',
+            'success_count': success_count,
+            'error_count': error_count
         })
         
     except Exception as e:
