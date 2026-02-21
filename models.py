@@ -359,7 +359,8 @@ class Student(db.Model):
             'guardian_name': self.guardian_name,
             'guardian_phone': self.guardian_phone,
             'created_by': self.created_by,
-            'is_blacklisted': self.blacklist_entry.is_active if self.blacklist_entry else False
+            'is_blacklisted': self.blacklist_entry.is_active if self.blacklist_entry else False,
+            'has_face_encoding': bool(self.face_encoding)
         }
 
     def has_permission(self, user):

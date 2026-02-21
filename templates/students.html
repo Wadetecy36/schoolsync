@@ -131,6 +131,8 @@
             <div class="flex items-center text-gold font-bold">
                 <i class="material-icons-round text-sm mr-2">check_box</i>
                 <span id="selected-count" class="mr-1">0</span> Selected
+                <span class="ml-2 text-xs text-theme-muted font-normal">(<span id="selected-face-count"
+                        class="text-blue-400 font-bold">0</span> with Face ID)</span>
             </div>
 
             <div class="flex items-center gap-2">
@@ -820,6 +822,7 @@
                         ? `<img src="${s.photo_url}" class="w-full h-full object-cover">`
                         : `<div class="w-full h-full bg-gradient-to-br from-blue-600 to-indigo-900 flex items-center justify-center text-white font-bold text-2xl">${initial(s.name)}</div>`
                     }
+                             ${s.has_face_encoding ? '<div class="absolute bottom-0 right-0 bg-blue-500/80 backdrop-blur-sm rounded-tl-lg px-1" title="Face Encoded"><i class="material-icons-round text-white" style="font-size:12px;">face</i></div>' : ''}
                         </div>
                         <input type="checkbox" class="student-checkbox w-5 h-5 rounded border-white/20 bg-black/20 text-gold focus:ring-0 cursor-pointer transition" 
                                onchange="toggleSelect(${s.id}, this.checked)" ${window.selectedStudents.has(s.id) ? 'checked' : ''}>
@@ -870,6 +873,7 @@
                             <p class="font-bold text-theme-main group-hover:text-gold transition flex items-center">
                                 ${safe(s.name)}
                                 ${isBlacklisted ? '<i class="material-icons-round text-red-500 text-sm ml-2" title="Blacklisted">warning</i>' : ''}
+                                ${s.has_face_encoding ? '<i class="material-icons-round text-blue-500 text-sm ml-2" title="Face Encoded">face</i>' : ''}
                             </p>
                             <p class="text-xs text-theme-muted">${safe(s.email)}</p>
                          </div>
@@ -1166,8 +1170,19 @@
 
     function updateBulkActionsUI() {
         const count = window.selectedStudents.size;
+
+        let faceCount = 0;
+        window.selectedStudents.forEach(id => {
+            const student = window.allStudents.find(s => s.id == id);
+            if (student && student.has_face_encoding) {
+                faceCount++;
+            }
+        });
+
         const panel = document.getElementById('bulk-actions-panel');
         document.getElementById('selected-count').innerText = count;
+        const faceCountEl = document.getElementById('selected-face-count');
+        if (faceCountEl) faceCountEl.innerText = faceCount;
 
         if (count > 0) {
             panel.classList.remove('hidden');
